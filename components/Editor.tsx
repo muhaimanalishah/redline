@@ -176,11 +176,15 @@ export default function Editor({
       onChange?.(markdown);
 
       const pluginState = DiffPluginKey.getState(ed.state);
-      const remainingCount = pluginState?.issues.size ?? 0;
-      setIssueCount(remainingCount);
       if (onIssuesChange && pluginState) {
         onIssuesChange(Array.from(pluginState.issues.values()));
       }
+    },
+    onTransaction: ({ editor: ed }) => {
+      const pluginState = DiffPluginKey.getState(ed.state);
+      const remainingCount = pluginState?.issues.size ?? 0;
+      setIssueCount(remainingCount);
+      ed.setEditable(remainingCount === 0);
     },
   });
 
@@ -193,8 +197,6 @@ export default function Editor({
           issues,
         })
       );
-      setIssueCount(issues.length);
-      editor.setEditable(issues.length === 0);
     }
   }, [editor, issues]);
 
@@ -280,11 +282,6 @@ export default function Editor({
 
       document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
       setActiveDiff(null);
-
-      const pluginState = DiffPluginKey.getState(editor.state);
-      const remaining = pluginState?.issues.size ?? 0;
-      setIssueCount(remaining);
-      editor.setEditable(remaining === 0);
       toast.success("Applied suggestion", {
         description: `"${issue.original}" → "${issue.suggestion}"`,
       });
@@ -306,11 +303,6 @@ export default function Editor({
 
       document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
       setActiveDiff(null);
-
-      const pluginState = DiffPluginKey.getState(editor.state);
-      const remaining = pluginState?.issues.size ?? 0;
-      setIssueCount(remaining);
-      editor.setEditable(remaining === 0);
       toast.info("Dismissed suggestion", {
         description: `Kept "${issue.original}"`,
       });
@@ -356,8 +348,6 @@ export default function Editor({
 
     document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
     setActiveDiff(null);
-    setIssueCount(0);
-    editor.setEditable(true);
     toast.success(`Accepted all ${count} suggestions`);
   }, [editor]);
 
@@ -376,8 +366,6 @@ export default function Editor({
 
     document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
     setActiveDiff(null);
-    setIssueCount(0);
-    editor.setEditable(true);
     toast.info(`Rejected all ${count} suggestions`);
   }, [editor]);
 
