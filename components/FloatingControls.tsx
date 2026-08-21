@@ -61,10 +61,10 @@ export default function FloatingControls({
   const getThemeIcon = () => {
     switch (theme) {
       case "dark":
-        return <Moon size={15} />;
+        return <Moon size={17} />;
       case "light":
       default:
-        return <Sun size={15} />;
+        return <Sun size={17} />;
     }
   };
 
@@ -80,7 +80,7 @@ export default function FloatingControls({
               title="Proofread document"
               aria-label="Proofread document"
             >
-              <SpellCheck size={15} /> Proofread
+              <SpellCheck size={17} /> Proofread
             </button>
 
             <div
@@ -95,7 +95,7 @@ export default function FloatingControls({
                 title="Reject all suggestions"
                 aria-label="Reject all suggestions"
               >
-                <X size={15} />
+                <X size={17} />
               </button>
               <button
                 type="button"
@@ -104,7 +104,7 @@ export default function FloatingControls({
                 title="Accept all suggestions"
                 aria-label="Accept all suggestions"
               >
-                <Check size={15} />
+                <Check size={17} />
               </button>
             </div>
 
@@ -121,7 +121,7 @@ export default function FloatingControls({
               title="Copy Markdown to clipboard"
               aria-label="Copy Markdown"
             >
-              <Copy size={14} />
+              <Copy size={17} />
             </button>
             <div className={styles.divider} />
           </>
@@ -135,7 +135,7 @@ export default function FloatingControls({
           title="Zoom out (Decrease size)"
           aria-label="Zoom out"
         >
-          <ZoomOut size={15} />
+          <ZoomOut size={17} />
         </button>
 
         <button
@@ -156,7 +156,7 @@ export default function FloatingControls({
           title="Zoom in (Increase size)"
           aria-label="Zoom in"
         >
-          <ZoomIn size={15} />
+          <ZoomIn size={17} />
         </button>
 
         <div className={styles.divider} />

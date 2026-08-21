@@ -54,14 +54,13 @@ function buildDecorations(doc: ProseMirrorNode, issues: Map<string, DiffIssue>):
             )
           );
 
-          // Widget decoration for the inserted/suggested text (green underline)
+          // Widget decoration for the inserted/suggested text (accent, non-interactive)
           decos.push(
             Decoration.widget(
               to,
               () => {
                 const span = document.createElement("span");
                 span.className = `ins diff-ins diff-type-${issue.type}`;
-                span.setAttribute("data-diff-id", issue.id);
                 span.setAttribute("data-diff-type", issue.type);
                 span.textContent = issue.suggestion;
                 return span;

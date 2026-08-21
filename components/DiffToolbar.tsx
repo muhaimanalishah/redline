@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
+import { Check, X } from "lucide-react";
 import { DiffIssue } from "./types";
 import styles from "./DiffToolbar.module.css";
 
@@ -52,9 +53,7 @@ export default function DiffToolbar({
         onClick={() => onReject(issue)}
         aria-label="Reject suggestion"
       >
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-          <path d="M18 6 6 18M6 6l12 12" />
-        </svg>
+        <X size={14} strokeWidth={2.25} />
       </button>
       <button
         className={`${styles.button} ${styles.accept}`}
@@ -62,9 +61,7 @@ export default function DiffToolbar({
         onClick={() => onAccept(issue)}
         aria-label="Accept suggestion"
       >
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-          <path d="M20 6 9 17l-5-5" />
-        </svg>
+        <Check size={14} strokeWidth={2.25} />
       </button>
       <div className={styles.arrow} />
     </div>

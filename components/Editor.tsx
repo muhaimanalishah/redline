@@ -110,6 +110,7 @@ export default function Editor({
 
   const editor = useEditor({
     immediatelyRender: true,
+    editable: issues.length === 0,
     extensions: [
       StarterKit.configure({
         heading: {
@@ -193,6 +194,7 @@ export default function Editor({
         })
       );
       setIssueCount(issues.length);
+      editor.setEditable(issues.length === 0);
     }
   }, [editor, issues]);
 
@@ -200,7 +202,7 @@ export default function Editor({
   const handleContainerClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       const target = e.target as HTMLElement;
-      const diffEl = target.closest("[data-diff-id]") as HTMLElement | null;
+      const diffEl = target.closest(".diff-del[data-diff-id]") as HTMLElement | null;
 
       if (diffEl && editor && containerRef.current) {
         const diffId = diffEl.getAttribute("data-diff-id");
@@ -225,7 +227,7 @@ export default function Editor({
       }
 
       // Close toolbar if clicking outside diff marks
-      if (activeDiff && !target.closest("[data-diff-id]")) {
+      if (activeDiff && !target.closest(".diff-del[data-diff-id]")) {
         document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
         setActiveDiff(null);
       }
@@ -280,8 +282,9 @@ export default function Editor({
       setActiveDiff(null);
 
       const pluginState = DiffPluginKey.getState(editor.state);
-      const newCount = Math.max(0, (pluginState?.issues.size ?? 1) - 1);
-      setIssueCount(newCount);
+      const remaining = pluginState?.issues.size ?? 0;
+      setIssueCount(remaining);
+      editor.setEditable(remaining === 0);
       toast.success("Applied suggestion", {
         description: `"${issue.original}" → "${issue.suggestion}"`,
       });
@@ -305,8 +308,9 @@ export default function Editor({
       setActiveDiff(null);
 
       const pluginState = DiffPluginKey.getState(editor.state);
-      const newCount = Math.max(0, (pluginState?.issues.size ?? 1) - 1);
-      setIssueCount(newCount);
+      const remaining = pluginState?.issues.size ?? 0;
+      setIssueCount(remaining);
+      editor.setEditable(remaining === 0);
       toast.info("Dismissed suggestion", {
         description: `Kept "${issue.original}"`,
       });
@@ -353,6 +357,7 @@ export default function Editor({
     document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
     setActiveDiff(null);
     setIssueCount(0);
+    editor.setEditable(true);
     toast.success(`Accepted all ${count} suggestions`);
   }, [editor]);
 
@@ -372,6 +377,7 @@ export default function Editor({
     document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
     setActiveDiff(null);
     setIssueCount(0);
+    editor.setEditable(true);
     toast.info(`Rejected all ${count} suggestions`);
   }, [editor]);
 
