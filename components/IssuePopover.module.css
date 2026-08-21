@@ -1,0 +1,159 @@
+.popCard {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 18px 20px 16px;
+  box-shadow: 0 12px 28px -14px rgba(38, 36, 31, 0.22);
+  z-index: 9999;
+  font-family: var(--serif);
+  color: var(--ink);
+  position: fixed;
+  animation: popoverFadeIn 0.12s ease-out;
+}
+
+@keyframes popoverFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.pin {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--card);
+  transform: rotate(45deg);
+}
+
+.pinTop {
+  top: -6px;
+  border-top: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
+}
+
+.pinBottom {
+  bottom: -6px;
+  border-bottom: 1px solid var(--rule);
+  border-right: 1px solid var(--rule);
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 12px;
+}
+
+.typeTab {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 2px;
+}
+
+.typeTab.clarity,
+.clarity {
+  color: var(--clarity);
+  background: rgba(61, 90, 115, 0.1);
+}
+
+.typeTab.grammar,
+.grammar {
+  color: var(--grammar);
+  background: rgba(181, 80, 46, 0.1);
+}
+
+.typeTab.spelling,
+.spelling {
+  color: var(--spelling);
+  background: rgba(138, 59, 59, 0.1);
+}
+
+.issueLabel {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-soft);
+}
+
+.explain {
+  font-family: var(--serif);
+  font-size: 14.5px;
+  line-height: 1.55;
+  margin-bottom: 14px;
+  color: var(--ink);
+}
+
+.diff {
+  margin-bottom: 16px;
+  border-left: 2px solid var(--rule);
+  padding-left: 12px;
+}
+
+.diffRow {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  display: flex;
+  gap: 8px;
+}
+
+.diffSym {
+  flex-shrink: 0;
+  width: 10px;
+  opacity: 0.5;
+  color: var(--ink);
+}
+
+.diffOld {
+  color: #a6604f;
+  text-decoration: line-through;
+  text-decoration-color: rgba(166, 96, 79, 0.5);
+}
+
+.diffNew {
+  color: var(--accept);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.03em;
+  border-radius: 3px;
+  padding: 7px 0;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s, background-color 0.15s;
+}
+
+.btnAccept {
+  flex: 1.3;
+  background: var(--accept);
+  color: #f3f7f3;
+}
+
+.btnAccept:hover {
+  opacity: 0.88;
+}
+
+.btnReject {
+  flex: 1;
+  background: transparent;
+  color: var(--reject-ink);
+  border: 1px solid var(--rule);
+}
+
+.btnReject:hover {
+  background: rgba(38, 36, 31, 0.04);
+}

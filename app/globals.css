@@ -1,26 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #f7f4ee;
+  --card: #fcfbf8;
+  --ink: #26241f;
+  --ink-soft: #8a8578;
+  --rule: #e3ddd0;
+
+  --grammar: #b5502e;
+  --clarity: #3d5a73;
+  --spelling: #8a3b3b;
+
+  --accept: #3f6b4a;
+  --reject-ink: #8a8578;
+
+  --mono: "IBM Plex Mono", "SF Mono", ui-monospace, Consolas, monospace;
+  --serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+
+  --background: var(--paper);
+  --foreground: var(--ink);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  min-height: 100vh;
 }
