@@ -11,4 +11,6 @@ export interface DiffIssue {
 export interface ActiveDiffState {
   issue: DiffIssue;
   anchorRect: DOMRect;
+  containerRect: DOMRect;
 }
+

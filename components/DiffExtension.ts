@@ -1,6 +1,7 @@
 import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { DiffIssue } from "./types";
 
 export interface DiffPluginState {
@@ -26,16 +27,16 @@ export interface ClearAllDiffsMeta {
 
 export type DiffMeta = SetDiffIssuesMeta | RemoveDiffMeta | ClearAllDiffsMeta;
 
-function buildDecorations(doc: any, issues: Map<string, DiffIssue>): DecorationSet {
+function buildDecorations(doc: ProseMirrorNode, issues: Map<string, DiffIssue>): DecorationSet {
   const decos: Decoration[] = [];
 
   issues.forEach((issue) => {
     // Scan doc text to locate the original text
-    doc.descendants((node: any, pos: number) => {
+    doc.descendants((node: ProseMirrorNode, pos: number) => {
       if (node.isText && node.text) {
         const text = node.text;
-        let index = text.indexOf(issue.original);
-        while (index !== -1) {
+        const index = text.indexOf(issue.original);
+        if (index !== -1) {
           const from = pos + index;
           const to = from + issue.original.length;
 
@@ -69,7 +70,7 @@ function buildDecorations(doc: any, issues: Map<string, DiffIssue>): DecorationS
             )
           );
 
-          break; // Match first occurrence per node
+          return false; // Match first occurrence per node
         }
       }
     });
@@ -86,14 +87,14 @@ export const DiffExtension = Extension.create({
       new Plugin<DiffPluginState>({
         key: DiffPluginKey,
         state: {
-          init(_, { doc }) {
+          init() {
             return {
               decorations: DecorationSet.empty,
               issues: new Map<string, DiffIssue>(),
             };
           },
-          apply(tr, prev, oldState, newState) {
-            let issues = new Map<string, DiffIssue>(prev.issues);
+          apply(tr, prev, _oldState, newState) {
+            const issues = new Map<string, DiffIssue>(prev.issues);
             const meta = tr.getMeta(DiffPluginKey) as DiffMeta | undefined;
 
             if (meta) {
@@ -130,3 +131,4 @@ export const DiffExtension = Extension.create({
     ];
   },
 });
+
