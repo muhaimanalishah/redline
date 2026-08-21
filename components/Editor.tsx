@@ -37,6 +37,7 @@ export default function Editor({
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeDiff, setActiveDiff] = useState<ActiveDiffState | null>(null);
   const [issueCount, setIssueCount] = useState<number>(() => issues.length);
+  const [hasSelection, setHasSelection] = useState(false);
   const [zoom, setZoom] = useState<number>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -186,6 +187,9 @@ export default function Editor({
       setIssueCount(remainingCount);
       ed.setEditable(remainingCount === 0);
     },
+    onSelectionUpdate: ({ editor: ed }) => {
+      setHasSelection(!ed.state.selection.empty);
+    },
   });
 
   // Sync issues to editor plugin when external issues prop updates
@@ -200,41 +204,74 @@ export default function Editor({
     }
   }, [editor, issues]);
 
-  // Handle clicking inline diff marks
-  const handleContainerClick = useCallback(
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    };
+  }, []);
+
+  const cancelCloseTimeout = useCallback(() => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+  }, []);
+
+  const closeActiveDiff = useCallback(() => {
+    document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
+    setActiveDiff(null);
+  }, []);
+
+  const scheduleClose = useCallback(() => {
+    cancelCloseTimeout();
+    closeTimeoutRef.current = setTimeout(() => {
+      closeActiveDiff();
+    }, 150);
+  }, [cancelCloseTimeout, closeActiveDiff]);
+
+  // Show the toolbar when hovering a suggested/inserted word
+  const handleContainerMouseOver = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       const target = e.target as HTMLElement;
-      const diffEl = target.closest(".diff-del[data-diff-id]") as HTMLElement | null;
+      const diffEl = target.closest(".diff-ins[data-diff-id]") as HTMLElement | null;
+      if (!diffEl || !editor || !containerRef.current) return;
 
-      if (diffEl && editor && containerRef.current) {
-        const diffId = diffEl.getAttribute("data-diff-id");
-        if (!diffId) return;
+      const diffId = diffEl.getAttribute("data-diff-id");
+      if (!diffId) return;
 
-        const pluginState = DiffPluginKey.getState(editor.state);
-        const issue = pluginState?.issues.get(diffId);
+      const pluginState = DiffPluginKey.getState(editor.state);
+      const issue = pluginState?.issues.get(diffId);
+      if (!issue) return;
 
-        if (issue) {
-          document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
-          diffEl.classList.add("diff-active");
+      cancelCloseTimeout();
+      document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
+      diffEl.classList.add("diff-active");
 
-          const rect = diffEl.getBoundingClientRect();
-          const contRect = containerRef.current.getBoundingClientRect();
-          setActiveDiff({
-            issue,
-            anchorRect: rect,
-            containerRect: contRect,
-          });
-          return;
-        }
-      }
-
-      // Close toolbar if clicking outside diff marks
-      if (activeDiff && !target.closest(".diff-del[data-diff-id]")) {
-        document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
-        setActiveDiff(null);
-      }
+      const rect = diffEl.getBoundingClientRect();
+      const contRect = containerRef.current.getBoundingClientRect();
+      setActiveDiff({
+        issue,
+        anchorRect: rect,
+        containerRect: contRect,
+      });
     },
-    [editor, activeDiff]
+    [editor, cancelCloseTimeout]
+  );
+
+  // Hide the toolbar when leaving the suggested word (with a short grace period)
+  const handleContainerMouseOut = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const target = e.target as HTMLElement;
+      const related = e.relatedTarget as HTMLElement | null;
+      const diffEl = target.closest(".diff-ins[data-diff-id]");
+      if (!diffEl) return;
+      if (related && diffEl.contains(related)) return;
+
+      scheduleClose();
+    },
+    [scheduleClose]
   );
 
   // Accept a single suggestion
@@ -378,7 +415,10 @@ export default function Editor({
 
   const handleProofreadClick = useCallback(() => {
     if (!editor || !onProofread) return;
-    onProofread(editor.getText());
+    const { from, to, empty } = editor.state.selection;
+    if (empty) return;
+    const selectedText = editor.state.doc.textBetween(from, to, " ");
+    onProofread(selectedText);
   }, [editor, onProofread]);
 
   if (!editor) return null;
@@ -390,7 +430,8 @@ export default function Editor({
     <div
       ref={containerRef}
       className={styles.container}
-      onClick={handleContainerClick}
+      onMouseOver={handleContainerMouseOver}
+      onMouseOut={handleContainerMouseOut}
       style={{
         ["--editor-zoom" as string]: zoomScale,
       }}
@@ -405,7 +446,7 @@ export default function Editor({
         <EditorContent editor={editor} className={styles.editorContent} />
       </div>
 
-      {/* Floating Notion-style Micro-Toolbar for clicked redline issues */}
+      {/* Floating Notion-style Micro-Toolbar for hovered redline issues */}
       {activeDiff && (
         <DiffToolbar
           issue={activeDiff.issue}
@@ -413,10 +454,9 @@ export default function Editor({
           containerRect={activeDiff.containerRect}
           onAccept={handleAccept}
           onReject={handleReject}
-          onClose={() => {
-            document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
-            setActiveDiff(null);
-          }}
+          onClose={closeActiveDiff}
+          onMouseEnter={cancelCloseTimeout}
+          onMouseLeave={scheduleClose}
         />
       )}
 
@@ -430,6 +470,7 @@ export default function Editor({
         onThemeChange={handleThemeChange}
         onCopyMarkdown={handleCopyMarkdown}
         onProofread={onProofread ? handleProofreadClick : undefined}
+        proofreadDisabled={!hasSelection}
         issueCount={issueCount}
         onAcceptAll={handleAcceptAll}
         onRejectAll={handleRejectAll}

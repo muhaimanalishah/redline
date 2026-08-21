@@ -12,6 +12,8 @@ interface DiffToolbarProps {
   onAccept: (issue: DiffIssue) => void;
   onReject: (issue: DiffIssue) => void;
   onClose: () => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 export default function DiffToolbar({
@@ -21,6 +23,8 @@ export default function DiffToolbar({
   onAccept,
   onReject,
   onClose,
+  onMouseEnter,
+  onMouseLeave,
 }: DiffToolbarProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
 
@@ -44,6 +48,8 @@ export default function DiffToolbar({
       className={styles.toolbar}
       style={{ left: `${left}px`, top: `${top}px` }}
       onClick={(e) => e.stopPropagation()}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <span className={styles.label}>{issue.type}</span>
       <div className={styles.divider} />

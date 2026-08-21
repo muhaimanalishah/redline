@@ -40,27 +40,27 @@ function buildDecorations(doc: ProseMirrorNode, issues: Map<string, DiffIssue>):
           const from = pos + index;
           const to = from + issue.original.length;
 
-          // Inline decoration for the deleted/original text (red strikethrough)
+          // Inline decoration for the deleted/original text (non-interactive)
           decos.push(
             Decoration.inline(
               from,
               to,
               {
                 class: `del diff-del diff-type-${issue.type}`,
-                "data-diff-id": issue.id,
                 "data-diff-type": issue.type,
               },
               { id: issue.id, issue }
             )
           );
 
-          // Widget decoration for the inserted/suggested text (accent, non-interactive)
+          // Widget decoration for the inserted/suggested text (clickable)
           decos.push(
             Decoration.widget(
               to,
               () => {
                 const span = document.createElement("span");
                 span.className = `ins diff-ins diff-type-${issue.type}`;
+                span.setAttribute("data-diff-id", issue.id);
                 span.setAttribute("data-diff-type", issue.type);
                 span.textContent = issue.suggestion;
                 return span;

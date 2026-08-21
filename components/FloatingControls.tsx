@@ -16,6 +16,7 @@ interface FloatingControlsProps {
   onThemeChange: (theme: ThemeMode) => void;
   onCopyMarkdown?: () => void;
   onProofread?: () => void;
+  proofreadDisabled?: boolean;
   issueCount?: number;
   onAcceptAll?: () => void;
   onRejectAll?: () => void;
@@ -30,6 +31,7 @@ export default function FloatingControls({
   onThemeChange,
   onCopyMarkdown,
   onProofread,
+  proofreadDisabled = false,
   issueCount = 0,
   onAcceptAll,
   onRejectAll,
@@ -77,8 +79,9 @@ export default function FloatingControls({
               type="button"
               className={`${styles.btn} ${styles.btnProofread}`}
               onClick={onProofread}
-              title="Proofread document"
-              aria-label="Proofread document"
+              disabled={proofreadDisabled}
+              title={proofreadDisabled ? "Select text to proofread" : "Proofread selected text"}
+              aria-label="Proofread selected text"
             >
               <SpellCheck size={17} /> Proofread
             </button>

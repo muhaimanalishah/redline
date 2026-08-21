@@ -289,33 +289,26 @@
 /* ---- Inline Diff Marks ---- */
 :global(.del.diff-del) {
   background: transparent;
-  color: var(--ink-faint);
+  color: var(--ink-soft);
   text-decoration: line-through;
-  text-decoration-thickness: 1.5px;
+  text-decoration-thickness: 1px;
   text-decoration-color: var(--ink-faint);
   border-radius: 3px;
-  padding: 1px 2px;
-  cursor: pointer;
-  transition: all 0.15s ease;
+  padding: 0 1px;
+  cursor: default;
   display: inline;
-}
-
-:global(.del.diff-del:hover) {
-  color: var(--ink-soft);
-  text-decoration-color: var(--ink-soft);
 }
 
 :global(.ins.diff-ins) {
   background: transparent;
   color: var(--accent-blue);
   text-decoration: underline;
-  text-decoration-thickness: 1.5px;
-  text-decoration-color: var(--accent-blue);
-  text-decoration-style: dashed;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, var(--accent-blue) 55%, transparent);
   border-radius: 3px;
-  padding: 1px 2px;
+  padding: 0 1px;
   margin-left: 3px;
-  cursor: default;
+  cursor: pointer;
   display: inline;
 }
 
