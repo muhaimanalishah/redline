@@ -73,7 +73,6 @@
 .btn:hover:not(:disabled) {
   background: var(--paper-subtle);
   color: var(--ink);
-  transform: translateY(-1px);
 }
 
 .btn:active:not(:disabled) {

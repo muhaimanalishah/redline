@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import styles from "./FloatingControls.module.css";
 
 
-export type ThemeMode = "light" | "dark" | "sepia";
+export type ThemeMode = "light" | "dark";
 
 interface FloatingControlsProps {
   zoom: number;
@@ -15,8 +15,6 @@ interface FloatingControlsProps {
   onZoomReset: () => void;
   theme: ThemeMode;
   onThemeChange: (theme: ThemeMode) => void;
-  wordCount?: number;
-  charCount?: number;
   onCopyMarkdown?: () => void;
 }
 
@@ -27,93 +25,44 @@ export default function FloatingControls({
   onZoomReset,
   theme,
   onThemeChange,
-  wordCount = 0,
-  charCount = 0,
   onCopyMarkdown,
 }: FloatingControlsProps) {
-  const readingTime = Math.max(1, Math.ceil(wordCount / 200));
-
   const handleNextTheme = () => {
-    let nextTheme: ThemeMode = "light";
-    let themeLabel = "Warm Editorial Light";
-
-    if (theme === "light") {
-      nextTheme = "dark";
-      themeLabel = "Warm Charcoal Dark";
-    } else if (theme === "dark") {
-      nextTheme = "sepia";
-      themeLabel = "Warm Amber Sepia";
-    } else {
-      nextTheme = "light";
-      themeLabel = "Warm Editorial Light";
-    }
-
+    const nextTheme: ThemeMode = theme === "light" ? "dark" : "light";
     onThemeChange(nextTheme);
-    toast.success(`Switched to ${themeLabel}`, {
-      description: "Eye-friendly low glare palette active",
-    });
   };
 
   const handleCopy = () => {
     if (onCopyMarkdown) {
       onCopyMarkdown();
-      toast.success("Markdown copied to clipboard", {
-        description: `${wordCount} words (${charCount} characters)`,
-      });
+      toast.success("Copied to clipboard");
     }
   };
 
   const handleZoomInClick = () => {
     onZoomIn();
-    const nextZoom = Math.min(zoom + 10, 160);
-    toast.info(`Zoom: ${nextZoom}%`);
   };
 
   const handleZoomOutClick = () => {
     onZoomOut();
-    const nextZoom = Math.max(zoom - 10, 80);
-    toast.info(`Zoom: ${nextZoom}%`);
   };
 
   const handleZoomResetClick = () => {
     onZoomReset();
-    toast.info("Zoom reset to 100%");
   };
 
   const getThemeIcon = () => {
     switch (theme) {
       case "dark":
         return <Moon size={15} />;
-      case "sepia":
-        return <Sparkles size={15} />;
       case "light":
       default:
         return <Sun size={15} />;
     }
   };
 
-  const getThemeTitle = () => {
-    switch (theme) {
-      case "dark":
-        return "Theme: Charcoal Dark (Click for Sepia)";
-      case "sepia":
-        return "Theme: Amber Sepia (Click for Light)";
-      case "light":
-      default:
-        return "Theme: Warm Light (Click for Dark)";
-    }
-  };
-
   return (
     <aside aria-label="Editor controls" className={styles.dockContainer}>
-      {wordCount > 0 && (
-        <div className={styles.statsDock}>
-          <span>{wordCount} words</span>
-          <span className={styles.statsDot} />
-          <span>{readingTime} min read</span>
-        </div>
-      )}
-
       <div className={styles.floatingDock}>
         {onCopyMarkdown && (
           <>
@@ -168,7 +117,6 @@ export default function FloatingControls({
           type="button"
           className={styles.btn}
           onClick={handleNextTheme}
-          title={getThemeTitle()}
           aria-label="Toggle eye-friendly theme"
         >
           {getThemeIcon()}

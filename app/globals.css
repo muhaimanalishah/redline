@@ -99,52 +99,6 @@
   --foreground: var(--ink);
 }
 
-[data-theme="sepia"] {
-  /* Warm Amber Sand (Comfortable Reading Theme) */
-  --paper: #F3EBDD;
-  --paper-subtle: #EBE0CE;
-  --paper-edge: #E3D6C1;
-  --paper-card: #FAF4E9;
-  --ink: #3B3127;
-  --ink-soft: #736454;
-  --ink-faint: #A49481;
-  --ink-subtle: #C2B3A1;
-
-  --rule: #DBCFBD;
-  --rule-subtle: #E6DBCB;
-  --accent: #AC5E22;
-  --accent-soft: rgba(172, 94, 34, 0.12);
-  --accent-hover: #964F19;
-
-  --del-bg: rgba(198, 72, 53, 0.15);
-  --del-text: #9E321E;
-  --ins-bg: rgba(43, 118, 77, 0.15);
-  --ins-text: #1E663D;
-
-  --grammar: #AC5E22;
-  --clarity: #39678F;
-  --spelling: #9E321E;
-
-  --code-bg: #EAE0CE;
-  --code-border: #DBCFBD;
-  --code-text: #3D3227;
-  --table-head-bg: #E8DDCA;
-  --table-border: #DBCFBD;
-  --blockquote-bg: rgba(172, 94, 34, 0.05);
-  --blockquote-border: #AC5E22;
-  --selection-bg: rgba(172, 94, 34, 0.2);
-
-  --shadow-sm: 0 1px 3px rgba(59, 49, 39, 0.08);
-  --shadow-md: 0 4px 14px -3px rgba(59, 49, 39, 0.12);
-  --shadow-lg: 0 10px 30px -8px rgba(59, 49, 39, 0.18);
-
-  --float-bg: rgba(243, 235, 221, 0.92);
-  --float-border: rgba(219, 207, 189, 0.95);
-
-  --background: var(--paper-edge);
-  --foreground: var(--ink);
-}
-
 * {
   box-sizing: border-box;
 }

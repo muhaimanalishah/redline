@@ -54,7 +54,7 @@ export default function Editor({
     if (typeof window !== "undefined") {
       try {
         const savedTheme = localStorage.getItem("redline-theme") as ThemeMode | null;
-        if (savedTheme && ["light", "dark", "sepia"].includes(savedTheme)) {
+        if (savedTheme && ["light", "dark"].includes(savedTheme)) {
           return savedTheme;
         }
         if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
@@ -64,9 +64,6 @@ export default function Editor({
     }
     return "light";
   });
-
-  const [wordCount, setWordCount] = useState<number>(0);
-  const [charCount, setCharCount] = useState<number>(0);
 
   // Sync data-theme attribute on document root
   useEffect(() => {
@@ -107,14 +104,6 @@ export default function Editor({
     try {
       localStorage.setItem("redline-zoom", "100");
     } catch {}
-  }, []);
-
-  const updateStats = useCallback((text: string) => {
-    const trimmed = text.trim();
-    const words = trimmed ? trimmed.split(/\s+/).filter(Boolean).length : 0;
-    const chars = text.length;
-    setWordCount(words);
-    setCharCount(chars);
   }, []);
 
   const editor = useEditor({
@@ -182,7 +171,6 @@ export default function Editor({
       const storage = ed.storage as unknown as Record<string, MarkdownStorage>;
       const markdown = storage.markdown?.getMarkdown?.() ?? "";
       onChange?.(markdown);
-      updateStats(ed.getText());
 
       const pluginState = DiffPluginKey.getState(ed.state);
       const remainingCount = pluginState?.issues.size ?? 0;
@@ -192,14 +180,6 @@ export default function Editor({
       }
     },
   });
-
-  // Compute initial word/char counts once the editor has mounted
-  useEffect(() => {
-    if (editor) {
-      updateStats(editor.getText());
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editor]);
 
   // Sync issues to editor plugin when external issues prop updates
   useEffect(() => {
@@ -472,8 +452,6 @@ export default function Editor({
         onZoomReset={handleZoomReset}
         theme={theme}
         onThemeChange={handleThemeChange}
-        wordCount={wordCount}
-        charCount={charCount}
         onCopyMarkdown={handleCopyMarkdown}
       />
     </div>
