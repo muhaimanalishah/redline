@@ -1,76 +1,32 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown, type MarkdownStorage } from "tiptap-markdown";
-import { EditorState } from "@tiptap/pm/state";
-import { RedlineExtension, RedlinePluginKey } from "./RedlineExtension";
-import IssuePopover from "./IssuePopover";
-import { checkParagraph } from "@/lib/checkParagraph";
-import { Issue } from "@/lib/types";
+import { DiffExtension, DiffPluginKey } from "./DiffExtension";
+import DiffToolbar from "./DiffToolbar";
+import { DiffIssue, ActiveDiffState } from "./types";
 import styles from "./Editor.module.css";
 
-interface EditorProps {
+export interface EditorProps {
+  initialContent?: string;
+  issues?: DiffIssue[];
+  placeholder?: string;
   onChange?: (markdown: string) => void;
+  onIssuesChange?: (issues: DiffIssue[]) => void;
 }
 
-interface ActivePopoverState {
-  issue: Issue;
-  anchorRect: DOMRect;
-}
-
-interface ParagraphInfo {
-  pos: number;
-  text: string;
-  isDirty: boolean;
-}
-
-function getActiveParagraph(state: EditorState): { pos: number; text: string } | null {
-  const { $from } = state.selection;
-  for (let d = $from.depth; d > 0; d--) {
-    const node = $from.node(d);
-    if (node.type.name === "paragraph" || node.isTextblock) {
-      return {
-        pos: $from.before(d),
-        text: node.textContent,
-      };
-    }
-  }
-  return null;
-}
-
-export default function Editor({ onChange }: EditorProps) {
-  const [activePopover, setActivePopover] = useState<ActivePopoverState | null>(null);
-
-  const activeParagraphRef = useRef<ParagraphInfo | null>(null);
-  const pauseTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Trigger check for a specific paragraph
-  const performParagraphCheck = useCallback(
-    async (paragraphPos: number, text: string, currentEditor: ReturnType<typeof useEditor>) => {
-      if (!currentEditor || currentEditor.isDestroyed || !text || text.trim().length === 0) {
-        return;
-      }
-
-      try {
-        const issues = await checkParagraph(text);
-        if (!currentEditor || currentEditor.isDestroyed) return;
-
-        currentEditor.view.dispatch(
-          currentEditor.state.tr.setMeta(RedlinePluginKey, {
-            type: "SET_PARAGRAPH_ISSUES",
-            paragraphPos,
-            paragraphText: text,
-            issues,
-          })
-        );
-      } catch (err) {
-        console.error("Error during checkParagraph:", err);
-      }
-    },
-    []
-  );
+export default function Editor({
+  initialContent = "",
+  issues = [],
+  placeholder = "Start writing...",
+  onChange,
+  onIssuesChange,
+}: EditorProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [activeDiff, setActiveDiff] = useState<ActiveDiffState | null>(null);
+  const [issueCount, setIssueCount] = useState<number>(issues.length);
 
   const editor = useEditor({
     immediatelyRender: true,
@@ -81,82 +37,69 @@ export default function Editor({ onChange }: EditorProps) {
         transformPastedText: true,
         transformCopiedText: true,
       }),
-      RedlineExtension,
+      DiffExtension,
     ],
-    content: "Start writing here.",
+    content: initialContent,
+    editorProps: {
+      attributes: {
+        "data-placeholder": placeholder,
+      },
+    },
+    onCreate: ({ editor: ed }) => {
+      if (issues.length > 0) {
+        ed.view.dispatch(
+          ed.state.tr.setMeta(DiffPluginKey, {
+            type: "SET_DIFF_ISSUES",
+            issues,
+          })
+        );
+      }
+    },
     onUpdate: ({ editor: ed }) => {
-      // 1. Expose current content as markdown
       const storage = ed.storage as unknown as Record<string, MarkdownStorage>;
       onChange?.(storage.markdown?.getMarkdown?.() ?? "");
 
-      // 2. Paragraph-level pause detection (1.2s timer)
-      const current = getActiveParagraph(ed.state);
-      if (current) {
-        activeParagraphRef.current = {
-          pos: current.pos,
-          text: current.text,
-          isDirty: true,
-        };
-
-        if (pauseTimerRef.current) {
-          clearTimeout(pauseTimerRef.current);
-        }
-
-        pauseTimerRef.current = setTimeout(() => {
-          if (activeParagraphRef.current) {
-            activeParagraphRef.current.isDirty = false;
-          }
-          performParagraphCheck(current.pos, current.text, ed);
-        }, 1200);
-      }
-    },
-    onSelectionUpdate: ({ editor: ed }) => {
-      const current = getActiveParagraph(ed.state);
-      const prev = activeParagraphRef.current;
-
-      if (current && prev && prev.pos !== current.pos) {
-        // Cursor moved to a different paragraph
-        if (prev.isDirty) {
-          if (pauseTimerRef.current) {
-            clearTimeout(pauseTimerRef.current);
-            pauseTimerRef.current = null;
-          }
-          // Immediately check the paragraph that was just left
-          performParagraphCheck(prev.pos, prev.text, ed);
-          prev.isDirty = false;
-        }
-
-        activeParagraphRef.current = {
-          pos: current.pos,
-          text: current.text,
-          isDirty: false,
-        };
-      } else if (current && !prev) {
-        activeParagraphRef.current = {
-          pos: current.pos,
-          text: current.text,
-          isDirty: false,
-        };
+      const pluginState = DiffPluginKey.getState(ed.state);
+      const remainingCount = pluginState?.issues.size ?? 0;
+      setIssueCount(remainingCount);
+      if (onIssuesChange && pluginState) {
+        onIssuesChange(Array.from(pluginState.issues.values()));
       }
     },
   });
 
-  // Handle clicking on issue underlines in the editor
+  // Sync issues when external issues prop updates
+  useEffect(() => {
+    if (editor && issues) {
+      editor.view.dispatch(
+        editor.state.tr.setMeta(DiffPluginKey, {
+          type: "SET_DIFF_ISSUES",
+          issues,
+        })
+      );
+      setIssueCount(issues.length);
+    }
+  }, [editor, issues]);
+
+  // Handle clicking inline diff marks
   const handleContainerClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       const target = e.target as HTMLElement;
-      const issueEl = target.closest("[data-issue-id]") as HTMLElement | null;
+      const diffEl = target.closest("[data-diff-id]") as HTMLElement | null;
 
-      if (issueEl && editor) {
-        const issueId = issueEl.getAttribute("data-issue-id");
-        if (!issueId) return;
+      if (diffEl && editor) {
+        const diffId = diffEl.getAttribute("data-diff-id");
+        if (!diffId) return;
 
-        const pluginState = RedlinePluginKey.getState(editor.state);
-        const issue = pluginState?.issues.get(issueId);
+        const pluginState = DiffPluginKey.getState(editor.state);
+        const issue = pluginState?.issues.get(diffId);
 
         if (issue) {
-          const rect = issueEl.getBoundingClientRect();
-          setActivePopover({
+          document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
+          diffEl.classList.add("diff-active");
+
+          const rect = diffEl.getBoundingClientRect();
+          setActiveDiff({
             issue,
             anchorRect: rect,
           });
@@ -164,94 +107,197 @@ export default function Editor({ onChange }: EditorProps) {
         }
       }
 
-      // If clicked inside editor but not on an issue mark, close popover
-      if (activePopover && !target.closest("[data-issue-id]")) {
-        setActivePopover(null);
+      // Close toolbar if clicking outside diff marks
+      if (activeDiff && !target.closest("[data-diff-id]")) {
+        document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
+        setActiveDiff(null);
       }
     },
-    [editor, activePopover]
+    [editor, activeDiff]
   );
 
-  // Accept issue suggestion
-  const handleAccept = useCallback(() => {
-    if (!editor || !activePopover) return;
+  // Accept a single suggestion
+  const handleAccept = useCallback(
+    (issue: DiffIssue) => {
+      if (!editor) return;
 
-    const { issue } = activePopover;
-    const pluginState = RedlinePluginKey.getState(editor.state);
+      const { doc } = editor.state;
+      let targetFrom = -1;
+      let targetTo = -1;
 
-    // Find the latest mapped decoration range for this issue
-    const deco = pluginState?.decorations.find(
-      undefined,
-      undefined,
-      (spec) => spec.id === issue.id
-    )[0];
+      doc.descendants((node, pos) => {
+        if (targetFrom !== -1) return false;
+        if (node.isText && node.text) {
+          const idx = node.text.indexOf(issue.original);
+          if (idx !== -1) {
+            targetFrom = pos + idx;
+            targetTo = targetFrom + issue.original.length;
+            return false;
+          }
+        }
+      });
 
-    if (deco) {
-      const { from, to } = deco;
-      // Replace text and remove decoration
-      editor
-        .chain()
-        .focus()
-        .insertContentAt({ from, to }, issue.suggestion)
-        .command(({ tr }) => {
-          tr.setMeta(RedlinePluginKey, {
-            type: "REMOVE_ISSUE",
+      if (targetFrom !== -1 && targetTo !== -1) {
+        editor
+          .chain()
+          .focus()
+          .insertContentAt({ from: targetFrom, to: targetTo }, issue.suggestion)
+          .command(({ tr }) => {
+            tr.setMeta(DiffPluginKey, {
+              type: "REMOVE_DIFF",
+              issueId: issue.id,
+            });
+            return true;
+          })
+          .run();
+      } else {
+        editor.view.dispatch(
+          editor.state.tr.setMeta(DiffPluginKey, {
+            type: "REMOVE_DIFF",
             issueId: issue.id,
-          });
-          return true;
-        })
-        .run();
-    } else {
-      // Fallback: just remove issue mark if position is lost
+          })
+        );
+      }
+
+      document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
+      setActiveDiff(null);
+
+      const pluginState = DiffPluginKey.getState(editor.state);
+      const newCount = Math.max(0, (pluginState?.issues.size ?? 1) - 1);
+      setIssueCount(newCount);
+    },
+    [editor]
+  );
+
+  // Reject a single suggestion
+  const handleReject = useCallback(
+    (issue: DiffIssue) => {
+      if (!editor) return;
+
       editor.view.dispatch(
-        editor.state.tr.setMeta(RedlinePluginKey, {
-          type: "REMOVE_ISSUE",
+        editor.state.tr.setMeta(DiffPluginKey, {
+          type: "REMOVE_DIFF",
           issueId: issue.id,
         })
       );
-    }
 
-    setActivePopover(null);
-  }, [editor, activePopover]);
+      document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
+      setActiveDiff(null);
 
-  // Reject issue suggestion
-  const handleReject = useCallback(() => {
-    if (!editor || !activePopover) return;
+      const pluginState = DiffPluginKey.getState(editor.state);
+      const newCount = Math.max(0, (pluginState?.issues.size ?? 1) - 1);
+      setIssueCount(newCount);
+    },
+    [editor]
+  );
 
-    const { issue } = activePopover;
+  // Accept all suggestions
+  const handleAcceptAll = useCallback(() => {
+    if (!editor) return;
+
+    const pluginState = DiffPluginKey.getState(editor.state);
+    if (!pluginState || pluginState.issues.size === 0) return;
+
+    const currentIssues = Array.from(pluginState.issues.values());
+    const { doc } = editor.state;
+
+    const replacements: { from: number; to: number; text: string }[] = [];
+
+    currentIssues.forEach((issue) => {
+      doc.descendants((node, pos) => {
+        if (node.isText && node.text) {
+          const idx = node.text.indexOf(issue.original);
+          if (idx !== -1) {
+            const from = pos + idx;
+            const to = from + issue.original.length;
+            replacements.push({ from, to, text: issue.suggestion });
+          }
+        }
+      });
+    });
+
+    replacements.sort((a, b) => b.from - a.from);
+
+    let tr = editor.state.tr;
+    replacements.forEach(({ from, to, text }) => {
+      tr = tr.replaceWith(from, to, editor.schema.text(text));
+    });
+
+    tr = tr.setMeta(DiffPluginKey, { type: "CLEAR_ALL_DIFFS" });
+    editor.view.dispatch(tr);
+
+    document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
+    setActiveDiff(null);
+    setIssueCount(0);
+  }, [editor]);
+
+  // Reject all suggestions
+  const handleRejectAll = useCallback(() => {
+    if (!editor) return;
+
     editor.view.dispatch(
-      editor.state.tr.setMeta(RedlinePluginKey, {
-        type: "REMOVE_ISSUE",
-        issueId: issue.id,
+      editor.state.tr.setMeta(DiffPluginKey, {
+        type: "CLEAR_ALL_DIFFS",
       })
     );
 
-    setActivePopover(null);
-  }, [editor, activePopover]);
-
-  // Clean up timers on unmount
-  useEffect(() => {
-    return () => {
-      if (pauseTimerRef.current) {
-        clearTimeout(pauseTimerRef.current);
-      }
-    };
-  }, []);
+    document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
+    setActiveDiff(null);
+    setIssueCount(0);
+  }, [editor]);
 
   if (!editor) return null;
 
+  const containerRect = containerRef.current?.getBoundingClientRect();
+
   return (
-    <div className={styles.container} onClick={handleContainerClick}>
-      <EditorContent editor={editor} className={styles.content} />
-      {activePopover && (
-        <IssuePopover
-          issue={activePopover.issue}
-          anchorRect={activePopover.anchorRect}
+    <div ref={containerRef} className={styles.container} onClick={handleContainerClick}>
+      <div className={styles.editorWrapper}>
+        {/* Sticky Review Bar - displayed when suggestions exist */}
+        {issueCount > 0 && (
+          <div className={styles.reviewBar}>
+            <div className={styles.count}>
+              <span className={styles.dot} />
+              {issueCount} suggestion{issueCount === 1 ? "" : "s"}
+            </div>
+            <div className={styles.actions}>
+              <button
+                className={styles.pillBtn}
+                onClick={handleRejectAll}
+              >
+                Reject all
+              </button>
+              <button
+                className={`${styles.pillBtn} ${styles.pillBtnPrimary}`}
+                onClick={handleAcceptAll}
+              >
+                Accept all
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Editor Content Area */}
+        <EditorContent editor={editor} className={styles.editorContent} />
+      </div>
+
+      {/* Floating Notion-style Micro-Toolbar */}
+      {activeDiff && containerRect && (
+        <DiffToolbar
+          issue={activeDiff.issue}
+          anchorRect={activeDiff.anchorRect}
+          containerRect={containerRect}
           onAccept={handleAccept}
           onReject={handleReject}
-          onClose={() => setActivePopover(null)}
+          onClose={() => {
+            document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
+            setActiveDiff(null);
+          }}
         />
       )}
     </div>
   );
 }
+
+
+

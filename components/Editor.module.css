@@ -1,151 +1,187 @@
 .container {
-  max-width: 800px;
-  margin: 0 auto;
-  background: var(--card);
-  border-radius: 3px;
-  padding: 48px 48px 56px;
-  font-family: var(--serif);
-  font-size: 18px;
-  line-height: 1.85;
-  color: var(--ink);
-  box-shadow: 0 1px 1px rgba(38, 36, 31, 0.03), 0 8px 24px -12px rgba(38, 36, 31, 0.08);
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 24px 120px;
+  background: var(--paper, #FBF9F4);
+  color: var(--ink, #2B2822);
+}
+
+.editorWrapper {
+  width: 100%;
+  max-width: 680px;
   position: relative;
 }
 
-.container::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 48px;
-  right: 48px;
-  height: 1px;
-  background: var(--rule);
+/* ---- Sticky Review Bar ---- */
+.reviewBar {
+  position: sticky;
+  top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FFFDF8;
+  border: 1px solid var(--rule, #E4DDCC);
+  border-radius: 10px;
+  padding: 10px 14px 10px 16px;
+  margin-bottom: 32px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  box-shadow: 0 2px 8px -4px rgba(43, 40, 34, 0.12);
+  z-index: 30;
 }
 
-.content {
+.count {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft, #6B6459);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent, #B8622E);
+  display: inline-block;
+  transition: background-color 0.2s ease;
+}
+
+.dotSuccess {
+  background: #3B7A57;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.pillBtn {
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--rule, #E4DDCC);
+  background: transparent;
+  color: var(--ink-soft, #6B6459);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.pillBtn:hover:not(:disabled) {
+  border-color: var(--ink-faint, #A39C8E);
+  color: var(--ink, #2B2822);
+}
+
+.pillBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pillBtnPrimary {
+  background: var(--ink, #2B2822);
+  border-color: var(--ink, #2B2822);
+  color: var(--paper, #FBF9F4);
+}
+
+.pillBtnPrimary:hover:not(:disabled) {
+  background: #1c1a15;
+  border-color: #1c1a15;
+}
+
+/* ---- Editor Content ---- */
+.editorContent {
+  font-family: 'Iowan Old Style', 'Palatino Linotype', 'Source Serif 4', Georgia, serif;
+  font-size: 18px;
+  line-height: 1.75;
+  color: var(--ink, #2B2822);
+  min-height: 480px;
   outline: none;
-  min-height: 320px;
 }
 
-.content :global(.tiptap) {
+.editorContent :global(.tiptap) {
   outline: none;
+  min-height: 480px;
 }
 
-.content p {
+.editorContent :global(.tiptap p.is-editor-empty:first-child::before) {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--ink-faint, #A39C8E);
+  pointer-events: none;
+  height: 0;
+}
+
+.editorContent p {
   margin: 0 0 22px 0;
 }
 
-.content p:last-child {
+.editorContent p:last-child {
   margin-bottom: 0;
 }
 
-.content h1 {
-  font-size: 28px;
+.editorContent h1 {
+  font-size: 30px;
   font-weight: 600;
-  margin: 0 0 22px 0;
+  margin: 0 0 24px 0;
   line-height: 1.35;
 }
 
-.content h2 {
-  font-size: 22px;
+.editorContent h2 {
+  font-size: 24px;
   font-weight: 600;
   margin: 0 0 18px 0;
-  line-height: 1.4;
 }
 
-.content h3 {
-  font-size: 18px;
+.editorContent h3 {
+  font-size: 20px;
   font-weight: 600;
   margin: 0 0 14px 0;
 }
 
-.content ul,
-.content ol {
-  padding-left: 1.5em;
-  margin: 0 0 22px 0;
-}
-
-.content code {
-  font-family: var(--mono);
-  background: rgba(38, 36, 31, 0.05);
-  padding: 0.15em 0.35em;
+/* ---- Inline Diff Marks ---- */
+:global(.del.diff-del) {
+  background: var(--del-bg, rgba(214, 84, 68, 0.12));
+  color: var(--del-text, #A8442F);
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: rgba(168, 68, 47, 0.55);
   border-radius: 3px;
-  font-size: 0.88em;
-}
-
-.content pre {
-  background: #26241f;
-  color: #f7f4ee;
-  font-family: var(--mono);
-  padding: 16px 20px;
-  border-radius: 4px;
-  overflow-x: auto;
-  margin: 0 0 22px 0;
-}
-
-.content pre code {
-  background: none;
-  padding: 0;
-  color: inherit;
-}
-
-.content blockquote {
-  border-left: 2px solid var(--rule);
-  margin: 0 0 22px 0;
-  padding-left: 16px;
-  color: var(--ink-soft);
-  font-style: italic;
-}
-
-.content hr {
-  border: none;
-  border-top: 1px solid var(--rule);
-  margin: 32px 0;
-}
-
-/* Underline Flags matching Showcase Spec */
-:global(.flag) {
-  text-decoration: none;
-  padding-bottom: 1px;
-  background-repeat: repeat-x;
-  background-position: 0 100%;
+  padding: 1px 3px;
   cursor: pointer;
+  transition: all 0.15s ease;
   display: inline;
-  transition: background-color 0.12s ease;
 }
 
-:global(.flag.grammar) {
-  color: var(--grammar);
-  background-image: linear-gradient(var(--grammar), var(--grammar));
-  background-size: 100% 1.4px;
+:global(.ins.diff-ins) {
+  background: var(--ins-bg, rgba(59, 122, 87, 0.12));
+  color: var(--ins-text, #2F6B4C);
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: rgba(47, 107, 76, 0.55);
+  border-radius: 3px;
+  padding: 1px 3px;
+  margin-left: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline;
 }
 
-:global(.flag.grammar:hover) {
-  background-color: rgba(181, 80, 46, 0.08);
+:global(.diff-del:hover),
+:global(.diff-ins:hover) {
+  background: rgba(214, 84, 68, 0.18);
+}
+:global(.diff-ins:hover) {
+  background: rgba(59, 122, 87, 0.18);
 }
 
-:global(.flag.clarity) {
-  color: var(--clarity);
-  background-image: linear-gradient(90deg, var(--clarity) 60%, transparent 0);
-  background-size: 5px 1.4px;
+:global(.diff-active) {
+  outline: 2px solid rgba(43, 40, 34, 0.2);
+  outline-offset: 1px;
 }
 
-:global(.flag.clarity:hover) {
-  background-color: rgba(61, 90, 115, 0.08);
-}
 
-:global(.flag.spelling) {
-  color: var(--spelling);
-  background-image: repeating-linear-gradient(
-    -63deg,
-    var(--spelling),
-    var(--spelling) 1.6px,
-    transparent 1.6px,
-    transparent 3.6px
-  );
-  background-size: 100% 3px;
-}
-
-:global(.flag.spelling:hover) {
-  background-color: rgba(138, 59, 59, 0.08);
-}
