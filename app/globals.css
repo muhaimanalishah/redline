@@ -1,6 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&display=swap');
-@import "tailwindcss";
-
 :root {
   /* Warm Editorial Parchment (Eye-friendly Light) */
   --paper: #FAF7F2;
@@ -14,27 +11,30 @@
   
   --rule: #E5DFD3;
   --rule-subtle: #EFE9DE;
-  --accent: #B85D1B;
-  --accent-soft: rgba(184, 93, 27, 0.09);
-  --accent-hover: #9E4D13;
-  
+  --accent: #5B5650;
+  --accent-soft: rgba(91, 86, 80, 0.09);
+  --accent-hover: #423E39;
+
   --del-bg: rgba(205, 75, 60, 0.12);
   --del-text: #A33827;
   --ins-bg: rgba(46, 125, 82, 0.12);
   --ins-text: #236B42;
 
-  --grammar: #B85D1B;
+  --grammar: #5B5650;
   --clarity: #356799;
   --spelling: #A33827;
-  
+
+  --accent-blue: #2563EB;
+  --accent-blue-hover: #1D4ED8;
+
   --code-bg: #F0EAE0;
   --code-border: #E2DBD0;
   --code-text: #3D3833;
   --table-head-bg: #F3EEE4;
   --table-border: #E4DED3;
-  --blockquote-bg: rgba(184, 93, 27, 0.035);
-  --blockquote-border: #C87A42;
-  --selection-bg: rgba(184, 93, 27, 0.18);
+  --blockquote-bg: rgba(91, 86, 80, 0.035);
+  --blockquote-border: #8A8378;
+  --selection-bg: rgba(91, 86, 80, 0.18);
   
   --shadow-sm: 0 1px 3px rgba(44, 40, 36, 0.06), 0 1px 2px rgba(44, 40, 36, 0.04);
   --shadow-md: 0 4px 14px -3px rgba(44, 40, 36, 0.1), 0 2px 6px -2px rgba(44, 40, 36, 0.06);
@@ -43,9 +43,9 @@
   --float-bg: rgba(250, 247, 242, 0.92);
   --float-border: rgba(229, 223, 211, 0.95);
 
-  --mono: "IBM Plex Mono", "SF Mono", ui-monospace, Consolas, monospace;
-  --serif: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
-  --sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --mono: var(--font-ibm-plex-mono), "SF Mono", ui-monospace, Consolas, monospace;
+  --serif: var(--font-source-serif-4), "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --sans: var(--font-plus-jakarta-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   --background: var(--paper-edge);
   --foreground: var(--ink);
@@ -66,27 +66,30 @@
 
   --rule: #2C2E34;
   --rule-subtle: #24252A;
-  --accent: #D97E38;
-  --accent-soft: rgba(217, 126, 56, 0.15);
-  --accent-hover: #E68F4D;
+  --accent: #A6A099;
+  --accent-soft: rgba(166, 160, 153, 0.15);
+  --accent-hover: #B8B2AB;
 
   --del-bg: rgba(220, 80, 70, 0.2);
   --del-text: #EB7C71;
   --ins-bg: rgba(60, 155, 98, 0.2);
   --ins-text: #68D194;
 
-  --grammar: #D97E38;
+  --grammar: #A6A099;
   --clarity: #568EC7;
   --spelling: #EB7C71;
+
+  --accent-blue: #3B82F6;
+  --accent-blue-hover: #60A5FA;
 
   --code-bg: #222429;
   --code-border: #2F3138;
   --code-text: #D8D2C5;
   --table-head-bg: #22242A;
   --table-border: #2C2E35;
-  --blockquote-bg: rgba(217, 126, 56, 0.07);
-  --blockquote-border: #D97E38;
-  --selection-bg: rgba(217, 126, 56, 0.3);
+  --blockquote-bg: rgba(166, 160, 153, 0.07);
+  --blockquote-border: #A6A099;
+  --selection-bg: rgba(166, 160, 153, 0.3);
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25);
   --shadow-md: 0 4px 14px -3px rgba(0, 0, 0, 0.4);
@@ -103,7 +106,22 @@
   box-sizing: border-box;
 }
 
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+  margin: 0;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
 html {
+  height: 100%;
   background-color: var(--paper-edge);
   color: var(--ink);
   transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -111,13 +129,20 @@ html {
 
 body {
   margin: 0;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--serif);
-  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+.main {
+  min-height: 100vh;
+  width: 100%;
 }
 
 ::selection {

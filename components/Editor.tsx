@@ -23,6 +23,7 @@ export interface EditorProps {
   placeholder?: string;
   onChange?: (markdown: string) => void;
   onIssuesChange?: (issues: DiffIssue[]) => void;
+  onProofread?: () => void;
 }
 
 export default function Editor({
@@ -31,6 +32,7 @@ export default function Editor({
   placeholder = "Start writing...",
   onChange,
   onIssuesChange,
+  onProofread,
 }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeDiff, setActiveDiff] = useState<ActiveDiffState | null>(null);
@@ -190,6 +192,7 @@ export default function Editor({
           issues,
         })
       );
+      setIssueCount(issues.length);
     }
   }, [editor, issues]);
 
@@ -399,32 +402,6 @@ export default function Editor({
           maxWidth: `${maxWidthPx}px`,
         }}
       >
-        {/* Sticky Review Bar - displayed when suggestions exist */}
-        {issueCount > 0 && (
-          <div className={styles.reviewBar}>
-            <div className={styles.count}>
-              <span className={styles.dot} />
-              {issueCount} suggestion{issueCount === 1 ? "" : "s"}
-            </div>
-            <div className={styles.actions}>
-              <button
-                type="button"
-                className={styles.pillBtn}
-                onClick={handleRejectAll}
-              >
-                Reject all
-              </button>
-              <button
-                type="button"
-                className={`${styles.pillBtn} ${styles.pillBtnPrimary}`}
-                onClick={handleAcceptAll}
-              >
-                Accept all
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Editor Content Area (Zero selection popover) */}
         <EditorContent editor={editor} className={styles.editorContent} />
       </div>
@@ -453,6 +430,10 @@ export default function Editor({
         theme={theme}
         onThemeChange={handleThemeChange}
         onCopyMarkdown={handleCopyMarkdown}
+        onProofread={onProofread}
+        issueCount={issueCount}
+        onAcceptAll={handleAcceptAll}
+        onRejectAll={handleRejectAll}
       />
     </div>
   );

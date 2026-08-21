@@ -1,7 +1,6 @@
 "use client";
 
-import React from "react";
-import { ZoomIn, ZoomOut, Sun, Moon, Sparkles, Copy } from "lucide-react";
+import { ZoomIn, ZoomOut, Sun, Moon, Copy, SpellCheck, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import styles from "./FloatingControls.module.css";
 
@@ -16,6 +15,10 @@ interface FloatingControlsProps {
   theme: ThemeMode;
   onThemeChange: (theme: ThemeMode) => void;
   onCopyMarkdown?: () => void;
+  onProofread?: () => void;
+  issueCount?: number;
+  onAcceptAll?: () => void;
+  onRejectAll?: () => void;
 }
 
 export default function FloatingControls({
@@ -26,6 +29,10 @@ export default function FloatingControls({
   theme,
   onThemeChange,
   onCopyMarkdown,
+  onProofread,
+  issueCount = 0,
+  onAcceptAll,
+  onRejectAll,
 }: FloatingControlsProps) {
   const handleNextTheme = () => {
     const nextTheme: ThemeMode = theme === "light" ? "dark" : "light";
@@ -64,6 +71,47 @@ export default function FloatingControls({
   return (
     <aside aria-label="Editor controls" className={styles.dockContainer}>
       <div className={styles.floatingDock}>
+        {onProofread && (
+          <>
+            <button
+              type="button"
+              className={`${styles.btn} ${styles.btnProofread}`}
+              onClick={onProofread}
+              title="Proofread document"
+              aria-label="Proofread document"
+            >
+              <SpellCheck size={15} /> Proofread
+            </button>
+
+            <div
+              className={styles.reviewActions}
+              data-open={issueCount > 0}
+            >
+              <span className={styles.reviewCount}>{issueCount}</span>
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnReject}`}
+                onClick={onRejectAll}
+                title="Reject all suggestions"
+                aria-label="Reject all suggestions"
+              >
+                <X size={15} />
+              </button>
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnAccept}`}
+                onClick={onAcceptAll}
+                title="Accept all suggestions"
+                aria-label="Accept all suggestions"
+              >
+                <Check size={15} />
+              </button>
+            </div>
+
+            <div className={styles.divider} />
+          </>
+        )}
+
         {onCopyMarkdown && (
           <>
             <button
@@ -117,6 +165,7 @@ export default function FloatingControls({
           type="button"
           className={styles.btn}
           onClick={handleNextTheme}
+          title={`Toggle theme ${theme === "light" ? "dark" : "light"}`}
           aria-label="Toggle eye-friendly theme"
         >
           {getThemeIcon()}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Editor from "@/components/Editor";
 import { DiffIssue } from "@/components/types";
 
@@ -66,12 +67,19 @@ interface TypographyTheme {
 `;
 
 export default function Home() {
+  const [issues, setIssues] = useState<DiffIssue[]>([]);
+
+  const handleProofread = () => {
+    setIssues(INITIAL_ISSUES);
+  };
+
   return (
-    <main className="min-h-screen w-full">
+    <main className="main">
       <Editor
         initialContent={INITIAL_MARKDOWN}
-        issues={INITIAL_ISSUES}
+        issues={issues}
         placeholder="Start writing here..."
+        onProofread={handleProofread}
       />
     </main>
   );
