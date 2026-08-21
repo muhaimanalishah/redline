@@ -23,7 +23,7 @@ export interface EditorProps {
   placeholder?: string;
   onChange?: (markdown: string) => void;
   onIssuesChange?: (issues: DiffIssue[]) => void;
-  onProofread?: () => void;
+  onProofread?: (text: string) => void;
 }
 
 export default function Editor({
@@ -376,6 +376,11 @@ export default function Editor({
     navigator.clipboard.writeText(markdown);
   }, [editor]);
 
+  const handleProofreadClick = useCallback(() => {
+    if (!editor || !onProofread) return;
+    onProofread(editor.getText());
+  }, [editor, onProofread]);
+
   if (!editor) return null;
 
   const zoomScale = zoom / 100;
@@ -424,7 +429,7 @@ export default function Editor({
         theme={theme}
         onThemeChange={handleThemeChange}
         onCopyMarkdown={handleCopyMarkdown}
-        onProofread={onProofread}
+        onProofread={onProofread ? handleProofreadClick : undefined}
         issueCount={issueCount}
         onAcceptAll={handleAcceptAll}
         onRejectAll={handleRejectAll}
