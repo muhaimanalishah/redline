@@ -7,13 +7,13 @@
 .popover {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-width: 180px;
+  gap: 10px;
+  min-width: 190px;
   background: var(--float-bg);
   border: 1px solid var(--float-border);
-  border-radius: 14px;
+  border-radius: 16px;
   box-shadow: var(--shadow-lg);
-  padding: 10px 12px;
+  padding: 12px 14px;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   animation: fadeIn 0.12s cubic-bezier(0.16, 1, 0.3, 1);

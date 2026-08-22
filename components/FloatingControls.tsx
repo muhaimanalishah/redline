@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { Editor } from "@tiptap/react";
+import { Editor, useEditorState } from "@tiptap/react";
 import {
   Bold,
   Italic,
@@ -18,8 +18,6 @@ import {
   ImageIcon,
   Link2,
   Sparkles,
-  Check,
-  X,
 } from "lucide-react";
 import InsertMenu from "./InsertMenu";
 import UrlPopover from "./UrlPopover";
@@ -63,6 +61,25 @@ export default function FloatingControls({
   const imageBtnRef = useRef<HTMLButtonElement>(null);
   const linkBtnRef = useRef<HTMLButtonElement>(null);
   const dockRef = useRef<HTMLDivElement>(null);
+
+  // Official TipTap React reactive state hook for toolbar sync
+  const editorState = useEditorState({
+    editor,
+    selector: ({ editor: ed }) => ({
+      isBold: ed.isActive("bold"),
+      isItalic: ed.isActive("italic"),
+      isUnderline: ed.isActive("underline"),
+      isStrike: ed.isActive("strike"),
+      isCode: ed.isActive("code"),
+      isBulletList: ed.isActive("bulletList"),
+      isOrderedList: ed.isActive("orderedList"),
+      isTaskList: ed.isActive("taskList"),
+      isBlockquote: ed.isActive("blockquote"),
+      isCodeBlock: ed.isActive("codeBlock"),
+      isTable: ed.isActive("table"),
+      isLink: ed.isActive("link"),
+    }),
+  });
 
   const closePopover = useCallback(() => setPendingUrl(null), []);
 
@@ -170,10 +187,10 @@ export default function FloatingControls({
         <button
           type="button"
           className={styles.btn}
-          data-active={editor.isActive("bold")}
-          disabled={!hasSelection}
+          data-active={editorState?.isBold ?? false}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().toggleBold().run()}
-          title={hasSelection ? "Bold" : "Select text to format"}
+          title="Bold"
           aria-label="Bold"
         >
           <Bold size={17} />
@@ -182,10 +199,10 @@ export default function FloatingControls({
         <button
           type="button"
           className={styles.btn}
-          data-active={editor.isActive("italic")}
-          disabled={!hasSelection}
+          data-active={editorState?.isItalic ?? false}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          title={hasSelection ? "Italic" : "Select text to format"}
+          title="Italic"
           aria-label="Italic"
         >
           <Italic size={17} />
@@ -194,10 +211,10 @@ export default function FloatingControls({
         <button
           type="button"
           className={styles.btn}
-          data-active={editor.isActive("underline")}
-          disabled={!hasSelection}
+          data-active={editorState?.isUnderline ?? false}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().toggleUnderline().run()}
-          title={hasSelection ? "Underline" : "Select text to format"}
+          title="Underline"
           aria-label="Underline"
         >
           <Underline size={17} />
@@ -206,10 +223,10 @@ export default function FloatingControls({
         <button
           type="button"
           className={styles.btn}
-          data-active={editor.isActive("strike")}
-          disabled={!hasSelection}
+          data-active={editorState?.isStrike ?? false}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().toggleStrike().run()}
-          title={hasSelection ? "Strikethrough" : "Select text to format"}
+          title="Strikethrough"
           aria-label="Strikethrough"
         >
           <Strikethrough size={17} />
@@ -218,10 +235,10 @@ export default function FloatingControls({
         <button
           type="button"
           className={styles.btn}
-          data-active={editor.isActive("code")}
-          disabled={!hasSelection}
+          data-active={editorState?.isCode ?? false}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().toggleCode().run()}
-          title={hasSelection ? "Inline code" : "Select text to format"}
+          title="Inline code"
           aria-label="Inline code"
         >
           <Code size={17} />
@@ -234,7 +251,8 @@ export default function FloatingControls({
         <button
           type="button"
           className={styles.btn}
-          data-active={editor.isActive("bulletList")}
+          data-active={editorState?.isBulletList ?? false}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           title="Bullet list"
           aria-label="Bullet list"
@@ -245,7 +263,8 @@ export default function FloatingControls({
         <button
           type="button"
           className={styles.btn}
-          data-active={editor.isActive("orderedList")}
+          data-active={editorState?.isOrderedList ?? false}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           title="Numbered list"
           aria-label="Numbered list"
@@ -256,7 +275,8 @@ export default function FloatingControls({
         <button
           type="button"
           className={styles.btn}
-          data-active={editor.isActive("taskList")}
+          data-active={editorState?.isTaskList ?? false}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().toggleTaskList().run()}
           title="Task list"
           aria-label="Task list"
@@ -267,7 +287,8 @@ export default function FloatingControls({
         <button
           type="button"
           className={styles.btn}
-          data-active={editor.isActive("blockquote")}
+          data-active={editorState?.isBlockquote ?? false}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           title="Blockquote"
           aria-label="Blockquote"
@@ -278,7 +299,8 @@ export default function FloatingControls({
         <button
           type="button"
           className={styles.btn}
-          data-active={editor.isActive("codeBlock")}
+          data-active={editorState?.isCodeBlock ?? false}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
           title="Code block"
           aria-label="Code block"
@@ -289,9 +311,10 @@ export default function FloatingControls({
         <button
           type="button"
           className={styles.btn}
-          disabled={hasSelection}
+          data-active={editorState?.isTable ?? false}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-          title={hasSelection ? "Deselect text to insert a table" : "Table"}
+          title="Table"
           aria-label="Insert table"
         >
           <Table size={17} />
@@ -301,6 +324,7 @@ export default function FloatingControls({
           type="button"
           className={styles.btn}
           disabled={hasSelection}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
           title={hasSelection ? "Deselect text to insert a horizontal rule" : "Horizontal rule"}
           aria-label="Insert horizontal rule"
@@ -324,10 +348,9 @@ export default function FloatingControls({
           ref={linkBtnRef}
           type="button"
           className={styles.btn}
-          data-active={editor.isActive("link") || pendingUrl?.field === "link"}
-          disabled={!hasSelection}
+          data-active={(editorState?.isLink ?? false) || pendingUrl?.field === "link"}
           onClick={() => openPopover("link")}
-          title={hasSelection ? "Link" : "Select text to add a link"}
+          title="Link"
           aria-label="Insert link"
         >
           <Link2 size={17} />

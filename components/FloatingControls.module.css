@@ -39,7 +39,7 @@
   border-radius: 50%;
   border: none;
   background: transparent;
-  color: var(--ink-soft);
+  color: var(--ink-faint);
   cursor: pointer;
   padding: 0;
   transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
@@ -61,22 +61,27 @@
 }
 
 .btn[data-active="true"] {
-  background: color-mix(in srgb, var(--accent-blue) 12%, transparent);
-  color: var(--accent-blue);
+  background: transparent;
+  color: var(--ink);
+}
+
+.btn[data-active="true"]:hover {
+  background: var(--paper-subtle);
+  color: var(--ink);
 }
 
 .btnAi {
+  background: transparent;
   color: var(--accent-blue);
-  background: color-mix(in srgb, var(--accent-blue) 8%, transparent);
 }
 
 .btnAi:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent-blue) 16%, transparent);
+  background: var(--paper-subtle);
   color: var(--accent-blue);
 }
 
 .btnAi[data-active="true"] {
-  background: color-mix(in srgb, var(--accent-blue) 22%, transparent);
+  background: transparent;
   color: var(--accent-blue);
 }
 

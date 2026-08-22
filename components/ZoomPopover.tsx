@@ -54,7 +54,7 @@ export default function ZoomPopover({
     <div
       ref={wrapRef}
       className={styles.wrap}
-      style={{ right: `${rightOffset}px`, top: `${anchorRect.bottom + 8}px` }}
+      style={{ right: `${rightOffset}px`, top: `${anchorRect.bottom + 14}px` }}
       role="dialog"
       aria-modal="true"
       aria-label="Zoom controls"

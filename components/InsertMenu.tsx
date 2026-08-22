@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Editor } from "@tiptap/react";
+import { Editor, useEditorState } from "@tiptap/react";
 import { ChevronDown, Pilcrow, Heading1, Heading2, Heading3, Heading4 } from "lucide-react";
 import styles from "./InsertMenu.module.css";
 
@@ -19,6 +19,22 @@ const LEVELS: { level: 1 | 2 | 3 | 4; label: string; Icon: typeof Heading1 }[] =
 export default function InsertMenu({ editor }: InsertMenuProps) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+
+  const activeLevelNum = useEditorState({
+    editor,
+    selector: ({ editor: ed }) => {
+      if (ed.isActive("heading", { level: 1 })) return 1;
+      if (ed.isActive("heading", { level: 2 })) return 2;
+      if (ed.isActive("heading", { level: 3 })) return 3;
+      if (ed.isActive("heading", { level: 4 })) return 4;
+      return null;
+    },
+  });
+
+  const isParagraph = useEditorState({
+    editor,
+    selector: ({ editor: ed }) => ed.isActive("paragraph") && !ed.isActive("heading"),
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -39,16 +55,19 @@ export default function InsertMenu({ editor }: InsertMenuProps) {
     };
   }, [open]);
 
-  const activeLevel = LEVELS.find(({ level }) => editor.isActive("heading", { level }));
+  const activeLevel = LEVELS.find(({ level }) => level === activeLevelNum);
   const CurrentIcon = activeLevel?.Icon ?? Pilcrow;
+  const currentLabel = activeLevel ? `H${activeLevel.level}` : "Text";
 
   return (
     <div ref={wrapRef} className={styles.wrap}>
       <button
         type="button"
         className={styles.trigger}
+        data-active={!!activeLevel}
+        onMouseDown={(e) => e.preventDefault()}
         onClick={() => setOpen((v) => !v)}
-        title="Text style"
+        title={activeLevel ? activeLevel.label : "Text style"}
         aria-label="Text style"
         aria-haspopup="menu"
         aria-expanded={open}
@@ -62,8 +81,9 @@ export default function InsertMenu({ editor }: InsertMenuProps) {
           <button
             type="button"
             className={styles.item}
-            data-active={editor.isActive("paragraph") && !editor.isActive("heading")}
+            data-active={isParagraph}
             role="menuitem"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
               editor.chain().focus().setParagraph().run();
               setOpen(false);
@@ -77,8 +97,9 @@ export default function InsertMenu({ editor }: InsertMenuProps) {
               key={level}
               type="button"
               className={styles.item}
-              data-active={editor.isActive("heading", { level })}
+              data-active={activeLevelNum === level}
               role="menuitem"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => {
                 editor.chain().focus().toggleHeading({ level }).run();
                 setOpen(false);
