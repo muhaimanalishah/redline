@@ -68,10 +68,10 @@ export default function FloatingControls({
 
   const closePopover = () => setPendingUrl(null);
 
-  const openPopover = (field: "image" | "link", btnRef: RefObject<HTMLButtonElement | null>) => {
+  const openPopover = (field: "image" | "link") => {
     setPendingUrl((prev) => {
       if (prev?.field === field) return null;
-      const anchorRect = btnRef.current?.getBoundingClientRect();
+      const anchorRect = dockRef.current?.getBoundingClientRect();
       return anchorRect ? { field, anchorRect } : null;
     });
   };
@@ -287,9 +287,9 @@ export default function FloatingControls({
           ref={imageBtnRef}
           type="button"
           className={styles.btn}
-          disabled={hasSelection}
-          onClick={() => openPopover("image", imageBtnRef)}
-          title={hasSelection ? "Deselect text to insert an image" : "Image"}
+          data-active={pendingUrl?.field === "image"}
+          onClick={() => openPopover("image")}
+          title="Image"
           aria-label="Insert image"
         >
           <ImageIcon size={17} />
@@ -299,9 +299,9 @@ export default function FloatingControls({
           ref={linkBtnRef}
           type="button"
           className={styles.btn}
-          data-active={editor.isActive("link")}
+          data-active={editor.isActive("link") || pendingUrl?.field === "link"}
           disabled={!hasSelection}
-          onClick={() => openPopover("link", linkBtnRef)}
+          onClick={() => openPopover("link")}
           title={hasSelection ? "Link" : "Select text to add a link"}
           aria-label="Insert link"
         >
@@ -316,6 +316,7 @@ export default function FloatingControls({
               type="button"
               className={styles.btn}
               data-active={!!aiAnchorRect}
+              onMouseDown={(e) => e.preventDefault()}
               onClick={toggleAiPopover}
               title="Ask AI"
               aria-label="Ask AI"

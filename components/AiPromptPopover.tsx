@@ -301,6 +301,7 @@ export default function AiPromptPopover({
                   type="button"
                   className={styles.menuItem}
                   data-highlighted={highlightedIndex === 0}
+                  onMouseEnter={() => setHighlightedIndex(0)}
                   disabled={loading}
                   onClick={() => handlePresetClick("proofread")}
                 >
@@ -314,6 +315,7 @@ export default function AiPromptPopover({
                   type="button"
                   className={styles.menuItem}
                   data-highlighted={highlightedIndex === 1}
+                  onMouseEnter={() => setHighlightedIndex(1)}
                   disabled={loading}
                   onClick={() => setActiveView("length")}
                 >
@@ -328,6 +330,7 @@ export default function AiPromptPopover({
                   type="button"
                   className={styles.menuItem}
                   data-highlighted={highlightedIndex === 2}
+                  onMouseEnter={() => setHighlightedIndex(2)}
                   disabled={loading}
                   onClick={() => setActiveView("tone")}
                 >
@@ -342,6 +345,7 @@ export default function AiPromptPopover({
                   type="button"
                   className={styles.menuItem}
                   data-highlighted={highlightedIndex === 3}
+                  onMouseEnter={() => setHighlightedIndex(3)}
                   disabled={loading}
                   onClick={() => setActiveView("format")}
                 >
@@ -360,15 +364,17 @@ export default function AiPromptPopover({
                   type="button"
                   className={styles.backBtn}
                   data-highlighted={highlightedIndex === 0}
+                  onMouseEnter={() => setHighlightedIndex(0)}
                   onClick={() => setActiveView("root")}
                 >
-                  <ChevronLeft size={14} />
+                  <ChevronLeft size={16} className={styles.itemIcon} />
                   <span>Back</span>
                 </button>
                 <button
                   type="button"
                   className={styles.menuItem}
                   data-highlighted={highlightedIndex === 1}
+                  onMouseEnter={() => setHighlightedIndex(1)}
                   disabled={loading}
                   onClick={() => handlePresetClick("shorten")}
                 >
@@ -381,6 +387,7 @@ export default function AiPromptPopover({
                   type="button"
                   className={styles.menuItem}
                   data-highlighted={highlightedIndex === 2}
+                  onMouseEnter={() => setHighlightedIndex(2)}
                   disabled={loading}
                   onClick={() => handlePresetClick("expand")}
                 >
@@ -393,6 +400,7 @@ export default function AiPromptPopover({
                   type="button"
                   className={styles.menuItem}
                   data-highlighted={highlightedIndex === 3}
+                  onMouseEnter={() => setHighlightedIndex(3)}
                   disabled={loading}
                   onClick={() => handlePresetClick("summarize")}
                 >
@@ -410,15 +418,17 @@ export default function AiPromptPopover({
                   type="button"
                   className={styles.backBtn}
                   data-highlighted={highlightedIndex === 0}
+                  onMouseEnter={() => setHighlightedIndex(0)}
                   onClick={() => setActiveView("root")}
                 >
-                  <ChevronLeft size={14} />
+                  <ChevronLeft size={16} className={styles.itemIcon} />
                   <span>Back</span>
                 </button>
                 <button
                   type="button"
                   className={styles.menuItem}
                   data-highlighted={highlightedIndex === 1}
+                  onMouseEnter={() => setHighlightedIndex(1)}
                   disabled={loading}
                   onClick={() => handlePresetClick("tone-professional")}
                 >
@@ -431,6 +441,7 @@ export default function AiPromptPopover({
                   type="button"
                   className={styles.menuItem}
                   data-highlighted={highlightedIndex === 2}
+                  onMouseEnter={() => setHighlightedIndex(2)}
                   disabled={loading}
                   onClick={() => handlePresetClick("tone-casual")}
                 >
@@ -443,6 +454,7 @@ export default function AiPromptPopover({
                   type="button"
                   className={styles.menuItem}
                   data-highlighted={highlightedIndex === 3}
+                  onMouseEnter={() => setHighlightedIndex(3)}
                   disabled={loading}
                   onClick={() => handlePresetClick("tone-direct")}
                 >
@@ -455,6 +467,7 @@ export default function AiPromptPopover({
                   type="button"
                   className={styles.menuItem}
                   data-highlighted={highlightedIndex === 4}
+                  onMouseEnter={() => setHighlightedIndex(4)}
                   disabled={loading}
                   onClick={() => handlePresetClick("tone-academic")}
                 >
@@ -472,15 +485,17 @@ export default function AiPromptPopover({
                   type="button"
                   className={styles.backBtn}
                   data-highlighted={highlightedIndex === 0}
+                  onMouseEnter={() => setHighlightedIndex(0)}
                   onClick={() => setActiveView("root")}
                 >
-                  <ChevronLeft size={14} />
+                  <ChevronLeft size={16} className={styles.itemIcon} />
                   <span>Back</span>
                 </button>
                 <button
                   type="button"
                   className={styles.menuItem}
                   data-highlighted={highlightedIndex === 1}
+                  onMouseEnter={() => setHighlightedIndex(1)}
                   disabled={loading}
                   onClick={() => handlePresetClick("format-bullet-list")}
                 >
@@ -493,6 +508,7 @@ export default function AiPromptPopover({
                   type="button"
                   className={styles.menuItem}
                   data-highlighted={highlightedIndex === 2}
+                  onMouseEnter={() => setHighlightedIndex(2)}
                   disabled={loading}
                   onClick={() => handlePresetClick("format-table")}
                 >

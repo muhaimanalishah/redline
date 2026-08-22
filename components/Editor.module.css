@@ -347,7 +347,13 @@
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
   animation: diffProcessingSweep 1.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
 :global(.diff-active-selection) {
   background-color: var(--selection-bg);
-  border-radius: 3px;
+  border-radius: 2px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 2px 0;
 }
+
