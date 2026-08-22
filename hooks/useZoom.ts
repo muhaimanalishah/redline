@@ -46,5 +46,11 @@ export function useZoom() {
     persist(100);
   }, []);
 
-  return { zoom, zoomIn, zoomOut, zoomReset };
+  const zoomSet = useCallback((value: number) => {
+    const clamped = Math.min(Math.max(value, MIN_ZOOM), MAX_ZOOM);
+    setZoom(clamped);
+    persist(clamped);
+  }, []);
+
+  return { zoom, zoomIn, zoomOut, zoomReset, zoomSet };
 }

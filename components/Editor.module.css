@@ -233,18 +233,22 @@
 
 .editorContent :global(.tiptap th) {
   background: var(--table-head-bg);
-  font-weight: 600;
+  font-weight: 650;
   text-align: left;
-  padding: 10px 14px;
+  padding: 11px 16px;
   border-bottom: 1.5px solid var(--table-border);
   border-right: 1px solid var(--table-border);
   color: var(--ink);
 }
 
 .editorContent :global(.tiptap td) {
-  padding: 10px 14px;
+  padding: 10px 16px;
   border-bottom: 1px solid var(--table-border);
   border-right: 1px solid var(--table-border);
+}
+
+.editorContent :global(.tiptap tr:nth-child(even) td) {
+  background: var(--table-zebra-bg);
 }
 
 .editorContent :global(.tiptap th:last-child),

@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import Editor from "@/components/Editor";
 import { DiffIssue, ExecuteAiOptions } from "@/types";
+
+const STORAGE_KEY = "redline-document-content";
 
 const INITIAL_MARKDOWN = `Their are alot of reasons why a person might wants to improve they're writing, but the most importantest one is clarity. When you're sentences is confusing, the reader loose interest quick and dont finish what you wrote, which effect how well you're ideas gets recieved by other peoples.
 
@@ -12,6 +14,20 @@ Me and him was discussing yesterday about how good writers doesn't never use to 
 
 export default function Home() {
   const [issues, setIssues] = useState<DiffIssue[]>([]);
+  const [initialContent] = useState<string>(() => {
+    if (typeof window === "undefined") return INITIAL_MARKDOWN;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved !== null && saved.trim().length > 0) return saved;
+    } catch {}
+    return INITIAL_MARKDOWN;
+  });
+
+  const handleContentChange = useCallback((markdown: string) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, markdown);
+    } catch {}
+  }, []);
 
   const handleAiExecute = async (options: ExecuteAiOptions): Promise<string> => {
     const payload =
@@ -61,8 +77,9 @@ export default function Home() {
   return (
     <main className="main">
       <Editor
-        initialContent={INITIAL_MARKDOWN}
+        initialContent={initialContent}
         issues={issues}
+        onChange={handleContentChange}
         onIssuesChange={setIssues}
         placeholder="Start writing here..."
         onAiExecute={handleAiExecute}

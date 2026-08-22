@@ -54,7 +54,7 @@ export function useHoverToolbar(editor: Editor | null, containerRef: RefObject<H
 
       cancelCloseTimeout();
 
-      if (pluginState.activeDiffId !== diffId) {
+      if (pluginState?.activeDiffId !== diffId) {
         editor.view.dispatch(
           editor.state.tr.setMeta(DiffPluginKey, { type: "SET_ACTIVE_DIFF_ID", issueId: diffId })
         );

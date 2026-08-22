@@ -30,8 +30,9 @@
   --code-bg: #F0EAE0;
   --code-border: #E2DBD0;
   --code-text: #3D3833;
-  --table-head-bg: #F3EEE4;
-  --table-border: #E4DED3;
+  --table-head-bg: #EAE3D2;
+  --table-border: #D1C6B0;
+  --table-zebra-bg: rgba(91, 86, 80, 0.035);
   --blockquote-bg: rgba(91, 86, 80, 0.035);
   --blockquote-border: #8A8378;
   --selection-bg: rgba(91, 86, 80, 0.18);
@@ -85,8 +86,9 @@
   --code-bg: #222429;
   --code-border: #2F3138;
   --code-text: #D8D2C5;
-  --table-head-bg: #22242A;
-  --table-border: #2C2E35;
+  --table-head-bg: #1F2126;
+  --table-border: #42464F;
+  --table-zebra-bg: rgba(255, 255, 255, 0.025);
   --blockquote-bg: rgba(166, 160, 153, 0.07);
   --blockquote-border: #A6A099;
   --selection-bg: rgba(166, 160, 153, 0.3);

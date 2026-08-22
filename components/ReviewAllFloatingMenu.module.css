@@ -1,0 +1,101 @@
+.wrap {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  z-index: 45;
+  pointer-events: auto;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--float-bg);
+  border: 1px solid var(--float-border);
+  border-radius: 9999px;
+  padding: 5px 6px 5px 12px;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: floatUp 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.countBadge {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-blue);
+  background: color-mix(in srgb, var(--accent-blue) 14%, transparent);
+  border-radius: 9999px;
+  padding: 2px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.label {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.divider {
+  width: 1px;
+  height: 16px;
+  background: var(--rule);
+  margin: 0 1px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btnReject,
+.btnAccept {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.btnReject {
+  color: var(--del-text);
+  background: transparent;
+}
+
+.btnReject:hover {
+  background: var(--del-bg);
+  color: var(--del-text);
+}
+
+.btnAccept {
+  color: var(--accent-blue);
+  background: color-mix(in srgb, var(--accent-blue) 12%, transparent);
+}
+
+.btnAccept:hover {
+  background: color-mix(in srgb, var(--accent-blue) 22%, transparent);
+  color: var(--accent-blue);
+}
+
+@keyframes floatUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

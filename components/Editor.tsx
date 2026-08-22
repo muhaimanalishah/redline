@@ -63,7 +63,7 @@ export default function Editor({
     closeActiveDiff
   );
   const { activeTable } = useTableToolbar(editor, containerRef);
-  const { zoom, zoomIn, zoomOut, zoomReset } = useZoom();
+  const { zoom, zoomIn, zoomOut, zoomReset, zoomSet } = useZoom();
   const { theme, changeTheme } = useEditorTheme();
 
   const getMarkdown = useCallback((): string => {
@@ -96,6 +96,33 @@ export default function Editor({
     const md = sourceMode ? sourceText : getMarkdown();
     if (md) navigator.clipboard.writeText(md);
   }, [sourceMode, sourceText, getMarkdown]);
+
+  const handleExportMarkdown = useCallback(
+    (filename: string) => {
+      const md = sourceMode ? sourceText : getMarkdown();
+      const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download =
+        filename.endsWith(".md") || filename.endsWith(".markdown") ? filename : `${filename}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+    [sourceMode, sourceText, getMarkdown]
+  );
+
+  const handleImportMarkdown = useCallback(
+    (content: string) => {
+      if (!editor) return;
+      editor.commands.setContent(content);
+      if (sourceMode) {
+        setSourceText(content);
+      }
+      onChange?.(content);
+    },
+    [editor, sourceMode, onChange]
+  );
 
   const runAiTransformation = useCallback(
     async (options: Omit<ExecuteAiOptions, "selectedText">) => {
@@ -281,9 +308,12 @@ export default function Editor({
         onZoomIn={zoomIn}
         onZoomOut={zoomOut}
         onZoomReset={zoomReset}
+        onZoomSet={zoomSet}
         theme={theme}
         onThemeChange={changeTheme}
         onCopyMarkdown={handleCopyMarkdown}
+        onExportMarkdown={handleExportMarkdown}
+        onImportMarkdown={handleImportMarkdown}
         sourceMode={sourceMode}
         onToggleSourceMode={handleToggleSourceMode}
         canUndo={canUndo}

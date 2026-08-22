@@ -24,6 +24,7 @@ import {
 import InsertMenu from "./InsertMenu";
 import UrlPopover from "./UrlPopover";
 import AiPromptPopover from "./AiPromptPopover";
+import ReviewAllFloatingMenu from "./ReviewAllFloatingMenu";
 import { DiffPluginKey } from "./DiffExtension";
 import { PresetId } from "@/lib/ai/presets";
 import styles from "./FloatingControls.module.css";
@@ -338,7 +339,7 @@ export default function FloatingControls({
 
             <button
               type="button"
-              className={styles.btn}
+              className={`${styles.btn} ${styles.btnAi}`}
               data-active={!!aiAnchorRect}
               onMouseDown={(e) => e.preventDefault()}
               onClick={toggleAiPopover}
@@ -349,35 +350,13 @@ export default function FloatingControls({
             </button>
           </>
         )}
-
-        {issueCount > 0 && (
-          <>
-            <div className={styles.divider} />
-
-            <div className={styles.reviewActions} data-open={true}>
-              <span className={styles.reviewCount}>{issueCount}</span>
-              <button
-                type="button"
-                className={`${styles.btn} ${styles.btnReject}`}
-                onClick={onRejectAll}
-                title="Reject all suggestions"
-                aria-label="Reject all suggestions"
-              >
-                <X size={17} />
-              </button>
-              <button
-                type="button"
-                className={`${styles.btn} ${styles.btnAccept}`}
-                onClick={onAcceptAll}
-                title="Accept all suggestions"
-                aria-label="Accept all suggestions"
-              >
-                <Check size={17} />
-              </button>
-            </div>
-          </>
-        )}
       </div>
+
+      <ReviewAllFloatingMenu
+        issueCount={issueCount}
+        onAcceptAll={onAcceptAll}
+        onRejectAll={onRejectAll}
+      />
 
       {pendingUrl?.field === "image" && (
         <UrlPopover
