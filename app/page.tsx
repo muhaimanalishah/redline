@@ -13,10 +13,7 @@ Me and him was discussing yesterday about how good writers doesn't never use to 
 export default function Home() {
   const [issues, setIssues] = useState<DiffIssue[]>([]);
 
-  const handleAiExecute = async (
-    options: ExecuteAiOptions,
-    onChunk?: (text: string) => void
-  ): Promise<string> => {
+  const handleAiExecute = async (options: ExecuteAiOptions): Promise<string> => {
     const payload =
       options.mode === "preset"
         ? {
@@ -55,10 +52,8 @@ export default function Home() {
       const { value, done } = await reader.read();
       if (done) break;
       fullText += decoder.decode(value, { stream: true });
-      onChunk?.(fullText);
     }
     fullText += decoder.decode();
-    onChunk?.(fullText);
 
     return fullText;
   };

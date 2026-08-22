@@ -3,7 +3,7 @@ import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { DiffIssue } from "@/types";
-import { renderMarkdownToHtml } from "@/lib/markdown/renderer";
+import { parseMarkdownToHtml } from "@/lib/markdownPreview";
 
 export interface DiffPluginState {
   decorations: DecorationSet;
@@ -99,7 +99,9 @@ function buildDecorations(
 
     const { from, to } = range;
 
-    // Render strike-through / dimmed state for original text
+    // Only render a strike-through for the original text when there is
+    // one — AI-generated text with no prior selection has nothing to
+    // delete, just the new suggestion to insert.
     if (issue.original) {
       decos.push(
         Decoration.inline(
@@ -114,34 +116,30 @@ function buildDecorations(
       );
     }
 
-    // Render formatted block preview widget directly beneath
     decos.push(
       Decoration.widget(
         to,
         () => {
-          const isAiBlock = issue.type === "ai" || issue.suggestion.includes("\n") || issue.suggestion.startsWith("|");
+          const isBlockMarkdown =
+            issue.suggestion.includes("\n") ||
+            issue.suggestion.startsWith("|") ||
+            issue.suggestion.startsWith("- ") ||
+            issue.suggestion.startsWith("1. ");
 
-          if (isAiBlock) {
-            const container = document.createElement("div");
-            container.className = `diff-block-preview diff-type-${issue.type}`;
-            container.setAttribute("data-diff-id", issue.id);
-            container.setAttribute("data-diff-type", issue.type);
+          const wrapper = document.createElement(isBlockMarkdown ? "div" : "span");
+          wrapper.className = `ins diff-ins diff-type-${issue.type} ${
+            isBlockMarkdown ? "diff-block" : ""
+          }`;
+          wrapper.setAttribute("data-diff-id", issue.id);
+          wrapper.setAttribute("data-diff-type", issue.type);
 
-            const contentWrap = document.createElement("div");
-            contentWrap.className = "diff-block-content";
-            contentWrap.innerHTML = renderMarkdownToHtml(issue.suggestion);
-
-            container.appendChild(contentWrap);
-            return container;
+          if (isBlockMarkdown) {
+            wrapper.innerHTML = parseMarkdownToHtml(issue.suggestion);
+          } else {
+            wrapper.textContent = issue.suggestion;
           }
 
-          // Inline suggestion fallback
-          const span = document.createElement("span");
-          span.className = `ins diff-ins diff-type-${issue.type}`;
-          span.setAttribute("data-diff-id", issue.id);
-          span.setAttribute("data-diff-type", issue.type);
-          span.textContent = issue.suggestion;
-          return span;
+          return wrapper;
         },
         { side: 1, key: `ins-${issue.id}` }
       )

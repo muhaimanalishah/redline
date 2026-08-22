@@ -34,7 +34,7 @@ export function useDiffActions(editor: Editor | null, onDiffResolved: () => void
 
       clearActiveDiffHighlight();
       onDiffResolved();
-      toast.success("Applied changes");
+      toast.success("Applied suggestion");
     },
     [editor, onDiffResolved]
   );
@@ -49,7 +49,7 @@ export function useDiffActions(editor: Editor | null, onDiffResolved: () => void
 
       clearActiveDiffHighlight();
       onDiffResolved();
-      toast.info("Discarded changes");
+      toast.info("Dismissed suggestion");
     },
     [editor, onDiffResolved]
   );
@@ -76,7 +76,7 @@ export function useDiffActions(editor: Editor | null, onDiffResolved: () => void
 
     clearActiveDiffHighlight();
     onDiffResolved();
-    toast.success(`Accepted all ${count} suggestions`);
+    toast.success(`Accepted ${count} suggestion${count > 1 ? "s" : ""}`);
   }, [editor, onDiffResolved]);
 
   const handleRejectAll = useCallback(() => {
@@ -91,7 +91,7 @@ export function useDiffActions(editor: Editor | null, onDiffResolved: () => void
 
     clearActiveDiffHighlight();
     onDiffResolved();
-    toast.info(`Rejected all ${count} suggestions`);
+    toast.info(`Dismissed ${count} suggestion${count > 1 ? "s" : ""}`);
   }, [editor, onDiffResolved]);
 
   return { handleAccept, handleReject, handleAcceptAll, handleRejectAll };

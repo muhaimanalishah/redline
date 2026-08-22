@@ -25,10 +25,7 @@ export interface EditorProps {
   placeholder?: string;
   onChange?: (markdown: string) => void;
   onIssuesChange?: (issues: DiffIssue[]) => void;
-  onAiExecute?: (
-    options: ExecuteAiOptions,
-    onChunk?: (text: string) => void
-  ) => Promise<string>;
+  onAiExecute?: (options: ExecuteAiOptions) => Promise<string>;
 }
 
 export default function Editor({
@@ -98,7 +95,6 @@ export default function Editor({
       const { from, to, empty } = editor.state.selection;
       const selectedText = empty ? "" : editor.state.doc.textBetween(from, to, " ");
       const range = { from, to };
-      const issueId = crypto.randomUUID();
 
       editor.view.dispatch(
         editor.state.tr.setMeta(DiffPluginKey, {
@@ -109,29 +105,10 @@ export default function Editor({
       setIsAiGenerating(true);
 
       try {
-        const generatedText = await onAiExecute(
-          {
-            ...options,
-            selectedText,
-          },
-          (streamingText) => {
-            const pluginState = DiffPluginKey.getState(editor.state);
-            const currentRange = pluginState?.processingRange ?? range;
-
-            editor.view.dispatch(
-              editor.state.tr.setMeta(DiffPluginKey, {
-                type: "ADD_DIFF_ISSUE",
-                issue: {
-                  id: issueId,
-                  type: "ai",
-                  original: selectedText,
-                  suggestion: streamingText,
-                  range: currentRange,
-                },
-              })
-            );
-          }
-        );
+        const generatedText = await onAiExecute({
+          ...options,
+          selectedText,
+        });
 
         const pluginState = DiffPluginKey.getState(editor.state);
         const currentRange = pluginState?.processingRange ?? range;
@@ -140,7 +117,7 @@ export default function Editor({
           editor.state.tr.setMeta(DiffPluginKey, {
             type: "ADD_DIFF_ISSUE",
             issue: {
-              id: issueId,
+              id: crypto.randomUUID(),
               type: "ai",
               original: selectedText,
               suggestion: generatedText,
@@ -151,9 +128,6 @@ export default function Editor({
       } catch (err) {
         editor.view.dispatch(
           editor.state.tr.setMeta(DiffPluginKey, {
-            type: "REMOVE_DIFF",
-            issueId,
-          }).setMeta(DiffPluginKey, {
             type: "SET_PROCESSING_RANGE",
             range: null,
           })
