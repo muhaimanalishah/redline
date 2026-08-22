@@ -55,6 +55,11 @@
   cursor: not-allowed;
 }
 
+.btn[data-active="true"] {
+  background: color-mix(in srgb, var(--accent-blue) 12%, transparent);
+  color: var(--accent-blue);
+}
+
 .zoomLabel {
   font-family: var(--sans);
   font-size: 12px;

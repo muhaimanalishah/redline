@@ -23,6 +23,7 @@ import styles from "./FloatingControls.module.css";
 
 interface FloatingControlsProps {
   editor: Editor;
+  hasSelection: boolean;
   onProofread?: () => void;
   proofreadDisabled?: boolean;
   proofreadLoading?: boolean;
@@ -40,6 +41,7 @@ interface PendingUrl {
 
 export default function FloatingControls({
   editor,
+  hasSelection,
   onProofread,
   proofreadDisabled = false,
   proofreadLoading = false,
@@ -62,7 +64,19 @@ export default function FloatingControls({
   };
 
   const handleImageSubmit = (url: string) => {
-    editor.chain().focus().setImage({ src: url }).run();
+    // Insert at the cursor when the editor has focus; otherwise default to
+    // a new line at the end of the document rather than an arbitrary
+    // leftover cursor position.
+    if (editor.isFocused) {
+      editor.chain().focus().setImage({ src: url }).run();
+    } else {
+      editor
+        .chain()
+        .focus("end")
+        .insertContent({ type: "paragraph" })
+        .setImage({ src: url })
+        .run();
+    }
     closePopover();
   };
 
@@ -134,8 +148,9 @@ export default function FloatingControls({
         <button
           type="button"
           className={styles.btn}
+          disabled={hasSelection}
           onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-          title="Table"
+          title={hasSelection ? "Deselect text to insert a table" : "Table"}
           aria-label="Insert table"
         >
           <Table size={17} />
@@ -144,8 +159,9 @@ export default function FloatingControls({
         <button
           type="button"
           className={styles.btn}
+          disabled={hasSelection}
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          title="Horizontal rule"
+          title={hasSelection ? "Deselect text to insert a horizontal rule" : "Horizontal rule"}
           aria-label="Insert horizontal rule"
         >
           <Minus size={17} />
@@ -155,8 +171,9 @@ export default function FloatingControls({
           ref={imageBtnRef}
           type="button"
           className={styles.btn}
+          disabled={hasSelection}
           onClick={() => openPopover("image", imageBtnRef)}
-          title="Image"
+          title={hasSelection ? "Deselect text to insert an image" : "Image"}
           aria-label="Insert image"
         >
           <ImageIcon size={17} />
@@ -167,8 +184,9 @@ export default function FloatingControls({
           type="button"
           className={styles.btn}
           data-active={editor.isActive("link")}
+          disabled={!hasSelection}
           onClick={() => openPopover("link", linkBtnRef)}
-          title="Link"
+          title={hasSelection ? "Link" : "Select text to add a link"}
           aria-label="Insert link"
         >
           <Link2 size={17} />

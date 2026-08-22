@@ -8,6 +8,7 @@ import DiffToolbar from "./DiffToolbar";
 import TableToolbar from "./TableToolbar";
 import FloatingControls from "./FloatingControls";
 import TopControls from "./TopControls";
+import MarkdownSourceView from "./MarkdownSourceView";
 import { DiffIssue } from "@/types";
 import { useDiffEditor } from "@/hooks/useDiffEditor";
 import { useHoverToolbar } from "@/hooks/useHoverToolbar";
@@ -36,6 +37,8 @@ export default function Editor({
 }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isProofreading, setIsProofreading] = useState(false);
+  const [sourceMode, setSourceMode] = useState(false);
+  const [sourceText, setSourceText] = useState("");
 
   const { editor, issueCount, hasSelection } = useDiffEditor({
     initialContent,
@@ -64,12 +67,27 @@ export default function Editor({
   const { zoom, zoomIn, zoomOut, zoomReset } = useZoom();
   const { theme, changeTheme } = useEditorTheme();
 
-  const handleCopyMarkdown = useCallback(() => {
-    if (!editor) return;
+  const getMarkdown = useCallback(() => {
+    if (!editor) return "";
     const storage = editor.storage as unknown as Record<string, MarkdownStorage>;
-    const markdown = storage.markdown?.getMarkdown?.() ?? "";
-    navigator.clipboard.writeText(markdown);
+    return storage.markdown?.getMarkdown?.() ?? "";
   }, [editor]);
+
+  const handleCopyMarkdown = useCallback(() => {
+    navigator.clipboard.writeText(getMarkdown());
+  }, [getMarkdown]);
+
+  const handleToggleSourceMode = useCallback(() => {
+    if (!editor) return;
+
+    if (sourceMode) {
+      editor.commands.setContent(sourceText);
+      setSourceMode(false);
+    } else {
+      setSourceText(getMarkdown());
+      setSourceMode(true);
+    }
+  }, [editor, sourceMode, sourceText, getMarkdown]);
 
   const handleProofreadClick = useCallback(async () => {
     if (!editor || !onProofread) return;
@@ -122,11 +140,19 @@ export default function Editor({
         }}
       >
         {/* Editor Content Area (Zero selection popover) */}
-        <EditorContent editor={editor} className={styles.editorContent} />
+        {sourceMode ? (
+          <MarkdownSourceView
+            value={sourceText}
+            onChange={setSourceText}
+            placeholder={placeholder}
+          />
+        ) : (
+          <EditorContent editor={editor} className={styles.editorContent} />
+        )}
       </div>
 
       {/* Floating table controls — add/delete rows and columns */}
-      {activeTable && (
+      {!sourceMode && activeTable && (
         <TableToolbar
           editor={editor}
           anchorRect={activeTable.anchorRect}
@@ -135,7 +161,7 @@ export default function Editor({
       )}
 
       {/* Floating Notion-style Micro-Toolbar for hovered redline issues */}
-      {activeDiff && (
+      {!sourceMode && activeDiff && (
         <DiffToolbar
           issue={activeDiff.issue}
           anchorRect={activeDiff.anchorRect}
@@ -148,8 +174,9 @@ export default function Editor({
         />
       )}
 
-      {/* Document controls — copy, zoom, theme */}
+      {/* Document controls — undo/redo, source view toggle, copy, zoom, theme */}
       <TopControls
+        editor={editor}
         zoom={zoom}
         onZoomIn={zoomIn}
         onZoomOut={zoomOut}
@@ -157,18 +184,23 @@ export default function Editor({
         theme={theme}
         onThemeChange={changeTheme}
         onCopyMarkdown={handleCopyMarkdown}
+        sourceMode={sourceMode}
+        onToggleSourceMode={handleToggleSourceMode}
       />
 
       {/* Insert + review dock at the bottom */}
-      <FloatingControls
-        editor={editor}
-        onProofread={onProofread ? handleProofreadClick : undefined}
-        proofreadDisabled={!hasSelection || isProofreading}
-        proofreadLoading={isProofreading}
-        issueCount={issueCount}
-        onAcceptAll={handleAcceptAll}
-        onRejectAll={handleRejectAll}
-      />
+      {!sourceMode && (
+        <FloatingControls
+          editor={editor}
+          hasSelection={hasSelection}
+          onProofread={onProofread ? handleProofreadClick : undefined}
+          proofreadDisabled={!hasSelection || isProofreading}
+          proofreadLoading={isProofreading}
+          issueCount={issueCount}
+          onAcceptAll={handleAcceptAll}
+          onRejectAll={handleRejectAll}
+        />
+      )}
     </div>
   );
 }
