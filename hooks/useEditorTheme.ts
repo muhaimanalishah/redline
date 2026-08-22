@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useLayoutEffect, useState } from "react";
 import { ThemeMode } from "@/components/TopControls";
 
 const THEME_KEY = "redline-theme";
@@ -18,7 +18,11 @@ export function useEditorTheme() {
     return "light";
   });
 
-  useEffect(() => {
+  // Re-applies data-theme before paint. In production this is a no-op
+  // matching what the inline script in layout.tsx already set; in dev,
+  // React Strict Mode's remount clears attributes the script set outside
+  // JSX, so this restores it before the browser paints.
+  useLayoutEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 

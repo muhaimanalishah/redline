@@ -27,6 +27,18 @@ export const metadata: Metadata = {
   description: "Distraction-free Markdown editor with revision redlines and eye-friendly themes",
 };
 
+const THEME_INIT_SCRIPT = `
+(function () {
+  try {
+    var saved = localStorage.getItem("redline-theme");
+    var theme = saved === "light" || saved === "dark"
+      ? saved
+      : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  } catch (e) {}
+})();
+`;
+
 export default function RootLayout({
   children,
 }: {
@@ -35,8 +47,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-theme="light"
+      suppressHydrationWarning
       className={`${sourceSerif4.variable} ${ibmPlexMono.variable} ${plusJakartaSans.variable}`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body>
         {children}
         <Toaster
