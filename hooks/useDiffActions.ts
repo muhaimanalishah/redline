@@ -3,7 +3,7 @@ import { Editor } from "@tiptap/react";
 import { toast } from "sonner";
 import { DiffPluginKey } from "@/components/DiffExtension";
 import { DiffIssue } from "@/types";
-import { findIssueRange, findIssueRanges } from "./diffDoc";
+import { resolveIssueRange, findIssueRanges } from "./diffDoc";
 
 function clearActiveDiffHighlight() {
   document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
@@ -14,7 +14,7 @@ export function useDiffActions(editor: Editor | null, onDiffResolved: () => void
     (issue: DiffIssue) => {
       if (!editor) return;
 
-      const range = findIssueRange(editor.state.doc, issue.original);
+      const range = resolveIssueRange(editor.state.doc, issue);
 
       if (range) {
         editor

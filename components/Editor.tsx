@@ -25,6 +25,7 @@ export interface EditorProps {
   onChange?: (markdown: string) => void;
   onIssuesChange?: (issues: DiffIssue[]) => void;
   onProofread?: (text: string) => void | Promise<void>;
+  onAiGenerate?: (prompt: string, selectedText: string) => Promise<string>;
 }
 
 export default function Editor({
@@ -34,13 +35,15 @@ export default function Editor({
   onChange,
   onIssuesChange,
   onProofread,
+  onAiGenerate,
 }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isProofreading, setIsProofreading] = useState(false);
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [sourceMode, setSourceMode] = useState(false);
   const [sourceText, setSourceText] = useState("");
 
-  const { editor, issueCount, hasSelection } = useDiffEditor({
+  const { editor, issueCount, hasSelection, canUndo, canRedo } = useDiffEditor({
     initialContent,
     placeholder,
     issues,
@@ -118,6 +121,59 @@ export default function Editor({
     }
   }, [editor, onProofread]);
 
+  const handleAiSubmit = useCallback(
+    async (prompt: string) => {
+      if (!editor || !onAiGenerate) return;
+
+      const { from, to, empty } = editor.state.selection;
+      const selectedText = empty ? "" : editor.state.doc.textBetween(from, to, " ");
+      const range = { from, to };
+
+      editor.view.dispatch(
+        editor.state.tr.setMeta(DiffPluginKey, {
+          type: "SET_PROCESSING_RANGE",
+          range,
+        })
+      );
+      setIsAiGenerating(true);
+
+      try {
+        const generatedText = await onAiGenerate(prompt, selectedText);
+
+        // Resolve the current range through the plugin state rather than
+        // the range captured above — the document may have changed while
+        // the request was in flight, and processingRange has been mapped
+        // through every edit since.
+        const pluginState = DiffPluginKey.getState(editor.state);
+        const currentRange = pluginState?.processingRange ?? range;
+
+        editor.view.dispatch(
+          editor.state.tr.setMeta(DiffPluginKey, {
+            type: "ADD_DIFF_ISSUE",
+            issue: {
+              id: crypto.randomUUID(),
+              type: "ai",
+              original: selectedText,
+              suggestion: generatedText,
+              range: currentRange,
+            },
+          })
+        );
+      } catch (err) {
+        editor.view.dispatch(
+          editor.state.tr.setMeta(DiffPluginKey, {
+            type: "SET_PROCESSING_RANGE",
+            range: null,
+          })
+        );
+        throw err;
+      } finally {
+        setIsAiGenerating(false);
+      }
+    },
+    [editor, onAiGenerate]
+  );
+
   if (!editor) return null;
 
   const zoomScale = zoom / 100;
@@ -186,6 +242,8 @@ export default function Editor({
         onCopyMarkdown={handleCopyMarkdown}
         sourceMode={sourceMode}
         onToggleSourceMode={handleToggleSourceMode}
+        canUndo={canUndo}
+        canRedo={canRedo}
       />
 
       {/* Insert + review dock at the bottom */}
@@ -199,6 +257,8 @@ export default function Editor({
           issueCount={issueCount}
           onAcceptAll={handleAcceptAll}
           onRejectAll={handleRejectAll}
+          onAiSubmit={onAiGenerate ? handleAiSubmit : undefined}
+          aiLoading={isAiGenerating}
         />
       )}
     </div>

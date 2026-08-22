@@ -17,6 +17,11 @@ export interface SetDiffIssuesMeta {
   issues: DiffIssue[];
 }
 
+export interface AddDiffIssueMeta {
+  type: "ADD_DIFF_ISSUE";
+  issue: DiffIssue;
+}
+
 export interface RemoveDiffMeta {
   type: "REMOVE_DIFF";
   issueId: string;
@@ -31,7 +36,30 @@ export interface SetProcessingRangeMeta {
   range: { from: number; to: number } | null;
 }
 
-export type DiffMeta = SetDiffIssuesMeta | RemoveDiffMeta | ClearAllDiffsMeta | SetProcessingRangeMeta;
+export type DiffMeta =
+  | SetDiffIssuesMeta
+  | AddDiffIssueMeta
+  | RemoveDiffMeta
+  | ClearAllDiffsMeta
+  | SetProcessingRangeMeta;
+
+function locateIssueRange(doc: ProseMirrorNode, issue: DiffIssue): { from: number; to: number } | null {
+  if (issue.range) return issue.range;
+  if (!issue.original) return null;
+
+  let range: { from: number; to: number } | null = null;
+  doc.descendants((node: ProseMirrorNode, pos: number) => {
+    if (range) return false;
+    if (node.isText && node.text) {
+      const index = node.text.indexOf(issue.original);
+      if (index !== -1) {
+        range = { from: pos + index, to: pos + index + issue.original.length };
+        return false;
+      }
+    }
+  });
+  return range;
+}
 
 function buildDecorations(
   doc: ProseMirrorNode,
@@ -49,48 +77,42 @@ function buildDecorations(
   }
 
   issues.forEach((issue) => {
-    // Scan doc text to locate the original text
-    doc.descendants((node: ProseMirrorNode, pos: number) => {
-      if (node.isText && node.text) {
-        const text = node.text;
-        const index = text.indexOf(issue.original);
-        if (index !== -1) {
-          const from = pos + index;
-          const to = from + issue.original.length;
+    const range = locateIssueRange(doc, issue);
+    if (!range) return;
 
-          // Inline decoration for the deleted/original text (non-interactive)
-          decos.push(
-            Decoration.inline(
-              from,
-              to,
-              {
-                class: `del diff-del diff-type-${issue.type}`,
-                "data-diff-type": issue.type,
-              },
-              { id: issue.id, issue }
-            )
-          );
+    const { from, to } = range;
 
-          // Widget decoration for the inserted/suggested text (clickable)
-          decos.push(
-            Decoration.widget(
-              to,
-              () => {
-                const span = document.createElement("span");
-                span.className = `ins diff-ins diff-type-${issue.type}`;
-                span.setAttribute("data-diff-id", issue.id);
-                span.setAttribute("data-diff-type", issue.type);
-                span.textContent = issue.suggestion;
-                return span;
-              },
-              { side: 1, key: `ins-${issue.id}` }
-            )
-          );
+    // Only render a strike-through for the original text when there is
+    // one — AI-generated text with no prior selection has nothing to
+    // delete, just the new suggestion to insert.
+    if (issue.original) {
+      decos.push(
+        Decoration.inline(
+          from,
+          to,
+          {
+            class: `del diff-del diff-type-${issue.type}`,
+            "data-diff-type": issue.type,
+          },
+          { id: issue.id, issue }
+        )
+      );
+    }
 
-          return false; // Match first occurrence per node
-        }
-      }
-    });
+    decos.push(
+      Decoration.widget(
+        to,
+        () => {
+          const span = document.createElement("span");
+          span.className = `ins diff-ins diff-type-${issue.type}`;
+          span.setAttribute("data-diff-id", issue.id);
+          span.setAttribute("data-diff-type", issue.type);
+          span.textContent = issue.suggestion;
+          return span;
+        },
+        { side: 1, key: `ins-${issue.id}` }
+      )
+    );
   });
 
   return DecorationSet.create(doc, decos);
@@ -128,6 +150,11 @@ export const DiffExtension = Extension.create({
                 processingRange = null;
                 const decorations = buildDecorations(newState.doc, issues, processingRange);
                 return { decorations, issues, processingRange };
+              } else if (meta.type === "ADD_DIFF_ISSUE") {
+                issues.set(meta.issue.id, meta.issue);
+                processingRange = null;
+                const decorations = buildDecorations(newState.doc, issues, processingRange);
+                return { decorations, issues, processingRange };
               } else if (meta.type === "REMOVE_DIFF") {
                 issues.delete(meta.issueId);
                 const decorations = buildDecorations(newState.doc, issues, processingRange);
@@ -160,4 +187,3 @@ export const DiffExtension = Extension.create({
     ];
   },
 });
-

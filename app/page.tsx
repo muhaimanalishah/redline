@@ -42,6 +42,24 @@ export default function Home() {
     }
   };
 
+  const handleAiGenerate = async (prompt: string, selectedText: string) => {
+    const res = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt, text: selectedText }),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      const message = body?.error ?? "Generate request failed";
+      toast.error(message);
+      throw new Error(message);
+    }
+
+    const data: { text: string } = await res.json();
+    return data.text;
+  };
+
   return (
     <main className="main">
       <Editor
@@ -49,6 +67,7 @@ export default function Home() {
         issues={issues}
         placeholder="Start writing here..."
         onProofread={handleProofread}
+        onAiGenerate={handleAiGenerate}
       />
     </main>
   );

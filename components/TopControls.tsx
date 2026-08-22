@@ -18,6 +18,8 @@ interface TopControlsProps {
   onCopyMarkdown?: () => void;
   sourceMode: boolean;
   onToggleSourceMode: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
 }
 
 export default function TopControls({
@@ -31,6 +33,8 @@ export default function TopControls({
   onCopyMarkdown,
   sourceMode,
   onToggleSourceMode,
+  canUndo,
+  canRedo,
 }: TopControlsProps) {
   const handleNextTheme = () => {
     const nextTheme: ThemeMode = theme === "light" ? "dark" : "light";
@@ -51,7 +55,7 @@ export default function TopControls({
           type="button"
           className={styles.btn}
           onClick={() => editor.chain().focus().undo().run()}
-          disabled={sourceMode || !editor.can().undo()}
+          disabled={sourceMode || !canUndo}
           title="Undo"
           aria-label="Undo"
         >
@@ -62,7 +66,7 @@ export default function TopControls({
           type="button"
           className={styles.btn}
           onClick={() => editor.chain().focus().redo().run()}
-          disabled={sourceMode || !editor.can().redo()}
+          disabled={sourceMode || !canRedo}
           title="Redo"
           aria-label="Redo"
         >

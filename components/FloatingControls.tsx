@@ -17,6 +17,7 @@ import {
   Minus,
   ImageIcon,
   Link2,
+  Sparkles,
   SpellCheck,
   Check,
   X,
@@ -24,6 +25,7 @@ import {
 } from "lucide-react";
 import InsertMenu from "./InsertMenu";
 import UrlPopover from "./UrlPopover";
+import AiPromptPopover from "./AiPromptPopover";
 import styles from "./FloatingControls.module.css";
 
 interface FloatingControlsProps {
@@ -35,6 +37,8 @@ interface FloatingControlsProps {
   issueCount?: number;
   onAcceptAll?: () => void;
   onRejectAll?: () => void;
+  onAiSubmit?: (prompt: string) => Promise<void>;
+  aiLoading?: boolean;
 }
 
 type PendingUrlField = "image" | "link" | null;
@@ -53,10 +57,14 @@ export default function FloatingControls({
   issueCount = 0,
   onAcceptAll,
   onRejectAll,
+  onAiSubmit,
+  aiLoading = false,
 }: FloatingControlsProps) {
   const [pendingUrl, setPendingUrl] = useState<PendingUrl | null>(null);
+  const [aiAnchorRect, setAiAnchorRect] = useState<DOMRect | null>(null);
   const imageBtnRef = useRef<HTMLButtonElement>(null);
   const linkBtnRef = useRef<HTMLButtonElement>(null);
+  const dockRef = useRef<HTMLDivElement>(null);
 
   const closePopover = () => setPendingUrl(null);
 
@@ -90,9 +98,21 @@ export default function FloatingControls({
     closePopover();
   };
 
+  const toggleAiPopover = () => {
+    setAiAnchorRect((prev) => {
+      if (prev) return null;
+      return dockRef.current?.getBoundingClientRect() ?? null;
+    });
+  };
+
+  const handleAiSubmit = async (prompt: string) => {
+    await onAiSubmit?.(prompt);
+    setAiAnchorRect(null);
+  };
+
   return (
     <aside aria-label="Editor controls" className={styles.dockContainer}>
-      <div className={styles.floatingDock}>
+      <div ref={dockRef} className={styles.floatingDock}>
         <button
           type="button"
           className={styles.btn}
@@ -259,6 +279,23 @@ export default function FloatingControls({
           <Link2 size={17} />
         </button>
 
+        {onAiSubmit && (
+          <>
+            <div className={styles.divider} />
+
+            <button
+              type="button"
+              className={styles.btn}
+              data-active={!!aiAnchorRect}
+              onClick={toggleAiPopover}
+              title="Ask AI"
+              aria-label="Ask AI"
+            >
+              <Sparkles size={17} />
+            </button>
+          </>
+        )}
+
         {onProofread && (
           <>
             <div className={styles.divider} />
@@ -321,6 +358,16 @@ export default function FloatingControls({
           anchorRect={pendingUrl.anchorRect}
           onSubmit={handleLinkSubmit}
           onClose={closePopover}
+        />
+      )}
+
+      {aiAnchorRect && (
+        <AiPromptPopover
+          anchorRect={aiAnchorRect}
+          hasSelection={hasSelection}
+          loading={aiLoading}
+          onSubmit={handleAiSubmit}
+          onClose={() => setAiAnchorRect(null)}
         />
       )}
     </aside>

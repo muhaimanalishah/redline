@@ -30,6 +30,8 @@ export function useDiffEditor({
 }: UseDiffEditorOptions) {
   const [issueCount, setIssueCount] = useState<number>(() => issues.length);
   const [hasSelection, setHasSelection] = useState(false);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: true,
@@ -38,6 +40,10 @@ export function useDiffEditor({
       StarterKit.configure({
         heading: { levels: [1, 2, 3, 4] },
         codeBlock: { HTMLAttributes: { class: "editor-code-block" } },
+        // Registered separately below with custom config — disable
+        // StarterKit's bundled defaults to avoid duplicate extensions.
+        link: false,
+        underline: false,
       }),
       TaskList,
       TaskItem.configure({ nested: true }),
@@ -89,6 +95,8 @@ export function useDiffEditor({
       const remainingCount = pluginState?.issues.size ?? 0;
       setIssueCount(remainingCount);
       ed.setEditable(remainingCount === 0);
+      setCanUndo(ed.can().undo());
+      setCanRedo(ed.can().redo());
     },
     onSelectionUpdate: ({ editor: ed }) => {
       setHasSelection(!ed.state.selection.empty);
@@ -113,5 +121,5 @@ export function useDiffEditor({
     }
   }, [editor, issues]);
 
-  return { editor, issueCount, hasSelection };
+  return { editor, issueCount, hasSelection, canUndo, canRedo };
 }

@@ -21,6 +21,14 @@ export function findIssueRange(
   return range;
 }
 
+export function resolveIssueRange(
+  doc: ProseMirrorNode,
+  issue: DiffIssue
+): { from: number; to: number } | null {
+  if (issue.range) return issue.range;
+  return findIssueRange(doc, issue.original);
+}
+
 export function findIssueRanges(
   doc: ProseMirrorNode,
   issues: DiffIssue[]
@@ -28,7 +36,7 @@ export function findIssueRanges(
   const ranges: { from: number; to: number; text: string }[] = [];
 
   issues.forEach((issue) => {
-    const range = findIssueRange(doc, issue.original);
+    const range = resolveIssueRange(doc, issue);
     if (range) {
       ranges.push({ from: range.from, to: range.to, text: issue.suggestion });
     }
