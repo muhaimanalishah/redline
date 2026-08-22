@@ -1,4 +1,4 @@
-import { generateText } from "ai";
+import { generateText, streamText } from "ai";
 import { openai } from "@ai-sdk/openai";
 
 const MODEL = "gpt-5.6-luna";
@@ -39,3 +39,12 @@ export async function generate(prompt: string, selectedText: string): Promise<st
 
   return result.text;
 }
+
+export function streamGenerate(prompt: string, selectedText: string) {
+  return streamText({
+    model: openai(MODEL),
+    system: buildSystemPrompt(selectedText),
+    prompt,
+  });
+}
+

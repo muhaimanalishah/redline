@@ -15,10 +15,10 @@ export default function Home() {
 
   const handleProofread = async (text: string) => {
     try {
-      const res = await fetch("/api/check", {
+      const res = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ mode: "preset", preset: "proofread", text }),
       });
 
       if (!res.ok) {
@@ -26,15 +26,32 @@ export default function Home() {
         throw new Error(body?.error ?? "Proofread check failed");
       }
 
-      const data: { issues: Omit<DiffIssue, "id">[] } = await res.json();
+      if (!res.body) {
+        throw new Error("No response body received");
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let rawText = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        rawText += decoder.decode(value, { stream: true });
+      }
+      rawText += decoder.decode();
+
+      const parsed = JSON.parse(rawText) as { issues?: Omit<DiffIssue, "id">[] };
+      const parsedIssues = parsed.issues ?? [];
+
       setIssues(
-        data.issues.map((issue, index) => ({
+        parsedIssues.map((issue, index) => ({
           id: `diff-${index}-${issue.original}`,
           ...issue,
         }))
       );
 
-      if (data.issues.length === 0) {
+      if (parsedIssues.length === 0) {
         toast.success("No issues found");
       }
     } catch (err) {
@@ -43,10 +60,10 @@ export default function Home() {
   };
 
   const handleAiGenerate = async (prompt: string, selectedText: string) => {
-    const res = await fetch("/api/generate", {
+    const res = await fetch("/api/ai", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, text: selectedText }),
+      body: JSON.stringify({ mode: "custom", prompt, text: selectedText }),
     });
 
     if (!res.ok) {
@@ -56,8 +73,22 @@ export default function Home() {
       throw new Error(message);
     }
 
-    const data: { text: string } = await res.json();
-    return data.text;
+    if (!res.body) {
+      throw new Error("No response body received");
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = "";
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      fullText += decoder.decode(value, { stream: true });
+    }
+    fullText += decoder.decode();
+
+    return fullText;
   };
 
   return (
