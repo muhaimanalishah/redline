@@ -3,6 +3,11 @@
 import { RefObject, useRef, useState } from "react";
 import { Editor } from "@tiptap/react";
 import {
+  Bold,
+  Italic,
+  Strikethrough,
+  Underline,
+  Code,
   List,
   ListOrdered,
   ListChecks,
@@ -88,6 +93,68 @@ export default function FloatingControls({
   return (
     <aside aria-label="Editor controls" className={styles.dockContainer}>
       <div className={styles.floatingDock}>
+        <button
+          type="button"
+          className={styles.btn}
+          data-active={editor.isActive("bold")}
+          disabled={!hasSelection}
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          title={hasSelection ? "Bold" : "Select text to format"}
+          aria-label="Bold"
+        >
+          <Bold size={17} />
+        </button>
+
+        <button
+          type="button"
+          className={styles.btn}
+          data-active={editor.isActive("italic")}
+          disabled={!hasSelection}
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          title={hasSelection ? "Italic" : "Select text to format"}
+          aria-label="Italic"
+        >
+          <Italic size={17} />
+        </button>
+
+        <button
+          type="button"
+          className={styles.btn}
+          data-active={editor.isActive("underline")}
+          disabled={!hasSelection}
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          title={hasSelection ? "Underline" : "Select text to format"}
+          aria-label="Underline"
+        >
+          <Underline size={17} />
+        </button>
+
+        <button
+          type="button"
+          className={styles.btn}
+          data-active={editor.isActive("strike")}
+          disabled={!hasSelection}
+          onClick={() => editor.chain().focus().toggleStrike().run()}
+          title={hasSelection ? "Strikethrough" : "Select text to format"}
+          aria-label="Strikethrough"
+        >
+          <Strikethrough size={17} />
+        </button>
+
+        <button
+          type="button"
+          className={styles.btn}
+          data-active={editor.isActive("code")}
+          disabled={!hasSelection}
+          onClick={() => editor.chain().focus().toggleCode().run()}
+          title={hasSelection ? "Inline code" : "Select text to format"}
+          aria-label="Inline code"
+        >
+          <Code size={17} />
+        </button>
+
+        <div className={styles.divider} />
+
         <InsertMenu editor={editor} />
 
         <button
