@@ -50,6 +50,9 @@ export default function UrlPopover({ label, placeholder, anchorRect, onSubmit, o
       ref={wrapRef}
       className={styles.wrap}
       style={{ left: `${anchorRect.left + anchorRect.width / 2}px`, top: `${anchorRect.top}px` }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={label}
     >
       <form className={styles.popover} onSubmit={handleSubmit}>
         <span className={styles.label}>{label}</span>

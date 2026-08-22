@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Editor } from "@tiptap/react";
 import {
   Bold,
@@ -58,45 +58,47 @@ export default function FloatingControls({
 }: FloatingControlsProps) {
   const [pendingUrl, setPendingUrl] = useState<PendingUrl | null>(null);
   const [aiAnchorRect, setAiAnchorRect] = useState<DOMRect | null>(null);
+  const [savedRange, setSavedRange] = useState<{ from: number; to: number } | null>(null);
   const imageBtnRef = useRef<HTMLButtonElement>(null);
   const linkBtnRef = useRef<HTMLButtonElement>(null);
   const dockRef = useRef<HTMLDivElement>(null);
 
-  const closePopover = () => setPendingUrl(null);
+  const closePopover = useCallback(() => setPendingUrl(null), []);
 
-  const openPopover = (field: "image" | "link") => {
+  const openPopover = useCallback((field: "image" | "link") => {
     setPendingUrl((prev) => {
       if (prev?.field === field) return null;
       const anchorRect = dockRef.current?.getBoundingClientRect();
       return anchorRect ? { field, anchorRect } : null;
     });
-  };
+  }, []);
 
-  const handleImageSubmit = (url: string) => {
-    // Insert at the cursor when the editor has focus; otherwise default to
-    // a new line at the end of the document rather than an arbitrary
-    // leftover cursor position.
-    if (editor.isFocused) {
-      editor.chain().focus().setImage({ src: url }).run();
-    } else {
-      editor
-        .chain()
-        .focus("end")
-        .insertContent({ type: "paragraph" })
-        .setImage({ src: url })
-        .run();
-    }
-    closePopover();
-  };
+  const handleImageSubmit = useCallback(
+    (url: string) => {
+      if (editor.isFocused) {
+        editor.chain().focus().setImage({ src: url }).run();
+      } else {
+        editor
+          .chain()
+          .focus("end")
+          .insertContent({ type: "paragraph" })
+          .setImage({ src: url })
+          .run();
+      }
+      closePopover();
+    },
+    [editor, closePopover]
+  );
 
-  const handleLinkSubmit = (url: string) => {
-    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
-    closePopover();
-  };
+  const handleLinkSubmit = useCallback(
+    (url: string) => {
+      editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+      closePopover();
+    },
+    [editor, closePopover]
+  );
 
-  const [savedRange, setSavedRange] = useState<{ from: number; to: number } | null>(null);
-
-  const closeAiPopover = () => {
+  const closeAiPopover = useCallback(() => {
     editor.view.dispatch(
       editor.state.tr.setMeta(DiffPluginKey, {
         type: "SET_ACTIVE_SELECTION_RANGE",
@@ -105,9 +107,9 @@ export default function FloatingControls({
     );
     setSavedRange(null);
     setAiAnchorRect(null);
-  };
+  }, [editor]);
 
-  const toggleAiPopover = () => {
+  const toggleAiPopover = useCallback(() => {
     setAiAnchorRect((prev) => {
       if (prev) {
         editor.view.dispatch(
@@ -135,29 +137,35 @@ export default function FloatingControls({
 
       return dockRef.current?.getBoundingClientRect() ?? null;
     });
-  };
+  }, [editor]);
 
-  const handleAiSubmit = async (prompt: string) => {
-    const rangeToUse = savedRange;
-    closeAiPopover();
-    if (rangeToUse) {
-      editor.commands.setTextSelection(rangeToUse);
-    }
-    await onAiSubmit?.(prompt);
-  };
+  const handleAiSubmit = useCallback(
+    async (prompt: string) => {
+      const rangeToUse = savedRange;
+      closeAiPopover();
+      if (rangeToUse) {
+        editor.commands.setTextSelection(rangeToUse);
+      }
+      await onAiSubmit?.(prompt);
+    },
+    [savedRange, closeAiPopover, editor, onAiSubmit]
+  );
 
-  const handleSelectPreset = async (preset: PresetId) => {
-    const rangeToUse = savedRange;
-    closeAiPopover();
-    if (rangeToUse) {
-      editor.commands.setTextSelection(rangeToUse);
-    }
-    await onSelectPreset?.(preset);
-  };
+  const handleSelectPreset = useCallback(
+    async (preset: PresetId) => {
+      const rangeToUse = savedRange;
+      closeAiPopover();
+      if (rangeToUse) {
+        editor.commands.setTextSelection(rangeToUse);
+      }
+      await onSelectPreset?.(preset);
+    },
+    [savedRange, closeAiPopover, editor, onSelectPreset]
+  );
 
   return (
     <aside aria-label="Editor controls" className={styles.dockContainer}>
-      <div ref={dockRef} className={styles.floatingDock}>
+      <div ref={dockRef} className={styles.floatingDock} role="toolbar" aria-label="Formatting toolbar">
         <button
           type="button"
           className={styles.btn}

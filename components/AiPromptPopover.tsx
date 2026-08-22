@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   ArrowUp,
@@ -19,8 +19,15 @@ import {
   Smile,
   Zap,
   GraduationCap,
+  type LucideIcon,
 } from "lucide-react";
-import { PresetId } from "@/lib/ai";
+import {
+  PRESETS,
+  PRESET_CATEGORIES,
+  getPresetsByCategory,
+  PresetId,
+  PresetCategory,
+} from "@/lib/ai";
 import styles from "./AiPromptPopover.module.css";
 
 interface AiPromptPopoverProps {
@@ -32,15 +39,31 @@ interface AiPromptPopoverProps {
   onClose: () => void;
 }
 
-type ActiveView = "root" | "length" | "tone" | "format";
+type ActiveView = "root" | PresetCategory;
 
 interface MenuItemDef {
   id: string;
   label: string;
-  Icon: typeof SpellCheck;
+  Icon: LucideIcon;
   action: () => void;
+  isBack?: boolean;
   hasSubmenu?: boolean;
 }
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  SpellCheck,
+  MoveHorizontal,
+  SlidersHorizontal,
+  Table,
+  List,
+  Minimize2,
+  Maximize2,
+  FileText,
+  Briefcase,
+  Smile,
+  Zap,
+  GraduationCap,
+};
 
 export default function AiPromptPopover({
   anchorRect,
@@ -101,133 +124,61 @@ export default function AiPromptPopover({
     onSelectPreset?.(presetId);
   };
 
-  // Build current menu items list for keyboard navigation
-  const getMenuItems = (): MenuItemDef[] => {
+  // Build current menu items list for keyboard navigation and rendering
+  const menuItems = useMemo<MenuItemDef[]>(() => {
     if (!hasSelection) return [];
 
     if (activeView === "root") {
-      return [
-        {
-          id: "proofread",
-          label: "Proofread & Fix",
-          Icon: SpellCheck,
-          action: () => handlePresetClick("proofread"),
-        },
-        {
-          id: "length",
-          label: "Adjust Length",
-          Icon: MoveHorizontal,
-          action: () => changeView("length"),
+      const items: MenuItemDef[] = [];
+
+      // 1. Proofread preset
+      const proofreadConfig = PRESETS.proofread;
+      if (proofreadConfig) {
+        items.push({
+          id: proofreadConfig.id,
+          label: proofreadConfig.label,
+          Icon: ICON_MAP[proofreadConfig.iconName] ?? SpellCheck,
+          action: () => handlePresetClick(proofreadConfig.id),
+        });
+      }
+
+      // 2. Preset category entries
+      PRESET_CATEGORIES.forEach((cat) => {
+        items.push({
+          id: cat.id,
+          label: cat.label,
+          Icon: ICON_MAP[cat.iconName] ?? List,
+          action: () => changeView(cat.id),
           hasSubmenu: true,
-        },
-        {
-          id: "tone",
-          label: "Change Tone",
-          Icon: SlidersHorizontal,
-          action: () => changeView("tone"),
-          hasSubmenu: true,
-        },
-        {
-          id: "format",
-          label: "Format",
-          Icon: List,
-          action: () => changeView("format"),
-          hasSubmenu: true,
-        },
-      ];
+        });
+      });
+
+      return items;
     }
 
-    if (activeView === "length") {
-      return [
-        {
-          id: "back",
-          label: "Back",
-          Icon: ChevronLeft,
-          action: () => changeView("root"),
-        },
-        {
-          id: "shorten",
-          label: "Shorten",
-          Icon: Minimize2,
-          action: () => handlePresetClick("shorten"),
-        },
-        {
-          id: "expand",
-          label: "Expand",
-          Icon: Maximize2,
-          action: () => handlePresetClick("expand"),
-        },
-        {
-          id: "summarize",
-          label: "Summarize",
-          Icon: FileText,
-          action: () => handlePresetClick("summarize"),
-        },
-      ];
-    }
+    // Category submenu
+    const subItems: MenuItemDef[] = [
+      {
+        id: "back",
+        label: "Back",
+        Icon: ChevronLeft,
+        action: () => changeView("root"),
+        isBack: true,
+      },
+    ];
 
-    if (activeView === "tone") {
-      return [
-        {
-          id: "back",
-          label: "Back",
-          Icon: ChevronLeft,
-          action: () => changeView("root"),
-        },
-        {
-          id: "tone-professional",
-          label: "Professional",
-          Icon: Briefcase,
-          action: () => handlePresetClick("tone-professional"),
-        },
-        {
-          id: "tone-casual",
-          label: "Casual",
-          Icon: Smile,
-          action: () => handlePresetClick("tone-casual"),
-        },
-        {
-          id: "tone-direct",
-          label: "Direct",
-          Icon: Zap,
-          action: () => handlePresetClick("tone-direct"),
-        },
-        {
-          id: "tone-academic",
-          label: "Academic",
-          Icon: GraduationCap,
-          action: () => handlePresetClick("tone-academic"),
-        },
-      ];
-    }
+    const categoryPresets = getPresetsByCategory(activeView);
+    categoryPresets.forEach((preset) => {
+      subItems.push({
+        id: preset.id,
+        label: preset.label,
+        Icon: ICON_MAP[preset.iconName] ?? FileText,
+        action: () => handlePresetClick(preset.id),
+      });
+    });
 
-    if (activeView === "format") {
-      return [
-        {
-          id: "back",
-          label: "Back",
-          Icon: ChevronLeft,
-          action: () => changeView("root"),
-        },
-        {
-          id: "format-bullet-list",
-          label: "Bullet List",
-          Icon: List,
-          action: () => handlePresetClick("format-bullet-list"),
-        },
-        {
-          id: "format-table",
-          label: "Table",
-          Icon: Table,
-          action: () => handlePresetClick("format-table"),
-        },
-      ];
-    }
-
-    return [];
-  };
-
-  const menuItems = getMenuItems();
+    return subItems;
+  }, [hasSelection, activeView, loading]);
 
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -262,6 +213,9 @@ export default function AiPromptPopover({
       ref={wrapRef}
       className={styles.wrap}
       style={{ left: `${anchorRect.left + anchorRect.width / 2}px`, top: `${anchorRect.top}px` }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="AI Assistant"
     >
       <div className={`${styles.popover} ${hasSelection ? styles.hasPresets : ""}`}>
         <form className={styles.inputRow} onSubmit={handleSubmit}>
@@ -281,6 +235,7 @@ export default function AiPromptPopover({
             }}
             onKeyDown={handleInputKeyDown}
             rows={1}
+            aria-label="Prompt input"
           />
           <button
             type="submit"
@@ -296,232 +251,50 @@ export default function AiPromptPopover({
           </button>
         </form>
 
-        {hasSelection && (
-          <div className={styles.menuSection}>
-            {activeView === "root" && (
-              <>
-                <button
-                  type="button"
-                  className={styles.menuItem}
-                  data-highlighted={highlightedIndex === 0}
-                  onMouseEnter={() => setHighlightedIndex(0)}
-                  disabled={loading}
-                  onClick={() => handlePresetClick("proofread")}
-                >
-                  <span className={styles.itemLabel}>
-                    <SpellCheck size={16} className={styles.itemIcon} />
-                    <span>Proofread & Fix</span>
-                  </span>
-                </button>
+        {hasSelection && menuItems.length > 0 && (
+          <div className={styles.menuSection} role="menu">
+            {menuItems.map((item, idx) => {
+              const isHighlighted = highlightedIndex === idx;
+              const ItemIcon = item.Icon;
 
-                <button
-                  type="button"
-                  className={styles.menuItem}
-                  data-highlighted={highlightedIndex === 1}
-                  onMouseEnter={() => setHighlightedIndex(1)}
-                  disabled={loading}
-                  onClick={() => changeView("length")}
-                >
-                  <span className={styles.itemLabel}>
-                    <MoveHorizontal size={16} className={styles.itemIcon} />
-                    <span>Adjust Length</span>
-                  </span>
-                  <ChevronRight size={15} className={styles.chevron} />
-                </button>
+              if (item.isBack) {
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={styles.backBtn}
+                    data-highlighted={isHighlighted}
+                    onMouseEnter={() => setHighlightedIndex(idx)}
+                    onClick={item.action}
+                    role="menuitem"
+                  >
+                    <ItemIcon size={16} className={styles.itemIcon} />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              }
 
+              return (
                 <button
+                  key={item.id}
                   type="button"
                   className={styles.menuItem}
-                  data-highlighted={highlightedIndex === 2}
-                  onMouseEnter={() => setHighlightedIndex(2)}
+                  data-highlighted={isHighlighted}
+                  onMouseEnter={() => setHighlightedIndex(idx)}
                   disabled={loading}
-                  onClick={() => changeView("tone")}
+                  onClick={item.action}
+                  role="menuitem"
                 >
                   <span className={styles.itemLabel}>
-                    <SlidersHorizontal size={16} className={styles.itemIcon} />
-                    <span>Change Tone</span>
+                    <ItemIcon size={16} className={styles.itemIcon} />
+                    <span>{item.label}</span>
                   </span>
-                  <ChevronRight size={15} className={styles.chevron} />
+                  {item.hasSubmenu && (
+                    <ChevronRight size={15} className={styles.chevron} />
+                  )}
                 </button>
-
-                <button
-                  type="button"
-                  className={styles.menuItem}
-                  data-highlighted={highlightedIndex === 3}
-                  onMouseEnter={() => setHighlightedIndex(3)}
-                  disabled={loading}
-                  onClick={() => changeView("format")}
-                >
-                  <span className={styles.itemLabel}>
-                    <List size={16} className={styles.itemIcon} />
-                    <span>Format</span>
-                  </span>
-                  <ChevronRight size={15} className={styles.chevron} />
-                </button>
-              </>
-            )}
-
-            {activeView === "length" && (
-              <>
-                <button
-                  type="button"
-                  className={styles.backBtn}
-                  data-highlighted={highlightedIndex === 0}
-                  onMouseEnter={() => setHighlightedIndex(0)}
-                  onClick={() => changeView("root")}
-                >
-                  <ChevronLeft size={16} className={styles.itemIcon} />
-                  <span>Back</span>
-                </button>
-                <button
-                  type="button"
-                  className={styles.menuItem}
-                  data-highlighted={highlightedIndex === 1}
-                  onMouseEnter={() => setHighlightedIndex(1)}
-                  disabled={loading}
-                  onClick={() => handlePresetClick("shorten")}
-                >
-                  <span className={styles.itemLabel}>
-                    <Minimize2 size={16} className={styles.itemIcon} />
-                    <span>Shorten</span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className={styles.menuItem}
-                  data-highlighted={highlightedIndex === 2}
-                  onMouseEnter={() => setHighlightedIndex(2)}
-                  disabled={loading}
-                  onClick={() => handlePresetClick("expand")}
-                >
-                  <span className={styles.itemLabel}>
-                    <Maximize2 size={16} className={styles.itemIcon} />
-                    <span>Expand</span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className={styles.menuItem}
-                  data-highlighted={highlightedIndex === 3}
-                  onMouseEnter={() => setHighlightedIndex(3)}
-                  disabled={loading}
-                  onClick={() => handlePresetClick("summarize")}
-                >
-                  <span className={styles.itemLabel}>
-                    <FileText size={16} className={styles.itemIcon} />
-                    <span>Summarize</span>
-                  </span>
-                </button>
-              </>
-            )}
-
-            {activeView === "tone" && (
-              <>
-                <button
-                  type="button"
-                  className={styles.backBtn}
-                  data-highlighted={highlightedIndex === 0}
-                  onMouseEnter={() => setHighlightedIndex(0)}
-                  onClick={() => changeView("root")}
-                >
-                  <ChevronLeft size={16} className={styles.itemIcon} />
-                  <span>Back</span>
-                </button>
-                <button
-                  type="button"
-                  className={styles.menuItem}
-                  data-highlighted={highlightedIndex === 1}
-                  onMouseEnter={() => setHighlightedIndex(1)}
-                  disabled={loading}
-                  onClick={() => handlePresetClick("tone-professional")}
-                >
-                  <span className={styles.itemLabel}>
-                    <Briefcase size={16} className={styles.itemIcon} />
-                    <span>Professional</span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className={styles.menuItem}
-                  data-highlighted={highlightedIndex === 2}
-                  onMouseEnter={() => setHighlightedIndex(2)}
-                  disabled={loading}
-                  onClick={() => handlePresetClick("tone-casual")}
-                >
-                  <span className={styles.itemLabel}>
-                    <Smile size={16} className={styles.itemIcon} />
-                    <span>Casual</span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className={styles.menuItem}
-                  data-highlighted={highlightedIndex === 3}
-                  onMouseEnter={() => setHighlightedIndex(3)}
-                  disabled={loading}
-                  onClick={() => handlePresetClick("tone-direct")}
-                >
-                  <span className={styles.itemLabel}>
-                    <Zap size={16} className={styles.itemIcon} />
-                    <span>Direct</span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className={styles.menuItem}
-                  data-highlighted={highlightedIndex === 4}
-                  onMouseEnter={() => setHighlightedIndex(4)}
-                  disabled={loading}
-                  onClick={() => handlePresetClick("tone-academic")}
-                >
-                  <span className={styles.itemLabel}>
-                    <GraduationCap size={16} className={styles.itemIcon} />
-                    <span>Academic</span>
-                  </span>
-                </button>
-              </>
-            )}
-
-            {activeView === "format" && (
-              <>
-                <button
-                  type="button"
-                  className={styles.backBtn}
-                  data-highlighted={highlightedIndex === 0}
-                  onMouseEnter={() => setHighlightedIndex(0)}
-                  onClick={() => changeView("root")}
-                >
-                  <ChevronLeft size={16} className={styles.itemIcon} />
-                  <span>Back</span>
-                </button>
-                <button
-                  type="button"
-                  className={styles.menuItem}
-                  data-highlighted={highlightedIndex === 1}
-                  onMouseEnter={() => setHighlightedIndex(1)}
-                  disabled={loading}
-                  onClick={() => handlePresetClick("format-bullet-list")}
-                >
-                  <span className={styles.itemLabel}>
-                    <List size={16} className={styles.itemIcon} />
-                    <span>Bullet List</span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className={styles.menuItem}
-                  data-highlighted={highlightedIndex === 2}
-                  onMouseEnter={() => setHighlightedIndex(2)}
-                  disabled={loading}
-                  onClick={() => handlePresetClick("format-table")}
-                >
-                  <span className={styles.itemLabel}>
-                    <Table size={16} className={styles.itemIcon} />
-                    <span>Table</span>
-                  </span>
-                </button>
-              </>
-            )}
+              );
+            })}
           </div>
         )}
       </div>

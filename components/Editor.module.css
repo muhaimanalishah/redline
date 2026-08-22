@@ -300,28 +300,23 @@
 }
 
 :global(.ins.diff-ins) {
-  background: transparent;
+  display: block;
+  margin-top: 4px;
+  margin-bottom: 8px;
   color: var(--accent-blue);
   font-weight: 400;
-  border-radius: 3px;
-  padding: 0 1px;
-  margin-left: 3px;
   cursor: pointer;
-  display: inline;
 }
 
-:global(.ins.diff-ins.diff-block) {
-  display: block;
-  margin-top: 12px;
-  margin-bottom: 12px;
-  padding: 12px 14px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--accent-blue) 4%, transparent);
-  border: 1px dashed color-mix(in srgb, var(--accent-blue) 35%, transparent);
-  color: var(--ink);
+:global(.ins.diff-ins p) {
+  margin: 0 0 0.4em 0;
 }
 
-:global(.ins.diff-ins.diff-block table) {
+:global(.ins.diff-ins p:last-child) {
+  margin-bottom: 0;
+}
+
+:global(.ins.diff-ins table) {
   width: 100%;
   border-collapse: collapse;
   margin: 6px 0;
@@ -331,7 +326,7 @@
   overflow: hidden;
 }
 
-:global(.ins.diff-ins.diff-block th) {
+:global(.ins.diff-ins th) {
   background: var(--table-head-bg);
   font-weight: 600;
   text-align: left;
@@ -340,28 +335,24 @@
   border-right: 1px solid var(--table-border);
 }
 
-:global(.ins.diff-ins.diff-block td) {
+:global(.ins.diff-ins td) {
   padding: 8px 12px;
   border-bottom: 1px solid var(--table-border);
   border-right: 1px solid var(--table-border);
 }
 
-:global(.ins.diff-ins.diff-block th:last-child),
-:global(.ins.diff-ins.diff-block td:last-child) {
+:global(.ins.diff-ins th:last-child),
+:global(.ins.diff-ins td:last-child) {
   border-right: none;
 }
 
-:global(.ins.diff-ins.diff-block tr:last-child td) {
+:global(.ins.diff-ins tr:last-child td) {
   border-bottom: none;
 }
 
-:global(.ins.diff-ins.diff-block ul),
-:global(.ins.diff-ins.diff-block ol) {
+:global(.ins.diff-ins ul),
+:global(.ins.diff-ins ol) {
   padding-left: 1.4em;
-  margin: 6px 0;
-}
-
-:global(.ins.diff-ins.diff-block p) {
   margin: 6px 0;
 }
 

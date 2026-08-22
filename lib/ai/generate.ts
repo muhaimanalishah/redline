@@ -1,7 +1,7 @@
 import { generateText, streamText } from "ai";
 import { openai } from "@ai-sdk/openai";
 
-const MODEL = "gpt-5.6-luna";
+const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
 export const MAX_PROMPT_LENGTH = 300;
 export const MAX_SELECTION_LENGTH = 4000;

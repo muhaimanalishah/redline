@@ -72,13 +72,22 @@ export default function Editor({
     return storage.markdown?.getMarkdown() ?? "";
   }, [editor]);
 
+  const handleSourceTextChange = useCallback(
+    (text: string) => {
+      setSourceText(text);
+      onChange?.(text);
+    },
+    [onChange]
+  );
+
   const handleToggleSourceMode = useCallback(() => {
     if (!editor) return;
     if (sourceMode) {
       editor.commands.setContent(sourceText);
       setSourceMode(false);
     } else {
-      setSourceText(getMarkdown());
+      const currentMd = getMarkdown();
+      setSourceText(currentMd);
       setSourceMode(true);
     }
   }, [editor, sourceMode, sourceText, getMarkdown]);
@@ -93,48 +102,111 @@ export default function Editor({
       if (!editor || !onAiExecute) return;
 
       const { from, to, empty } = editor.state.selection;
-      const selectedText = empty ? "" : editor.state.doc.textBetween(from, to, " ");
-      const range = { from, to };
 
-      editor.view.dispatch(
-        editor.state.tr.setMeta(DiffPluginKey, {
-          type: "SET_PROCESSING_RANGE",
-          range,
-        })
-      );
-      setIsAiGenerating(true);
-
-      try {
-        const generatedText = await onAiExecute({
-          ...options,
-          selectedText,
+      // Extract all selected text blocks to support per-paragraph independent diffs
+      const blocks: { from: number; to: number; text: string }[] = [];
+      if (!empty) {
+        editor.state.doc.nodesBetween(from, to, (node, pos) => {
+          if (node.isTextblock) {
+            const start = Math.max(from, pos + 1);
+            const end = Math.min(to, pos + node.nodeSize - 1);
+            if (start < end) {
+              const text = editor.state.doc.textBetween(start, end, " ");
+              if (text.trim()) {
+                blocks.push({ from: start, to: end, text });
+              }
+            }
+          }
         });
+      }
 
-        const pluginState = DiffPluginKey.getState(editor.state);
-        const currentRange = pluginState?.processingRange ?? range;
-
-        editor.view.dispatch(
-          editor.state.tr.setMeta(DiffPluginKey, {
-            type: "ADD_DIFF_ISSUE",
-            issue: {
-              id: crypto.randomUUID(),
-              type: "ai",
-              original: selectedText,
-              suggestion: generatedText,
-              range: currentRange,
-            },
-          })
-        );
-      } catch (err) {
+      if (blocks.length > 1) {
         editor.view.dispatch(
           editor.state.tr.setMeta(DiffPluginKey, {
             type: "SET_PROCESSING_RANGE",
-            range: null,
+            range: { from, to },
           })
         );
-        throw err;
-      } finally {
-        setIsAiGenerating(false);
+        setIsAiGenerating(true);
+
+        try {
+          const generatedIssues: DiffIssue[] = await Promise.all(
+            blocks.map(async (b) => {
+              const suggestion = await onAiExecute({
+                ...options,
+                selectedText: b.text,
+              });
+              return {
+                id: crypto.randomUUID(),
+                type: "ai" as const,
+                original: b.text,
+                suggestion,
+                range: { from: b.from, to: b.to },
+              };
+            })
+          );
+
+          editor.view.dispatch(
+            editor.state.tr.setMeta(DiffPluginKey, {
+              type: "ADD_DIFF_ISSUES",
+              issues: generatedIssues,
+            })
+          );
+        } catch (err) {
+          editor.view.dispatch(
+            editor.state.tr.setMeta(DiffPluginKey, {
+              type: "SET_PROCESSING_RANGE",
+              range: null,
+            })
+          );
+          throw err;
+        } finally {
+          setIsAiGenerating(false);
+        }
+      } else {
+        const selectedText = empty ? "" : editor.state.doc.textBetween(from, to, " ");
+        const range = { from, to };
+
+        editor.view.dispatch(
+          editor.state.tr.setMeta(DiffPluginKey, {
+            type: "SET_PROCESSING_RANGE",
+            range,
+          })
+        );
+        setIsAiGenerating(true);
+
+        try {
+          const generatedText = await onAiExecute({
+            ...options,
+            selectedText,
+          });
+
+          const pluginState = DiffPluginKey.getState(editor.state);
+          const currentRange = pluginState?.processingRange ?? range;
+
+          editor.view.dispatch(
+            editor.state.tr.setMeta(DiffPluginKey, {
+              type: "ADD_DIFF_ISSUE",
+              issue: {
+                id: crypto.randomUUID(),
+                type: "ai",
+                original: selectedText,
+                suggestion: generatedText,
+                range: currentRange,
+              },
+            })
+          );
+        } catch (err) {
+          editor.view.dispatch(
+            editor.state.tr.setMeta(DiffPluginKey, {
+              type: "SET_PROCESSING_RANGE",
+              range: null,
+            })
+          );
+          throw err;
+        } finally {
+          setIsAiGenerating(false);
+        }
       }
     },
     [editor, onAiExecute]
@@ -163,6 +235,7 @@ export default function Editor({
     <div
       ref={containerRef}
       className={styles.container}
+      style={{ "--editor-zoom": zoomScale } as React.CSSProperties}
       onMouseOver={handleContainerMouseOver}
       onMouseOut={handleContainerMouseOut}
     >
@@ -170,7 +243,7 @@ export default function Editor({
         {sourceMode ? (
           <MarkdownSourceView
             value={sourceText}
-            onChange={setSourceText}
+            onChange={handleSourceTextChange}
             placeholder={placeholder}
           />
         ) : (

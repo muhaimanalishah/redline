@@ -23,9 +23,16 @@ export function useHoverToolbar(editor: Editor | null, containerRef: RefObject<H
   }, []);
 
   const closeActiveDiff = useCallback(() => {
-    document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
+    if (editor && !editor.isDestroyed) {
+      const pluginState = DiffPluginKey.getState(editor.state);
+      if (pluginState?.activeDiffId) {
+        editor.view.dispatch(
+          editor.state.tr.setMeta(DiffPluginKey, { type: "SET_ACTIVE_DIFF_ID", issueId: null })
+        );
+      }
+    }
     setActiveDiff(null);
-  }, []);
+  }, [editor]);
 
   const scheduleClose = useCallback(() => {
     cancelCloseTimeout();
@@ -46,8 +53,12 @@ export function useHoverToolbar(editor: Editor | null, containerRef: RefObject<H
       if (!issue) return;
 
       cancelCloseTimeout();
-      document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
-      diffEl.classList.add("diff-active");
+
+      if (pluginState.activeDiffId !== diffId) {
+        editor.view.dispatch(
+          editor.state.tr.setMeta(DiffPluginKey, { type: "SET_ACTIVE_DIFF_ID", issueId: diffId })
+        );
+      }
 
       const rect = diffEl.getBoundingClientRect();
       const contRect = containerRef.current.getBoundingClientRect();

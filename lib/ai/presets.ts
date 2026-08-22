@@ -13,10 +13,25 @@ export type PresetId =
   | "format-bullet-list"
   | "format-table";
 
+export type PresetCategory = "length" | "tone" | "format";
+
+export interface PresetCategoryConfig {
+  id: PresetCategory;
+  label: string;
+  iconName: "MoveHorizontal" | "SlidersHorizontal" | "List";
+}
+
+export const PRESET_CATEGORIES: PresetCategoryConfig[] = [
+  { id: "length", label: "Adjust Length", iconName: "MoveHorizontal" },
+  { id: "tone", label: "Change Tone", iconName: "SlidersHorizontal" },
+  { id: "format", label: "Format", iconName: "List" },
+];
+
 export interface PresetConfig {
   id: PresetId;
   label: string;
   category: "proofread" | "length" | "tone" | "format";
+  iconName: string;
   description: string;
   prompt: string;
 }
@@ -26,6 +41,7 @@ export const PRESETS: Record<PresetId, PresetConfig> = {
     id: "proofread",
     label: "Proofread & Fix",
     category: "proofread",
+    iconName: "SpellCheck",
     description: "Fix grammar, spelling, clarity, and punctuation issues.",
     prompt: `You are the Proofreading Engine inside Redline, a distraction-free Markdown writing editor.
 Your ONLY objective is to fix mechanical and structural language errors in the user's selected Markdown text.
@@ -47,6 +63,7 @@ Strict Non-Negotiable Invariants:
     id: "shorten",
     label: "Shorten",
     category: "length",
+    iconName: "Minimize2",
     description: "Make the text more concise without changing tone or meaning.",
     prompt: `You are the Conciseness Engine inside Redline, a distraction-free Markdown writing editor.
 Your ONLY objective is to reduce the word count of the user's selected Markdown text while keeping the exact same meaning.
@@ -66,6 +83,7 @@ Strict Non-Negotiable Invariants:
     id: "expand",
     label: "Expand",
     category: "length",
+    iconName: "Maximize2",
     description: "Elaborate on ideas with additional depth while preserving tone.",
     prompt: `You are the Elaboration Engine inside Redline, a distraction-free Markdown writing editor.
 Your ONLY objective is to expand the user's selected Markdown text with valuable depth, concrete detail, and thorough explanation.
@@ -85,6 +103,7 @@ Strict Non-Negotiable Invariants:
     id: "summarize",
     label: "Summarize",
     category: "length",
+    iconName: "FileText",
     description: "Condense the selection into key takeaways.",
     prompt: `You are the Summarization Engine inside Redline, a distraction-free Markdown writing editor.
 Your ONLY objective is to synthesize the selected Markdown text into high-density core takeaways.
@@ -102,6 +121,7 @@ Strict Non-Negotiable Invariants:
     id: "tone-professional",
     label: "Professional",
     category: "tone",
+    iconName: "Briefcase",
     description: "Rewrite in a polished, business-ready voice without changing length or meaning.",
     prompt: `You are the Professional Tone Engine inside Redline, a distraction-free Markdown writing editor.
 Your ONLY objective is to rewrite the selected Markdown text into a polished, executive, and business-appropriate tone.
@@ -120,6 +140,7 @@ Strict Non-Negotiable Invariants:
     id: "tone-casual",
     label: "Casual",
     category: "tone",
+    iconName: "Smile",
     description: "Rewrite in a friendly, conversational voice without changing length or meaning.",
     prompt: `You are the Casual Tone Engine inside Redline, a distraction-free Markdown writing editor.
 Your ONLY objective is to rewrite the selected Markdown text into a warm, approachable, peer-to-peer conversational tone.
@@ -139,6 +160,7 @@ Strict Non-Negotiable Invariants:
     id: "tone-direct",
     label: "Direct",
     category: "tone",
+    iconName: "Zap",
     description: "Rewrite in an assertive, active voice without changing length or meaning.",
     prompt: `You are the Direct Tone Engine inside Redline, a distraction-free Markdown writing editor.
 Your ONLY objective is to rewrite the selected Markdown text to be direct, confident, and action-oriented.
@@ -157,6 +179,7 @@ Strict Non-Negotiable Invariants:
     id: "tone-academic",
     label: "Academic",
     category: "tone",
+    iconName: "GraduationCap",
     description: "Rewrite with scholarly precision and objective syntax without changing meaning.",
     prompt: `You are the Academic Tone Engine inside Redline, a distraction-free Markdown writing editor.
 Your ONLY objective is to rewrite the selected Markdown text into a formal academic and scholarly style.
@@ -175,6 +198,7 @@ Strict Non-Negotiable Invariants:
     id: "format-bullet-list",
     label: "Bullet List",
     category: "format",
+    iconName: "List",
     description: "Restructure content into a bullet list without altering meaning or tone.",
     prompt: `You are the List Formatting Engine inside Redline, a distraction-free Markdown writing editor.
 Your ONLY objective is to transform the selected text into a clean, structured Markdown bullet list.
@@ -192,6 +216,7 @@ Strict Non-Negotiable Invariants:
     id: "format-table",
     label: "Table",
     category: "format",
+    iconName: "Table",
     description: "Organize information into a Markdown table without altering facts.",
     prompt: `You are the Table Formatting Engine inside Redline, a distraction-free Markdown writing editor.
 Your ONLY objective is to extract and organize structured data or comparisons from the selected text into a valid Markdown table.
@@ -216,4 +241,8 @@ export function isValidPreset(preset: string): preset is PresetId {
 
 export function getPresetConfig(preset: PresetId): PresetConfig {
   return PRESETS[preset];
+}
+
+export function getPresetsByCategory(category: PresetCategory): PresetConfig[] {
+  return Object.values(PRESETS).filter((preset) => preset.category === category);
 }

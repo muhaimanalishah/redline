@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { createTextStreamResponse, toTextStream } from "ai";
 import {
   streamGenerate,
@@ -8,6 +9,36 @@ import {
   MAX_SELECTION_LENGTH,
 } from "@/lib/ai";
 
+const PresetRequestSchema = z.object({
+  mode: z.literal("preset"),
+  preset: z.string().refine(isValidPreset, {
+    message: "Invalid or unsupported preset",
+  }),
+  text: z
+    .string()
+    .min(1, "No text provided for preset")
+    .max(MAX_SELECTION_LENGTH, `Selected text too long. Max ${MAX_SELECTION_LENGTH} characters.`),
+});
+
+const CustomRequestSchema = z.object({
+  mode: z.literal("custom"),
+  prompt: z
+    .string()
+    .trim()
+    .min(1, "No prompt provided")
+    .max(MAX_PROMPT_LENGTH, `Prompt too long. Max ${MAX_PROMPT_LENGTH} characters.`),
+  text: z
+    .string()
+    .max(MAX_SELECTION_LENGTH, `Selected text too long. Max ${MAX_SELECTION_LENGTH} characters.`)
+    .optional()
+    .default(""),
+});
+
+const RequestSchema = z.discriminatedUnion("mode", [
+  PresetRequestSchema,
+  CustomRequestSchema,
+]);
+
 export async function POST(req: Request) {
   let body: unknown;
   try {
@@ -16,54 +47,26 @@ export async function POST(req: Request) {
     return Response.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  if (!body || typeof body !== "object") {
-    return Response.json({ error: "Invalid request payload" }, { status: 400 });
+  const parsed = RequestSchema.safeParse(body);
+  if (!parsed.success) {
+    const firstError = parsed.error.issues[0]?.message ?? "Invalid request payload";
+    return Response.json({ error: firstError }, { status: 400 });
   }
 
-  const { mode, text, prompt, preset } = body as {
-    mode?: string;
-    text?: unknown;
-    prompt?: unknown;
-    preset?: unknown;
-  };
-
-  if (!mode || (mode !== "preset" && mode !== "custom")) {
-    return Response.json(
-      { error: "Invalid mode. Expected 'preset' or 'custom'." },
-      { status: 400 }
-    );
-  }
+  const data = parsed.data;
 
   // --- Preset Mode ---
-  if (mode === "preset") {
-    if (typeof preset !== "string" || !isValidPreset(preset)) {
-      return Response.json(
-        { error: `Invalid or missing preset. Received: '${preset}'` },
-        { status: 400 }
-      );
-    }
-
-    const targetText = typeof text === "string" ? text : "";
-    if (!targetText.trim()) {
-      return Response.json({ error: "No text provided for preset" }, { status: 400 });
-    }
-
-    if (targetText.length > MAX_SELECTION_LENGTH) {
-      return Response.json(
-        { error: `Selected text too long. Max ${MAX_SELECTION_LENGTH} characters.` },
-        { status: 400 }
-      );
-    }
-
-    const config = getPresetConfig(preset as PresetId);
+  if (data.mode === "preset") {
+    const presetId = data.preset as PresetId;
+    const config = getPresetConfig(presetId);
 
     try {
-      const result = streamGenerate(config.prompt, targetText);
+      const result = streamGenerate(config.prompt, data.text);
       return createTextStreamResponse({
         stream: toTextStream({ stream: result.stream }),
       });
     } catch (err) {
-      console.error(`Preset '${preset}' streaming failed:`, err);
+      console.error(`Preset '${presetId}' streaming failed:`, err);
       return Response.json(
         { error: `Preset '${config.label}' execution failed. Please try again.` },
         { status: 502 }
@@ -72,28 +75,8 @@ export async function POST(req: Request) {
   }
 
   // --- Custom Mode ---
-  if (typeof prompt !== "string" || prompt.trim().length === 0) {
-    return Response.json({ error: "No prompt provided" }, { status: 400 });
-  }
-
-  if (prompt.length > MAX_PROMPT_LENGTH) {
-    return Response.json(
-      { error: `Prompt too long. Max ${MAX_PROMPT_LENGTH} characters.` },
-      { status: 400 }
-    );
-  }
-
-  const selectedText = typeof text === "string" ? text : "";
-
-  if (selectedText.length > MAX_SELECTION_LENGTH) {
-    return Response.json(
-      { error: `Selected text too long. Max ${MAX_SELECTION_LENGTH} characters.` },
-      { status: 400 }
-    );
-  }
-
   try {
-    const result = streamGenerate(prompt, selectedText);
+    const result = streamGenerate(data.prompt, data.text);
     return createTextStreamResponse({
       stream: toTextStream({ stream: result.stream }),
     });

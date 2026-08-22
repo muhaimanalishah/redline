@@ -5,10 +5,6 @@ import { DiffPluginKey } from "@/components/DiffExtension";
 import { DiffIssue } from "@/types";
 import { resolveIssueRange, findIssueRanges } from "./diffDoc";
 
-function clearActiveDiffHighlight() {
-  document.querySelectorAll(".diff-active").forEach((el) => el.classList.remove("diff-active"));
-}
-
 export function useDiffActions(editor: Editor | null, onDiffResolved: () => void) {
   const handleAccept = useCallback(
     (issue: DiffIssue) => {
@@ -32,7 +28,6 @@ export function useDiffActions(editor: Editor | null, onDiffResolved: () => void
         );
       }
 
-      clearActiveDiffHighlight();
       onDiffResolved();
       toast.success("Applied suggestion");
     },
@@ -47,7 +42,6 @@ export function useDiffActions(editor: Editor | null, onDiffResolved: () => void
         editor.state.tr.setMeta(DiffPluginKey, { type: "REMOVE_DIFF", issueId: issue.id })
       );
 
-      clearActiveDiffHighlight();
       onDiffResolved();
       toast.info("Dismissed suggestion");
     },
@@ -64,17 +58,21 @@ export function useDiffActions(editor: Editor | null, onDiffResolved: () => void
     const currentIssues = Array.from(pluginState.issues.values());
     const replacements = findIssueRanges(editor.state.doc, currentIssues);
 
+    // Sort in reverse document order so later replacements don't shift earlier positions
     replacements.sort((a, b) => b.from - a.from);
 
-    let tr = editor.state.tr;
-    replacements.forEach(({ from, to, text }) => {
-      tr = tr.replaceWith(from, to, editor.schema.text(text));
-    });
+    let chain = editor.chain().focus();
+    for (const { from, to, text } of replacements) {
+      chain = chain.insertContentAt({ from, to }, text);
+    }
 
-    tr = tr.setMeta(DiffPluginKey, { type: "CLEAR_ALL_DIFFS" });
-    editor.view.dispatch(tr);
+    chain
+      .command(({ tr }) => {
+        tr.setMeta(DiffPluginKey, { type: "CLEAR_ALL_DIFFS" });
+        return true;
+      })
+      .run();
 
-    clearActiveDiffHighlight();
     onDiffResolved();
     toast.success(`Accepted ${count} suggestion${count > 1 ? "s" : ""}`);
   }, [editor, onDiffResolved]);
@@ -89,7 +87,6 @@ export function useDiffActions(editor: Editor | null, onDiffResolved: () => void
       editor.state.tr.setMeta(DiffPluginKey, { type: "CLEAR_ALL_DIFFS" })
     );
 
-    clearActiveDiffHighlight();
     onDiffResolved();
     toast.info(`Dismissed ${count} suggestion${count > 1 ? "s" : ""}`);
   }, [editor, onDiffResolved]);

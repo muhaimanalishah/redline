@@ -50,17 +50,20 @@ export default function InsertMenu({ editor }: InsertMenuProps) {
         onClick={() => setOpen((v) => !v)}
         title="Text style"
         aria-label="Text style"
+        aria-haspopup="menu"
+        aria-expanded={open}
       >
         <CurrentIcon size={16} />
         <ChevronDown size={12} className={styles.chevron} />
       </button>
 
       {open && (
-        <div className={styles.menu}>
+        <div className={styles.menu} role="menu" aria-label="Text styles">
           <button
             type="button"
             className={styles.item}
             data-active={editor.isActive("paragraph") && !editor.isActive("heading")}
+            role="menuitem"
             onClick={() => {
               editor.chain().focus().setParagraph().run();
               setOpen(false);
@@ -75,6 +78,7 @@ export default function InsertMenu({ editor }: InsertMenuProps) {
               type="button"
               className={styles.item}
               data-active={editor.isActive("heading", { level })}
+              role="menuitem"
               onClick={() => {
                 editor.chain().focus().toggleHeading({ level }).run();
                 setOpen(false);
