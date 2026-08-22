@@ -45,31 +45,33 @@ export default function DiffToolbar({
   return (
     <div
       ref={toolbarRef}
-      className={styles.toolbar}
+      className={styles.toolbarWrap}
       style={{ left: `${left}px`, top: `${top}px` }}
       onClick={(e) => e.stopPropagation()}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <span className={styles.label}>{issue.type}</span>
-      <div className={styles.divider} />
-      <button
-        className={`${styles.button} ${styles.reject}`}
-        title="Reject"
-        onClick={() => onReject(issue)}
-        aria-label="Reject suggestion"
-      >
-        <X size={14} strokeWidth={2.25} />
-      </button>
-      <button
-        className={`${styles.button} ${styles.accept}`}
-        title="Accept"
-        onClick={() => onAccept(issue)}
-        aria-label="Accept suggestion"
-      >
-        <Check size={14} strokeWidth={2.25} />
-      </button>
-      <div className={styles.arrow} />
+      <div className={styles.toolbar}>
+        <span className={styles.label}>{issue.type}</span>
+        <div className={styles.divider} />
+        <button
+          className={`${styles.button} ${styles.reject}`}
+          title="Reject"
+          onClick={() => onReject(issue)}
+          aria-label="Reject suggestion"
+        >
+          <X size={14} strokeWidth={2.25} />
+        </button>
+        <button
+          className={`${styles.button} ${styles.accept}`}
+          title="Accept"
+          onClick={() => onAccept(issue)}
+          aria-label="Accept suggestion"
+        >
+          <Check size={14} strokeWidth={2.25} />
+        </button>
+        <div className={styles.arrow} />
+      </div>
     </div>
   );
 }

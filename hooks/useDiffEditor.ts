@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useEditor } from "@tiptap/react";
+import { TextSelection } from "@tiptap/pm/state";
 import StarterKit from "@tiptap/starter-kit";
 import { TaskList } from "@tiptap/extension-task-list";
 import { TaskItem } from "@tiptap/extension-task-item";
@@ -9,6 +10,7 @@ import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table
 import { Image } from "@tiptap/extension-image";
 import { Markdown, type MarkdownStorage } from "tiptap-markdown";
 import { DiffExtension, DiffPluginKey } from "@/components/DiffExtension";
+import { findIssueRange } from "./diffDoc";
 import { DiffIssue } from "@/types";
 
 export interface UseDiffEditorOptions {
@@ -96,9 +98,18 @@ export function useDiffEditor({
   // Sync issues to editor plugin when external issues prop updates
   useEffect(() => {
     if (editor && issues) {
-      editor.view.dispatch(
-        editor.state.tr.setMeta(DiffPluginKey, { type: "SET_DIFF_ISSUES", issues })
-      );
+      let tr = editor.state.tr.setMeta(DiffPluginKey, { type: "SET_DIFF_ISSUES", issues });
+
+      // Jump the cursor to the first issue so results are immediately
+      // visible instead of leaving it parked at the stale selection.
+      if (issues.length > 0) {
+        const range = findIssueRange(tr.doc, issues[0].original);
+        if (range) {
+          tr = tr.setSelection(TextSelection.create(tr.doc, range.to)).scrollIntoView();
+        }
+      }
+
+      editor.view.dispatch(tr);
     }
   }, [editor, issues]);
 
