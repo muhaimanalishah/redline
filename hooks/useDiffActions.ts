@@ -34,9 +34,7 @@ export function useDiffActions(editor: Editor | null, onDiffResolved: () => void
 
       clearActiveDiffHighlight();
       onDiffResolved();
-      toast.success("Applied suggestion", {
-        description: `"${issue.original}" → "${issue.suggestion}"`,
-      });
+      toast.success("Applied changes");
     },
     [editor, onDiffResolved]
   );
@@ -51,9 +49,7 @@ export function useDiffActions(editor: Editor | null, onDiffResolved: () => void
 
       clearActiveDiffHighlight();
       onDiffResolved();
-      toast.info("Dismissed suggestion", {
-        description: `Kept "${issue.original}"`,
-      });
+      toast.info("Discarded changes");
     },
     [editor, onDiffResolved]
   );
