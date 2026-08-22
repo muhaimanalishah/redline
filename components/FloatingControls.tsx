@@ -94,6 +94,19 @@ export default function FloatingControls({
     closePopover();
   };
 
+  const [savedRange, setSavedRange] = useState<{ from: number; to: number } | null>(null);
+
+  const closeAiPopover = () => {
+    editor.view.dispatch(
+      editor.state.tr.setMeta(DiffPluginKey, {
+        type: "SET_ACTIVE_SELECTION_RANGE",
+        range: null,
+      })
+    );
+    setSavedRange(null);
+    setAiAnchorRect(null);
+  };
+
   const toggleAiPopover = () => {
     setAiAnchorRect((prev) => {
       if (prev) {
@@ -103,40 +116,42 @@ export default function FloatingControls({
             range: null,
           })
         );
+        setSavedRange(null);
         return null;
       }
 
       const { from, to, empty } = editor.state.selection;
       if (!empty) {
+        setSavedRange({ from, to });
         editor.view.dispatch(
           editor.state.tr.setMeta(DiffPluginKey, {
             type: "SET_ACTIVE_SELECTION_RANGE",
             range: { from, to },
           })
         );
+      } else {
+        setSavedRange(null);
       }
 
       return dockRef.current?.getBoundingClientRect() ?? null;
     });
   };
 
-  const closeAiPopover = () => {
-    editor.view.dispatch(
-      editor.state.tr.setMeta(DiffPluginKey, {
-        type: "SET_ACTIVE_SELECTION_RANGE",
-        range: null,
-      })
-    );
-    setAiAnchorRect(null);
-  };
-
   const handleAiSubmit = async (prompt: string) => {
+    const rangeToUse = savedRange;
     closeAiPopover();
+    if (rangeToUse) {
+      editor.commands.setTextSelection(rangeToUse);
+    }
     await onAiSubmit?.(prompt);
   };
 
   const handleSelectPreset = async (preset: PresetId) => {
+    const rangeToUse = savedRange;
     closeAiPopover();
+    if (rangeToUse) {
+      editor.commands.setTextSelection(rangeToUse);
+    }
     await onSelectPreset?.(preset);
   };
 
