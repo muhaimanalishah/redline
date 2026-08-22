@@ -18,7 +18,6 @@ import {
   ImageIcon,
   Link2,
   Sparkles,
-  SpellCheck,
   Check,
   X,
   LoaderCircle,
@@ -26,6 +25,7 @@ import {
 import InsertMenu from "./InsertMenu";
 import UrlPopover from "./UrlPopover";
 import AiPromptPopover from "./AiPromptPopover";
+import { DiffPluginKey } from "./DiffExtension";
 import styles from "./FloatingControls.module.css";
 
 interface FloatingControlsProps {
@@ -100,14 +100,43 @@ export default function FloatingControls({
 
   const toggleAiPopover = () => {
     setAiAnchorRect((prev) => {
-      if (prev) return null;
+      if (prev) {
+        editor.view.dispatch(
+          editor.state.tr.setMeta(DiffPluginKey, {
+            type: "SET_ACTIVE_SELECTION_RANGE",
+            range: null,
+          })
+        );
+        return null;
+      }
+
+      const { from, to, empty } = editor.state.selection;
+      if (!empty) {
+        editor.view.dispatch(
+          editor.state.tr.setMeta(DiffPluginKey, {
+            type: "SET_ACTIVE_SELECTION_RANGE",
+            range: { from, to },
+          })
+        );
+      }
+
       return dockRef.current?.getBoundingClientRect() ?? null;
     });
   };
 
-  const handleAiSubmit = async (prompt: string) => {
-    await onAiSubmit?.(prompt);
+  const closeAiPopover = () => {
+    editor.view.dispatch(
+      editor.state.tr.setMeta(DiffPluginKey, {
+        type: "SET_ACTIVE_SELECTION_RANGE",
+        range: null,
+      })
+    );
     setAiAnchorRect(null);
+  };
+
+  const handleAiSubmit = async (prompt: string) => {
+    closeAiPopover();
+    await onAiSubmit?.(prompt);
   };
 
   return (
@@ -296,27 +325,11 @@ export default function FloatingControls({
           </>
         )}
 
-        {onProofread && (
+        {issueCount > 0 && (
           <>
             <div className={styles.divider} />
 
-            <button
-              type="button"
-              className={`${styles.btn} ${styles.btnProofread}`}
-              onClick={onProofread}
-              disabled={proofreadDisabled}
-              title={proofreadLoading ? "Proofreading…" : proofreadDisabled ? "Select text to proofread" : "Proofread selected text"}
-              aria-label="Proofread selected text"
-            >
-              {proofreadLoading ? (
-                <LoaderCircle size={17} className={styles.spin} />
-              ) : (
-                <SpellCheck size={17} />
-              )}
-              {proofreadLoading ? "Proofreading…" : "Proofread"}
-            </button>
-
-            <div className={styles.reviewActions} data-open={issueCount > 0}>
+            <div className={styles.reviewActions} data-open={true}>
               <span className={styles.reviewCount}>{issueCount}</span>
               <button
                 type="button"
@@ -367,7 +380,7 @@ export default function FloatingControls({
           hasSelection={hasSelection}
           loading={aiLoading}
           onSubmit={handleAiSubmit}
-          onClose={() => setAiAnchorRect(null)}
+          onClose={closeAiPopover}
         />
       )}
     </aside>

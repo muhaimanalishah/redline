@@ -40,8 +40,8 @@
   --shadow-md: 0 4px 14px -3px rgba(44, 40, 36, 0.1), 0 2px 6px -2px rgba(44, 40, 36, 0.06);
   --shadow-lg: 0 10px 30px -8px rgba(44, 40, 36, 0.16), 0 4px 10px -3px rgba(44, 40, 36, 0.08);
 
-  --float-bg: rgba(251, 246, 236, 0.92);
-  --float-border: rgba(232, 223, 199, 0.95);
+  --float-bg: #FBF6EC;
+  --float-border: #E2D7BE;
 
   --mono: var(--font-ibm-plex-mono), "SF Mono", ui-monospace, Consolas, monospace;
   --serif: var(--font-source-serif-4), "Iowan Old Style", "Palatino Linotype", Georgia, serif;
@@ -95,8 +95,8 @@
   --shadow-md: 0 4px 14px -3px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 12px 36px -8px rgba(0, 0, 0, 0.55), 0 4px 12px -3px rgba(0, 0, 0, 0.4);
 
-  --float-bg: rgba(36, 38, 43, 0.92);
-  --float-border: rgba(56, 59, 66, 0.95);
+  --float-bg: #26282C;
+  --float-border: #3A3D45;
 
   --background: var(--paper-edge);
   --foreground: var(--ink);

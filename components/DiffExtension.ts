@@ -8,6 +8,7 @@ export interface DiffPluginState {
   decorations: DecorationSet;
   issues: Map<string, DiffIssue>;
   processingRange: { from: number; to: number } | null;
+  activeSelectionRange: { from: number; to: number } | null;
 }
 
 export const DiffPluginKey = new PluginKey<DiffPluginState>("notion-diff");
@@ -36,12 +37,18 @@ export interface SetProcessingRangeMeta {
   range: { from: number; to: number } | null;
 }
 
+export interface SetActiveSelectionRangeMeta {
+  type: "SET_ACTIVE_SELECTION_RANGE";
+  range: { from: number; to: number } | null;
+}
+
 export type DiffMeta =
   | SetDiffIssuesMeta
   | AddDiffIssueMeta
   | RemoveDiffMeta
   | ClearAllDiffsMeta
-  | SetProcessingRangeMeta;
+  | SetProcessingRangeMeta
+  | SetActiveSelectionRangeMeta;
 
 function locateIssueRange(doc: ProseMirrorNode, issue: DiffIssue): { from: number; to: number } | null {
   if (issue.range) return issue.range;
@@ -64,9 +71,18 @@ function locateIssueRange(doc: ProseMirrorNode, issue: DiffIssue): { from: numbe
 function buildDecorations(
   doc: ProseMirrorNode,
   issues: Map<string, DiffIssue>,
-  processingRange: { from: number; to: number } | null
+  processingRange: { from: number; to: number } | null,
+  activeSelectionRange: { from: number; to: number } | null
 ): DecorationSet {
   const decos: Decoration[] = [];
+
+  if (activeSelectionRange) {
+    decos.push(
+      Decoration.inline(activeSelectionRange.from, activeSelectionRange.to, {
+        class: "diff-active-selection",
+      })
+    );
+  }
 
   if (processingRange) {
     decos.push(
@@ -131,6 +147,7 @@ export const DiffExtension = Extension.create({
               decorations: DecorationSet.empty,
               issues: new Map<string, DiffIssue>(),
               processingRange: null,
+              activeSelectionRange: null,
             };
           },
           apply(tr, prev, _oldState, newState) {
@@ -142,37 +159,49 @@ export const DiffExtension = Extension.create({
                   to: tr.mapping.map(prev.processingRange.to),
                 }
               : null;
+            let activeSelectionRange = prev.activeSelectionRange
+              ? {
+                  from: tr.mapping.map(prev.activeSelectionRange.from),
+                  to: tr.mapping.map(prev.activeSelectionRange.to),
+                }
+              : null;
 
             if (meta) {
               if (meta.type === "SET_DIFF_ISSUES") {
                 issues.clear();
                 meta.issues.forEach((issue) => issues.set(issue.id, issue));
                 processingRange = null;
-                const decorations = buildDecorations(newState.doc, issues, processingRange);
-                return { decorations, issues, processingRange };
+                const decorations = buildDecorations(newState.doc, issues, processingRange, activeSelectionRange);
+                return { decorations, issues, processingRange, activeSelectionRange };
               } else if (meta.type === "ADD_DIFF_ISSUE") {
                 issues.set(meta.issue.id, meta.issue);
                 processingRange = null;
-                const decorations = buildDecorations(newState.doc, issues, processingRange);
-                return { decorations, issues, processingRange };
+                activeSelectionRange = null;
+                const decorations = buildDecorations(newState.doc, issues, processingRange, activeSelectionRange);
+                return { decorations, issues, processingRange, activeSelectionRange };
               } else if (meta.type === "REMOVE_DIFF") {
                 issues.delete(meta.issueId);
-                const decorations = buildDecorations(newState.doc, issues, processingRange);
-                return { decorations, issues, processingRange };
+                const decorations = buildDecorations(newState.doc, issues, processingRange, activeSelectionRange);
+                return { decorations, issues, processingRange, activeSelectionRange };
               } else if (meta.type === "CLEAR_ALL_DIFFS") {
                 issues.clear();
-                return { decorations: DecorationSet.empty, issues, processingRange };
+                return { decorations: DecorationSet.empty, issues, processingRange, activeSelectionRange };
               } else if (meta.type === "SET_PROCESSING_RANGE") {
                 processingRange = meta.range;
-                const decorations = buildDecorations(newState.doc, issues, processingRange);
-                return { decorations, issues, processingRange };
+                activeSelectionRange = null;
+                const decorations = buildDecorations(newState.doc, issues, processingRange, activeSelectionRange);
+                return { decorations, issues, processingRange, activeSelectionRange };
+              } else if (meta.type === "SET_ACTIVE_SELECTION_RANGE") {
+                activeSelectionRange = meta.range;
+                const decorations = buildDecorations(newState.doc, issues, processingRange, activeSelectionRange);
+                return { decorations, issues, processingRange, activeSelectionRange };
               }
             }
 
             // Map decorations through edits if doc changed
             if (tr.docChanged) {
-              const decorations = buildDecorations(newState.doc, issues, processingRange);
-              return { decorations, issues, processingRange };
+              const decorations = buildDecorations(newState.doc, issues, processingRange, activeSelectionRange);
+              return { decorations, issues, processingRange, activeSelectionRange };
             }
 
             return prev;
