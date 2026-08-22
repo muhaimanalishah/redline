@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const issueSchema = z.object({
   issues: z.array(z.object({
