@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { Check, X } from "lucide-react";
-import { DiffIssue } from "./types";
+import { DiffIssue } from "@/types";
 import styles from "./DiffToolbar.module.css";
 
 interface DiffToolbarProps {

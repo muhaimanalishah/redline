@@ -2,7 +2,7 @@ import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { Node as ProseMirrorNode } from "@tiptap/pm/model";
-import { DiffIssue } from "./types";
+import { DiffIssue } from "@/types";
 
 export interface DiffPluginState {
   decorations: DecorationSet;

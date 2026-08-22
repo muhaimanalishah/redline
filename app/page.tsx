@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import Editor from "@/components/Editor";
-import { DiffIssue } from "@/components/types";
+import { DiffIssue } from "@/types";
 
 const INITIAL_MARKDOWN = `Their are alot of reasons why a person might wants to improve they're writing, but the most importantest one is clarity. When you're sentences is confusing, the reader loose interest quick and dont finish what you wrote, which effect how well you're ideas gets recieved by other peoples.
 
