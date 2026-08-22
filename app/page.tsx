@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import Editor from "@/components/Editor";
-import { DiffIssue } from "@/types";
+import { DiffIssue, ExecuteAiOptions } from "@/types";
 
 const INITIAL_MARKDOWN = `Their are alot of reasons why a person might wants to improve they're writing, but the most importantest one is clarity. When you're sentences is confusing, the reader loose interest quick and dont finish what you wrote, which effect how well you're ideas gets recieved by other peoples.
 
@@ -13,62 +13,29 @@ Me and him was discussing yesterday about how good writers doesn't never use to 
 export default function Home() {
   const [issues, setIssues] = useState<DiffIssue[]>([]);
 
-  const handleProofread = async (text: string) => {
-    try {
-      const res = await fetch("/api/ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: "preset", preset: "proofread", text }),
-      });
+  const handleAiExecute = async (options: ExecuteAiOptions): Promise<string> => {
+    const payload =
+      options.mode === "preset"
+        ? {
+            mode: "preset",
+            preset: options.preset,
+            text: options.selectedText || "",
+          }
+        : {
+            mode: "custom",
+            prompt: options.prompt,
+            text: options.selectedText || "",
+          };
 
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.error ?? "Proofread check failed");
-      }
-
-      if (!res.body) {
-        throw new Error("No response body received");
-      }
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let rawText = "";
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        rawText += decoder.decode(value, { stream: true });
-      }
-      rawText += decoder.decode();
-
-      const parsed = JSON.parse(rawText) as { issues?: Omit<DiffIssue, "id">[] };
-      const parsedIssues = parsed.issues ?? [];
-
-      setIssues(
-        parsedIssues.map((issue, index) => ({
-          id: `diff-${index}-${issue.original}`,
-          ...issue,
-        }))
-      );
-
-      if (parsedIssues.length === 0) {
-        toast.success("No issues found");
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Proofread check failed");
-    }
-  };
-
-  const handleAiGenerate = async (prompt: string, selectedText: string) => {
     const res = await fetch("/api/ai", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode: "custom", prompt, text: selectedText }),
+      body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
       const body = await res.json().catch(() => null);
-      const message = body?.error ?? "Generate request failed";
+      const message = body?.error ?? "AI request failed";
       toast.error(message);
       throw new Error(message);
     }
@@ -96,12 +63,10 @@ export default function Home() {
       <Editor
         initialContent={INITIAL_MARKDOWN}
         issues={issues}
+        onIssuesChange={setIssues}
         placeholder="Start writing here..."
-        onProofread={handleProofread}
-        onAiGenerate={handleAiGenerate}
+        onAiExecute={handleAiExecute}
       />
     </main>
   );
 }
-
-

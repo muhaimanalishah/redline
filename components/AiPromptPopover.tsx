@@ -56,9 +56,12 @@ export default function AiPromptPopover({
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
 
-  // Reset highlight index and focus input on view changes
-  useEffect(() => {
+  const changeView = (view: ActiveView) => {
     setHighlightedIndex(-1);
+    setActiveView(view);
+  };
+
+  useEffect(() => {
     inputRef.current?.focus();
   }, [activeView]);
 
@@ -68,7 +71,7 @@ export default function AiPromptPopover({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         if (activeView !== "root") {
-          setActiveView("root");
+          changeView("root");
         } else {
           onClose();
         }
@@ -114,21 +117,21 @@ export default function AiPromptPopover({
           id: "length",
           label: "Adjust Length",
           Icon: MoveHorizontal,
-          action: () => setActiveView("length"),
+          action: () => changeView("length"),
           hasSubmenu: true,
         },
         {
           id: "tone",
           label: "Change Tone",
           Icon: SlidersHorizontal,
-          action: () => setActiveView("tone"),
+          action: () => changeView("tone"),
           hasSubmenu: true,
         },
         {
           id: "format",
           label: "Format",
           Icon: List,
-          action: () => setActiveView("format"),
+          action: () => changeView("format"),
           hasSubmenu: true,
         },
       ];
@@ -140,7 +143,7 @@ export default function AiPromptPopover({
           id: "back",
           label: "Back",
           Icon: ChevronLeft,
-          action: () => setActiveView("root"),
+          action: () => changeView("root"),
         },
         {
           id: "shorten",
@@ -169,7 +172,7 @@ export default function AiPromptPopover({
           id: "back",
           label: "Back",
           Icon: ChevronLeft,
-          action: () => setActiveView("root"),
+          action: () => changeView("root"),
         },
         {
           id: "tone-professional",
@@ -204,7 +207,7 @@ export default function AiPromptPopover({
           id: "back",
           label: "Back",
           Icon: ChevronLeft,
-          action: () => setActiveView("root"),
+          action: () => changeView("root"),
         },
         {
           id: "format-bullet-list",
@@ -317,7 +320,7 @@ export default function AiPromptPopover({
                   data-highlighted={highlightedIndex === 1}
                   onMouseEnter={() => setHighlightedIndex(1)}
                   disabled={loading}
-                  onClick={() => setActiveView("length")}
+                  onClick={() => changeView("length")}
                 >
                   <span className={styles.itemLabel}>
                     <MoveHorizontal size={16} className={styles.itemIcon} />
@@ -332,7 +335,7 @@ export default function AiPromptPopover({
                   data-highlighted={highlightedIndex === 2}
                   onMouseEnter={() => setHighlightedIndex(2)}
                   disabled={loading}
-                  onClick={() => setActiveView("tone")}
+                  onClick={() => changeView("tone")}
                 >
                   <span className={styles.itemLabel}>
                     <SlidersHorizontal size={16} className={styles.itemIcon} />
@@ -347,7 +350,7 @@ export default function AiPromptPopover({
                   data-highlighted={highlightedIndex === 3}
                   onMouseEnter={() => setHighlightedIndex(3)}
                   disabled={loading}
-                  onClick={() => setActiveView("format")}
+                  onClick={() => changeView("format")}
                 >
                   <span className={styles.itemLabel}>
                     <List size={16} className={styles.itemIcon} />
@@ -365,7 +368,7 @@ export default function AiPromptPopover({
                   className={styles.backBtn}
                   data-highlighted={highlightedIndex === 0}
                   onMouseEnter={() => setHighlightedIndex(0)}
-                  onClick={() => setActiveView("root")}
+                  onClick={() => changeView("root")}
                 >
                   <ChevronLeft size={16} className={styles.itemIcon} />
                   <span>Back</span>
@@ -419,7 +422,7 @@ export default function AiPromptPopover({
                   className={styles.backBtn}
                   data-highlighted={highlightedIndex === 0}
                   onMouseEnter={() => setHighlightedIndex(0)}
-                  onClick={() => setActiveView("root")}
+                  onClick={() => changeView("root")}
                 >
                   <ChevronLeft size={16} className={styles.itemIcon} />
                   <span>Back</span>
@@ -486,7 +489,7 @@ export default function AiPromptPopover({
                   className={styles.backBtn}
                   data-highlighted={highlightedIndex === 0}
                   onMouseEnter={() => setHighlightedIndex(0)}
-                  onClick={() => setActiveView("root")}
+                  onClick={() => changeView("root")}
                 >
                   <ChevronLeft size={16} className={styles.itemIcon} />
                   <span>Back</span>

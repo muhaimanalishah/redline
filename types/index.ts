@@ -1,3 +1,5 @@
+import { PresetId } from "@/lib/ai/presets";
+
 export type DiffType = "grammar" | "clarity" | "spelling" | "word-choice" | "ai";
 
 export interface DiffIssue {
@@ -19,3 +21,9 @@ export interface ActiveDiffState {
   containerRect: DOMRect;
 }
 
+export interface ExecuteAiOptions {
+  mode: "custom" | "preset";
+  prompt?: string;
+  preset?: PresetId;
+  selectedText?: string;
+}

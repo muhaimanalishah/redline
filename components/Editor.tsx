@@ -9,7 +9,8 @@ import TableToolbar from "./TableToolbar";
 import FloatingControls from "./FloatingControls";
 import TopControls from "./TopControls";
 import MarkdownSourceView from "./MarkdownSourceView";
-import { DiffIssue } from "@/types";
+import { DiffIssue, ExecuteAiOptions } from "@/types";
+import { PresetId } from "@/lib/ai/presets";
 import { useDiffEditor } from "@/hooks/useDiffEditor";
 import { useHoverToolbar } from "@/hooks/useHoverToolbar";
 import { useDiffActions } from "@/hooks/useDiffActions";
@@ -24,8 +25,7 @@ export interface EditorProps {
   placeholder?: string;
   onChange?: (markdown: string) => void;
   onIssuesChange?: (issues: DiffIssue[]) => void;
-  onProofread?: (text: string) => void | Promise<void>;
-  onAiGenerate?: (prompt: string, selectedText: string) => Promise<string>;
+  onAiExecute?: (options: ExecuteAiOptions) => Promise<string>;
 }
 
 export default function Editor({
@@ -34,11 +34,9 @@ export default function Editor({
   placeholder = "Start writing...",
   onChange,
   onIssuesChange,
-  onProofread,
-  onAiGenerate,
+  onAiExecute,
 }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isProofreading, setIsProofreading] = useState(false);
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [sourceMode, setSourceMode] = useState(false);
   const [sourceText, setSourceText] = useState("");
@@ -64,25 +62,18 @@ export default function Editor({
     editor,
     closeActiveDiff
   );
-
   const { activeTable } = useTableToolbar(editor, containerRef);
-
   const { zoom, zoomIn, zoomOut, zoomReset } = useZoom();
   const { theme, changeTheme } = useEditorTheme();
 
-  const getMarkdown = useCallback(() => {
+  const getMarkdown = useCallback((): string => {
     if (!editor) return "";
-    const storage = editor.storage as unknown as Record<string, MarkdownStorage>;
-    return storage.markdown?.getMarkdown?.() ?? "";
+    const storage = editor.storage as { markdown?: MarkdownStorage };
+    return storage.markdown?.getMarkdown() ?? "";
   }, [editor]);
-
-  const handleCopyMarkdown = useCallback(() => {
-    navigator.clipboard.writeText(getMarkdown());
-  }, [getMarkdown]);
 
   const handleToggleSourceMode = useCallback(() => {
     if (!editor) return;
-
     if (sourceMode) {
       editor.commands.setContent(sourceText);
       setSourceMode(false);
@@ -92,38 +83,14 @@ export default function Editor({
     }
   }, [editor, sourceMode, sourceText, getMarkdown]);
 
-  const handleProofreadClick = useCallback(async () => {
-    if (!editor || !onProofread) return;
-    const { from, to, empty } = editor.state.selection;
-    if (empty) return;
-    const selectedText = editor.state.doc.textBetween(from, to, " ");
+  const handleCopyMarkdown = useCallback(() => {
+    const md = sourceMode ? sourceText : getMarkdown();
+    if (md) navigator.clipboard.writeText(md);
+  }, [sourceMode, sourceText, getMarkdown]);
 
-    editor.view.dispatch(
-      editor.state.tr.setMeta(DiffPluginKey, {
-        type: "SET_PROCESSING_RANGE",
-        range: { from, to },
-      })
-    );
-    setIsProofreading(true);
-
-    try {
-      await onProofread(selectedText);
-    } finally {
-      setIsProofreading(false);
-      if (editor.state.doc.content.size > 0) {
-        editor.view.dispatch(
-          editor.state.tr.setMeta(DiffPluginKey, {
-            type: "SET_PROCESSING_RANGE",
-            range: null,
-          })
-        );
-      }
-    }
-  }, [editor, onProofread]);
-
-  const handleAiSubmit = useCallback(
-    async (prompt: string) => {
-      if (!editor || !onAiGenerate) return;
+  const runAiTransformation = useCallback(
+    async (options: Omit<ExecuteAiOptions, "selectedText">) => {
+      if (!editor || !onAiExecute) return;
 
       const { from, to, empty } = editor.state.selection;
       const selectedText = empty ? "" : editor.state.doc.textBetween(from, to, " ");
@@ -138,12 +105,11 @@ export default function Editor({
       setIsAiGenerating(true);
 
       try {
-        const generatedText = await onAiGenerate(prompt, selectedText);
+        const generatedText = await onAiExecute({
+          ...options,
+          selectedText,
+        });
 
-        // Resolve the current range through the plugin state rather than
-        // the range captured above — the document may have changed while
-        // the request was in flight, and processingRange has been mapped
-        // through every edit since.
         const pluginState = DiffPluginKey.getState(editor.state);
         const currentRange = pluginState?.processingRange ?? range;
 
@@ -171,7 +137,21 @@ export default function Editor({
         setIsAiGenerating(false);
       }
     },
-    [editor, onAiGenerate]
+    [editor, onAiExecute]
+  );
+
+  const handleAiSubmit = useCallback(
+    async (prompt: string) => {
+      await runAiTransformation({ mode: "custom", prompt });
+    },
+    [runAiTransformation]
+  );
+
+  const handleSelectPreset = useCallback(
+    async (preset: PresetId) => {
+      await runAiTransformation({ mode: "preset", preset });
+    },
+    [runAiTransformation]
   );
 
   if (!editor) return null;
@@ -185,17 +165,8 @@ export default function Editor({
       className={styles.container}
       onMouseOver={handleContainerMouseOver}
       onMouseOut={handleContainerMouseOut}
-      style={{
-        ["--editor-zoom" as string]: zoomScale,
-      }}
     >
-      <div
-        className={styles.editorWrapper}
-        style={{
-          maxWidth: `${maxWidthPx}px`,
-        }}
-      >
-        {/* Editor Content Area (Zero selection popover) */}
+      <div className={styles.editorWrapper} style={{ maxWidth: `${maxWidthPx}px` }}>
         {sourceMode ? (
           <MarkdownSourceView
             value={sourceText}
@@ -207,7 +178,7 @@ export default function Editor({
         )}
       </div>
 
-      {/* Floating table controls — add/delete rows and columns */}
+      {/* Floating table controls */}
       {!sourceMode && activeTable && (
         <TableToolbar
           editor={editor}
@@ -216,7 +187,7 @@ export default function Editor({
         />
       )}
 
-      {/* Floating Notion-style Micro-Toolbar for hovered redline issues */}
+      {/* Floating Micro-Toolbar for hovered redline issues */}
       {!sourceMode && activeDiff && (
         <DiffToolbar
           issue={activeDiff.issue}
@@ -230,7 +201,7 @@ export default function Editor({
         />
       )}
 
-      {/* Document controls — undo/redo, source view toggle, copy, zoom, theme */}
+      {/* Top Document controls */}
       <TopControls
         editor={editor}
         zoom={zoom}
@@ -246,18 +217,16 @@ export default function Editor({
         canRedo={canRedo}
       />
 
-      {/* Insert + review dock at the bottom */}
+      {/* Unified Dock at the bottom */}
       {!sourceMode && (
         <FloatingControls
           editor={editor}
           hasSelection={hasSelection}
-          onProofread={onProofread ? handleProofreadClick : undefined}
-          proofreadDisabled={!hasSelection || isProofreading}
-          proofreadLoading={isProofreading}
           issueCount={issueCount}
           onAcceptAll={handleAcceptAll}
           onRejectAll={handleRejectAll}
-          onAiSubmit={onAiGenerate ? handleAiSubmit : undefined}
+          onAiSubmit={onAiExecute ? handleAiSubmit : undefined}
+          onSelectPreset={onAiExecute ? handleSelectPreset : undefined}
           aiLoading={isAiGenerating}
         />
       )}

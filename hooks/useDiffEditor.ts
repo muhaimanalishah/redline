@@ -93,32 +93,51 @@ export function useDiffEditor({
     onTransaction: ({ editor: ed }) => {
       const pluginState = DiffPluginKey.getState(ed.state);
       const remainingCount = pluginState?.issues.size ?? 0;
-      setIssueCount(remainingCount);
-      ed.setEditable(remainingCount === 0);
-      setCanUndo(ed.can().undo());
-      setCanRedo(ed.can().redo());
+
+      setIssueCount((prev) => (prev !== remainingCount ? remainingCount : prev));
+
+      const isEditable = remainingCount === 0;
+      if (ed.isEditable !== isEditable) {
+        ed.setEditable(isEditable);
+      }
+
+      const undoPossible = ed.can().undo();
+      const redoPossible = ed.can().redo();
+      setCanUndo((prev) => (prev !== undoPossible ? undoPossible : prev));
+      setCanRedo((prev) => (prev !== redoPossible ? redoPossible : prev));
     },
     onSelectionUpdate: ({ editor: ed }) => {
-      setHasSelection(!ed.state.selection.empty);
+      const selected = !ed.state.selection.empty;
+      setHasSelection((prev) => (prev !== selected ? selected : prev));
     },
   });
 
   // Sync issues to editor plugin when external issues prop updates
   useEffect(() => {
-    if (editor && issues) {
-      let tr = editor.state.tr.setMeta(DiffPluginKey, { type: "SET_DIFF_ISSUES", issues });
+    if (!editor || !issues) return;
 
-      // Jump the cursor to the first issue so results are immediately
-      // visible instead of leaving it parked at the stale selection.
-      if (issues.length > 0) {
-        const range = findIssueRange(tr.doc, issues[0].original);
-        if (range) {
-          tr = tr.setSelection(TextSelection.create(tr.doc, range.to)).scrollIntoView();
-        }
+    const pluginState = DiffPluginKey.getState(editor.state);
+    const currentIssues = pluginState ? Array.from(pluginState.issues.values()) : [];
+    
+    // Only dispatch if issues are genuinely different
+    const isSame =
+      currentIssues.length === issues.length &&
+      issues.every((iss, idx) => iss.id === currentIssues[idx]?.id);
+
+    if (isSame) return;
+
+    let tr = editor.state.tr.setMeta(DiffPluginKey, { type: "SET_DIFF_ISSUES", issues });
+
+    // Jump the cursor to the first issue so results are immediately
+    // visible instead of leaving it parked at the stale selection.
+    if (issues.length > 0) {
+      const range = findIssueRange(tr.doc, issues[0].original);
+      if (range) {
+        tr = tr.setSelection(TextSelection.create(tr.doc, range.to)).scrollIntoView();
       }
-
-      editor.view.dispatch(tr);
     }
+
+    editor.view.dispatch(tr);
   }, [editor, issues]);
 
   return { editor, issueCount, hasSelection, canUndo, canRedo };

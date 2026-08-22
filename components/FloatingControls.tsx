@@ -1,6 +1,6 @@
 "use client";
 
-import { RefObject, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Editor } from "@tiptap/react";
 import {
   Bold,
@@ -20,24 +20,22 @@ import {
   Sparkles,
   Check,
   X,
-  LoaderCircle,
 } from "lucide-react";
 import InsertMenu from "./InsertMenu";
 import UrlPopover from "./UrlPopover";
 import AiPromptPopover from "./AiPromptPopover";
 import { DiffPluginKey } from "./DiffExtension";
+import { PresetId } from "@/lib/ai/presets";
 import styles from "./FloatingControls.module.css";
 
 interface FloatingControlsProps {
   editor: Editor;
   hasSelection: boolean;
-  onProofread?: () => void;
-  proofreadDisabled?: boolean;
-  proofreadLoading?: boolean;
   issueCount?: number;
   onAcceptAll?: () => void;
   onRejectAll?: () => void;
   onAiSubmit?: (prompt: string) => Promise<void>;
+  onSelectPreset?: (preset: PresetId) => Promise<void>;
   aiLoading?: boolean;
 }
 
@@ -51,13 +49,11 @@ interface PendingUrl {
 export default function FloatingControls({
   editor,
   hasSelection,
-  onProofread,
-  proofreadDisabled = false,
-  proofreadLoading = false,
   issueCount = 0,
   onAcceptAll,
   onRejectAll,
   onAiSubmit,
+  onSelectPreset,
   aiLoading = false,
 }: FloatingControlsProps) {
   const [pendingUrl, setPendingUrl] = useState<PendingUrl | null>(null);
@@ -137,6 +133,11 @@ export default function FloatingControls({
   const handleAiSubmit = async (prompt: string) => {
     closeAiPopover();
     await onAiSubmit?.(prompt);
+  };
+
+  const handleSelectPreset = async (preset: PresetId) => {
+    closeAiPopover();
+    await onSelectPreset?.(preset);
   };
 
   return (
@@ -381,6 +382,7 @@ export default function FloatingControls({
           hasSelection={hasSelection}
           loading={aiLoading}
           onSubmit={handleAiSubmit}
+          onSelectPreset={handleSelectPreset}
           onClose={closeAiPopover}
         />
       )}
