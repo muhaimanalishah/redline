@@ -317,5 +317,39 @@
   outline-offset: 2px;
 }
 
+/* ---- Processing (proofread in-flight) shimmer ---- */
+@keyframes diffProcessingSweep {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+:global(.diff-processing) {
+  background-image: linear-gradient(
+    115deg,
+    var(--ink-faint) 0%,
+    var(--ink-faint) 25%,
+    var(--accent-blue) 45%,
+    var(--accent-blue-hover) 50%,
+    var(--accent-blue) 55%,
+    var(--ink-faint) 75%,
+    var(--ink-faint) 100%
+  );
+  background-size: 240% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  animation: diffProcessingSweep 1.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
 
 

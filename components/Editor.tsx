@@ -23,7 +23,7 @@ export interface EditorProps {
   placeholder?: string;
   onChange?: (markdown: string) => void;
   onIssuesChange?: (issues: DiffIssue[]) => void;
-  onProofread?: (text: string) => void;
+  onProofread?: (text: string) => void | Promise<void>;
 }
 
 export default function Editor({
@@ -38,6 +38,7 @@ export default function Editor({
   const [activeDiff, setActiveDiff] = useState<ActiveDiffState | null>(null);
   const [issueCount, setIssueCount] = useState<number>(() => issues.length);
   const [hasSelection, setHasSelection] = useState(false);
+  const [isProofreading, setIsProofreading] = useState(false);
   const [zoom, setZoom] = useState<number>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -413,12 +414,33 @@ export default function Editor({
     navigator.clipboard.writeText(markdown);
   }, [editor]);
 
-  const handleProofreadClick = useCallback(() => {
+  const handleProofreadClick = useCallback(async () => {
     if (!editor || !onProofread) return;
     const { from, to, empty } = editor.state.selection;
     if (empty) return;
     const selectedText = editor.state.doc.textBetween(from, to, " ");
-    onProofread(selectedText);
+
+    editor.view.dispatch(
+      editor.state.tr.setMeta(DiffPluginKey, {
+        type: "SET_PROCESSING_RANGE",
+        range: { from, to },
+      })
+    );
+    setIsProofreading(true);
+
+    try {
+      await onProofread(selectedText);
+    } finally {
+      setIsProofreading(false);
+      if (editor.state.doc.content.size > 0) {
+        editor.view.dispatch(
+          editor.state.tr.setMeta(DiffPluginKey, {
+            type: "SET_PROCESSING_RANGE",
+            range: null,
+          })
+        );
+      }
+    }
   }, [editor, onProofread]);
 
   if (!editor) return null;
@@ -470,7 +492,8 @@ export default function Editor({
         onThemeChange={handleThemeChange}
         onCopyMarkdown={handleCopyMarkdown}
         onProofread={onProofread ? handleProofreadClick : undefined}
-        proofreadDisabled={!hasSelection}
+        proofreadDisabled={!hasSelection || isProofreading}
+        proofreadLoading={isProofreading}
         issueCount={issueCount}
         onAcceptAll={handleAcceptAll}
         onRejectAll={handleRejectAll}

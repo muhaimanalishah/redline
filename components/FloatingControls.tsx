@@ -1,6 +1,6 @@
 "use client";
 
-import { ZoomIn, ZoomOut, Sun, Moon, Copy, SpellCheck, Check, X } from "lucide-react";
+import { ZoomIn, ZoomOut, Sun, Moon, Copy, SpellCheck, Check, X, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import styles from "./FloatingControls.module.css";
 
@@ -17,6 +17,7 @@ interface FloatingControlsProps {
   onCopyMarkdown?: () => void;
   onProofread?: () => void;
   proofreadDisabled?: boolean;
+  proofreadLoading?: boolean;
   issueCount?: number;
   onAcceptAll?: () => void;
   onRejectAll?: () => void;
@@ -32,6 +33,7 @@ export default function FloatingControls({
   onCopyMarkdown,
   onProofread,
   proofreadDisabled = false,
+  proofreadLoading = false,
   issueCount = 0,
   onAcceptAll,
   onRejectAll,
@@ -80,10 +82,15 @@ export default function FloatingControls({
               className={`${styles.btn} ${styles.btnProofread}`}
               onClick={onProofread}
               disabled={proofreadDisabled}
-              title={proofreadDisabled ? "Select text to proofread" : "Proofread selected text"}
+              title={proofreadLoading ? "Proofreading…" : proofreadDisabled ? "Select text to proofread" : "Proofread selected text"}
               aria-label="Proofread selected text"
             >
-              <SpellCheck size={17} /> Proofread
+              {proofreadLoading ? (
+                <LoaderCircle size={17} className={styles.spin} />
+              ) : (
+                <SpellCheck size={17} />
+              )}
+              {proofreadLoading ? "Proofreading…" : "Proofread"}
             </button>
 
             <div

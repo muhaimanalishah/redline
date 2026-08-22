@@ -7,6 +7,7 @@ import { DiffIssue } from "./types";
 export interface DiffPluginState {
   decorations: DecorationSet;
   issues: Map<string, DiffIssue>;
+  processingRange: { from: number; to: number } | null;
 }
 
 export const DiffPluginKey = new PluginKey<DiffPluginState>("notion-diff");
@@ -25,10 +26,27 @@ export interface ClearAllDiffsMeta {
   type: "CLEAR_ALL_DIFFS";
 }
 
-export type DiffMeta = SetDiffIssuesMeta | RemoveDiffMeta | ClearAllDiffsMeta;
+export interface SetProcessingRangeMeta {
+  type: "SET_PROCESSING_RANGE";
+  range: { from: number; to: number } | null;
+}
 
-function buildDecorations(doc: ProseMirrorNode, issues: Map<string, DiffIssue>): DecorationSet {
+export type DiffMeta = SetDiffIssuesMeta | RemoveDiffMeta | ClearAllDiffsMeta | SetProcessingRangeMeta;
+
+function buildDecorations(
+  doc: ProseMirrorNode,
+  issues: Map<string, DiffIssue>,
+  processingRange: { from: number; to: number } | null
+): DecorationSet {
   const decos: Decoration[] = [];
+
+  if (processingRange) {
+    decos.push(
+      Decoration.inline(processingRange.from, processingRange.to, {
+        class: "diff-processing",
+      })
+    );
+  }
 
   issues.forEach((issue) => {
     // Scan doc text to locate the original text
@@ -90,32 +108,44 @@ export const DiffExtension = Extension.create({
             return {
               decorations: DecorationSet.empty,
               issues: new Map<string, DiffIssue>(),
+              processingRange: null,
             };
           },
           apply(tr, prev, _oldState, newState) {
             const issues = new Map<string, DiffIssue>(prev.issues);
             const meta = tr.getMeta(DiffPluginKey) as DiffMeta | undefined;
+            let processingRange = prev.processingRange
+              ? {
+                  from: tr.mapping.map(prev.processingRange.from),
+                  to: tr.mapping.map(prev.processingRange.to),
+                }
+              : null;
 
             if (meta) {
               if (meta.type === "SET_DIFF_ISSUES") {
                 issues.clear();
                 meta.issues.forEach((issue) => issues.set(issue.id, issue));
-                const decorations = buildDecorations(newState.doc, issues);
-                return { decorations, issues };
+                processingRange = null;
+                const decorations = buildDecorations(newState.doc, issues, processingRange);
+                return { decorations, issues, processingRange };
               } else if (meta.type === "REMOVE_DIFF") {
                 issues.delete(meta.issueId);
-                const decorations = buildDecorations(newState.doc, issues);
-                return { decorations, issues };
+                const decorations = buildDecorations(newState.doc, issues, processingRange);
+                return { decorations, issues, processingRange };
               } else if (meta.type === "CLEAR_ALL_DIFFS") {
                 issues.clear();
-                return { decorations: DecorationSet.empty, issues };
+                return { decorations: DecorationSet.empty, issues, processingRange };
+              } else if (meta.type === "SET_PROCESSING_RANGE") {
+                processingRange = meta.range;
+                const decorations = buildDecorations(newState.doc, issues, processingRange);
+                return { decorations, issues, processingRange };
               }
             }
 
             // Map decorations through edits if doc changed
             if (tr.docChanged) {
-              const decorations = buildDecorations(newState.doc, issues);
-              return { decorations, issues };
+              const decorations = buildDecorations(newState.doc, issues, processingRange);
+              return { decorations, issues, processingRange };
             }
 
             return prev;
