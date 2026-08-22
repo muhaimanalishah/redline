@@ -5,9 +5,38 @@ import { toast } from "sonner";
 import Editor from "@/components/Editor";
 import { DiffIssue, ExecuteAiOptions } from "@/types";
 
-const STORAGE_KEY = "redline-document-content";
+const STORAGE_KEY = "redline-document-content-v2";
 
-const INITIAL_MARKDOWN = `Their are alot of reasons why a person might wants to improve they're writing, but the most importantest one is clarity. When you're sentences is confusing, the reader loose interest quick and dont finish what you wrote, which effect how well you're ideas gets recieved by other peoples.
+const INITIAL_MARKDOWN = `# Redline
+
+A fast, distraction-free markdown editor with **instant inline revisions** and intelligent AI writing assistance.
+
+## Key Features
+
+- **Inline Diffs:** Inspect suggestions and accept or decline changes per paragraph.
+- **Client-Side Export:** Download cleanly formatted \`.md\` files with a single click.
+- **Rich Elements:** Headings, blockquotes, code blocks, task lists, and structured tables.
+
+> "Simplicity is about subtracting the obvious and adding the meaningful." — *John Maeda*
+
+### Overview
+
+| Feature | Status | Description |
+| :--- | :--- | :--- |
+| Live Diff Review | Supported | Per-block redline diffing |
+| Markdown Tables | Supported | High-contrast styled tables |
+| AI Transformations | Supported | Proofread, clarify, and summarize |
+
+\`\`\`ts
+// AI-assisted editing workflow
+async function polishDraft(content: string) {
+  return await redline.proofread({ content, mode: "concise" });
+}
+\`\`\`
+
+## Sample Draft (Needs Proofreading)
+
+Their are alot of reasons why a person might wants to improve they're writing, but the most importantest one is clarity. When you're sentences is confusing, the reader loose interest quick and dont finish what you wrote, which effect how well you're ideas gets recieved by other peoples.
 
 Me and him was discussing yesterday about how good writers doesn't never use to many words when less would of been better. Its a common mistake to think that longer sentences sounds more smarter, but actually it just make the reader more confuseder and less likely to remember what the point were.
 `;
