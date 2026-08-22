@@ -84,8 +84,8 @@
 }
 
 .button.reject:hover {
-  color: var(--ink);
-  background: var(--paper-subtle);
+  color: var(--del-text);
+  background: var(--del-bg);
 }
 
 @keyframes fadeIn {

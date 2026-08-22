@@ -286,13 +286,13 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* ---- Inline Diff Marks ---- */
+/* ---- Inline Diff Marks (Quiet Correction) ---- */
 :global(.del.diff-del) {
   background: transparent;
-  color: var(--ink-soft);
+  color: var(--ink-faint);
   text-decoration: line-through;
   text-decoration-thickness: 1px;
-  text-decoration-color: var(--ink-faint);
+  text-decoration-color: var(--ink-subtle);
   border-radius: 3px;
   padding: 0 1px;
   cursor: default;
@@ -302,9 +302,7 @@
 :global(.ins.diff-ins) {
   background: transparent;
   color: var(--accent-blue);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-decoration-color: color-mix(in srgb, var(--accent-blue) 55%, transparent);
+  font-weight: 400;
   border-radius: 3px;
   padding: 0 1px;
   margin-left: 3px;

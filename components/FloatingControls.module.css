@@ -154,12 +154,12 @@
 }
 
 .btnAccept {
-  color: var(--ins-text);
+  color: var(--accent-blue);
 }
 
 .btnAccept:hover:not(:disabled) {
-  background: var(--ins-bg);
-  color: var(--ins-text);
+  background: color-mix(in srgb, var(--accent-blue) 14%, transparent);
+  color: var(--accent-blue);
 }
 
 .btnReject {
