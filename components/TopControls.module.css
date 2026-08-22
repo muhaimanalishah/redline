@@ -1,0 +1,97 @@
+.dockContainer {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 40;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.dock {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--float-bg);
+  border: 1px solid var(--float-border);
+  border-radius: 9999px;
+  padding: 6px 8px;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dock:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--rule);
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--paper-subtle);
+  color: var(--ink);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0px) scale(0.96);
+}
+
+.btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.zoomLabel {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  min-width: 42px;
+  text-align: center;
+  padding: 6px 6px;
+  border-radius: 7px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.zoomLabel:hover {
+  background: var(--paper-subtle);
+  color: var(--ink);
+}
+
+.divider {
+  width: 1px;
+  height: 16px;
+  background: var(--rule);
+  margin: 0 2px;
+}
+
+@media (max-width: 640px) {
+  .dockContainer {
+    top: 14px;
+    right: 14px;
+  }
+  .dock {
+    padding: 4px 6px;
+  }
+  .btn {
+    width: 30px;
+    height: 30px;
+  }
+}

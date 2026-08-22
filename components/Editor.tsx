@@ -5,11 +5,14 @@ import { EditorContent } from "@tiptap/react";
 import { MarkdownStorage } from "tiptap-markdown";
 import { DiffPluginKey } from "./DiffExtension";
 import DiffToolbar from "./DiffToolbar";
+import TableToolbar from "./TableToolbar";
 import FloatingControls from "./FloatingControls";
+import TopControls from "./TopControls";
 import { DiffIssue } from "@/types";
 import { useDiffEditor } from "@/hooks/useDiffEditor";
 import { useHoverToolbar } from "@/hooks/useHoverToolbar";
 import { useDiffActions } from "@/hooks/useDiffActions";
+import { useTableToolbar } from "@/hooks/useTableToolbar";
 import { useZoom } from "@/hooks/useZoom";
 import { useEditorTheme } from "@/hooks/useEditorTheme";
 import styles from "./Editor.module.css";
@@ -55,6 +58,8 @@ export default function Editor({
     editor,
     closeActiveDiff
   );
+
+  const { activeTable } = useTableToolbar(editor, containerRef);
 
   const { zoom, zoomIn, zoomOut, zoomReset } = useZoom();
   const { theme, changeTheme } = useEditorTheme();
@@ -120,6 +125,15 @@ export default function Editor({
         <EditorContent editor={editor} className={styles.editorContent} />
       </div>
 
+      {/* Floating table controls — add/delete rows and columns */}
+      {activeTable && (
+        <TableToolbar
+          editor={editor}
+          anchorRect={activeTable.anchorRect}
+          containerRect={activeTable.containerRect}
+        />
+      )}
+
       {/* Floating Notion-style Micro-Toolbar for hovered redline issues */}
       {activeDiff && (
         <DiffToolbar
@@ -134,8 +148,8 @@ export default function Editor({
         />
       )}
 
-      {/* Floating Controls in Bottom Right */}
-      <FloatingControls
+      {/* Document controls — copy, zoom, theme */}
+      <TopControls
         zoom={zoom}
         onZoomIn={zoomIn}
         onZoomOut={zoomOut}
@@ -143,6 +157,11 @@ export default function Editor({
         theme={theme}
         onThemeChange={changeTheme}
         onCopyMarkdown={handleCopyMarkdown}
+      />
+
+      {/* Insert + review dock at the bottom */}
+      <FloatingControls
+        editor={editor}
         onProofread={onProofread ? handleProofreadClick : undefined}
         proofreadDisabled={!hasSelection || isProofreading}
         proofreadLoading={isProofreading}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ThemeMode } from "@/components/FloatingControls";
+import { ThemeMode } from "@/components/TopControls";
 
 const THEME_KEY = "redline-theme";
 
