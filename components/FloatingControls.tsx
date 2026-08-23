@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Editor, useEditorState } from "@tiptap/react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Bold,
   Italic,
@@ -206,7 +207,6 @@ export default function FloatingControls({
     setActivePresetView("root");
     setHighlightedPresetIndex(-1);
 
-    // Auto-focus input and set anchor rect after render
     setTimeout(() => {
       aiInputRef.current?.focus();
       const rect = dockRef.current?.getBoundingClientRect();
@@ -226,7 +226,6 @@ export default function FloatingControls({
     [savedRange, closeAiDock, editor, onSelectPreset]
   );
 
-  // Compute current preset menu items for keyboard navigation and popover
   const currentMenuItems = useMemo<MenuItemDef[]>(() => {
     const hasActiveSelection = Boolean(savedRange) || hasSelection;
     if (!hasActiveSelection) return [];
@@ -387,7 +386,6 @@ export default function FloatingControls({
         return;
       }
 
-      // Highlight target range while transcribing
       editor.view.dispatch(
         editor.state.tr.setMeta(DiffPluginKey, {
           type: "SET_PROCESSING_RANGE",
@@ -482,320 +480,341 @@ export default function FloatingControls({
 
   return (
     <aside aria-label="Editor controls" className={styles.dockContainer}>
-      {showRecordingDock ? (
-        <div
-          ref={dockRef}
-          className={styles.recordingDock}
-          role="region"
-          aria-label="Voice recording dock"
-        >
-          <button
-            type="button"
-            className={`${styles.btn} ${styles.btnDiscard}`}
-            onClick={handleDiscardRecording}
-            disabled={isTranscribing}
-            title="Cancel recording"
-            aria-label="Cancel recording"
-          >
-            <X size={17} />
-          </button>
-
-          <div className={styles.recordingCenter}>
-            <AudioVisualizer amplitudes={isTranscribing ? new Array(28).fill(0.08) : audioAmplitudes} />
-            <span
-              className={styles.recordingTimer}
-              data-paused={isPaused}
-              aria-label={`Recording duration: ${formatDuration(durationSeconds)} of 3 minutes`}
+      <motion.div
+        ref={dockRef}
+        layout
+        transition={{ type: "spring", stiffness: 450, damping: 35 }}
+        style={{ display: "flex", alignItems: "center" }}
+      >
+        <AnimatePresence mode="wait" initial={false}>
+          {showRecordingDock ? (
+            <motion.div
+              key="recording-dock"
+              className={styles.recordingDock}
+              role="region"
+              aria-label="Voice recording dock"
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.16, ease: "easeOut" }}
             >
-              {formatDuration(durationSeconds)} / 03:00
-            </span>
-          </div>
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnDiscard}`}
+                onClick={handleDiscardRecording}
+                disabled={isTranscribing}
+                title="Cancel recording"
+                aria-label="Cancel recording"
+              >
+                <X size={17} />
+              </button>
 
-          <div className={styles.recordingActions}>
-            <button
-              type="button"
-              className={`${styles.btn} ${styles.btnPause}`}
-              onClick={handleTogglePause}
-              disabled={isTranscribing}
-              title={isPaused ? "Resume recording" : "Pause recording"}
-              aria-label={isPaused ? "Resume recording" : "Pause recording"}
+              <div className={styles.recordingCenter}>
+                <AudioVisualizer amplitudes={isTranscribing ? new Array(28).fill(0.08) : audioAmplitudes} />
+                <span
+                  className={styles.recordingTimer}
+                  data-paused={isPaused}
+                  aria-label={`Recording duration: ${formatDuration(durationSeconds)} of 3 minutes`}
+                >
+                  {formatDuration(durationSeconds)} / 03:00
+                </span>
+              </div>
+
+              <div className={styles.recordingActions}>
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnPause}`}
+                  onClick={handleTogglePause}
+                  disabled={isTranscribing}
+                  title={isPaused ? "Resume recording" : "Pause recording"}
+                  aria-label={isPaused ? "Resume recording" : "Pause recording"}
+                >
+                  {isPaused ? <Play size={16} /> : <Pause size={16} />}
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnDone}`}
+                  onClick={handleFinishRecording}
+                  disabled={isTranscribing}
+                  title={isTranscribing ? "Transcribing voice note..." : "Done & transcribe"}
+                  aria-label={isTranscribing ? "Transcribing voice note..." : "Done & transcribe"}
+                >
+                  {isTranscribing ? <Loader2 size={16} className={styles.spin} /> : <Check size={16} />}
+                </button>
+              </div>
+            </motion.div>
+          ) : showAiDock ? (
+            <motion.div
+              key="ai-dock"
+              className={styles.aiDock}
+              role="region"
+              aria-label="AI Prompt Input dock"
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.16, ease: "easeOut" }}
             >
-              {isPaused ? <Play size={16} /> : <Pause size={16} />}
-            </button>
-            <button
-              type="button"
-              className={`${styles.btn} ${styles.btnDone}`}
-              onClick={handleFinishRecording}
-              disabled={isTranscribing}
-              title={isTranscribing ? "Transcribing voice note..." : "Done & transcribe"}
-              aria-label={isTranscribing ? "Transcribing voice note..." : "Done & transcribe"}
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnDiscard}`}
+                onClick={closeAiDock}
+                disabled={aiLoading}
+                title="Cancel AI prompt"
+                aria-label="Cancel AI prompt"
+              >
+                <X size={17} />
+              </button>
+
+              <input
+                ref={aiInputRef}
+                type="text"
+                className={styles.aiDockInput}
+                placeholder={
+                  hasActiveSelection
+                    ? "Ask AI or select a preset above…"
+                    : "Ask AI to write something…"
+                }
+                value={aiPromptValue}
+                disabled={aiLoading}
+                onChange={(e) => {
+                  setAiPromptValue(e.target.value);
+                  setHighlightedPresetIndex(-1);
+                }}
+                onKeyDown={handleAiInputKeyDown}
+                aria-label="Ask AI prompt"
+              />
+
+              <button
+                type="button"
+                className={styles.aiDockSubmit}
+                onClick={handleAiCustomSubmit}
+                disabled={!aiPromptValue.trim() || aiLoading}
+                title={aiLoading ? "Generating AI response..." : "Submit prompt"}
+                aria-label={aiLoading ? "Generating AI response..." : "Submit prompt"}
+              >
+                {aiLoading ? (
+                  <LoaderCircle size={15} strokeWidth={2.5} className={styles.spin} />
+                ) : (
+                  <ArrowUp size={15} strokeWidth={2.5} />
+                )}
+              </button>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="standard-dock"
+              className={styles.floatingDock}
+              role="toolbar"
+              aria-label="Formatting toolbar"
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.16, ease: "easeOut" }}
             >
-              {isTranscribing ? <Loader2 size={16} className={styles.spin} /> : <Check size={16} />}
-            </button>
-          </div>
-        </div>
-      ) : showAiDock ? (
-        <div
-          ref={dockRef}
-          className={styles.aiDock}
-          role="region"
-          aria-label="AI Prompt Input dock"
-        >
-          <button
-            type="button"
-            className={`${styles.btn} ${styles.btnDiscard}`}
-            onClick={closeAiDock}
-            disabled={aiLoading}
-            title="Cancel AI prompt"
-            aria-label="Cancel AI prompt"
-          >
-            <X size={17} />
-          </button>
+              {onAiSubmit && (
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnAi}`}
+                  data-active={isAiDockOpen}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={openAiDock}
+                  title="Ask AI"
+                  aria-label="Ask AI"
+                >
+                  <Sparkles size={17} />
+                </button>
+              )}
 
-          <input
-            ref={aiInputRef}
-            type="text"
-            className={styles.aiDockInput}
-            placeholder={
-              hasActiveSelection
-                ? "Ask AI or select a preset above…"
-                : "Ask AI to write something…"
-            }
-            value={aiPromptValue}
-            disabled={aiLoading}
-            onChange={(e) => {
-              setAiPromptValue(e.target.value);
-              setHighlightedPresetIndex(-1);
-            }}
-            onKeyDown={handleAiInputKeyDown}
-            aria-label="Ask AI prompt"
-          />
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnMic}`}
+                data-active={isRecording}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={handleMicClick}
+                title="Voice recording"
+                aria-label="Start voice recording"
+              >
+                <Mic size={17} />
+              </button>
 
-          <button
-            type="button"
-            className={styles.aiDockSubmit}
-            onClick={handleAiCustomSubmit}
-            disabled={!aiPromptValue.trim() || aiLoading}
-            title={aiLoading ? "Generating AI response..." : "Submit prompt"}
-            aria-label={aiLoading ? "Generating AI response..." : "Submit prompt"}
-          >
-            {aiLoading ? (
-              <LoaderCircle size={15} strokeWidth={2.5} className={styles.spin} />
-            ) : (
-              <ArrowUp size={15} strokeWidth={2.5} />
-            )}
-          </button>
-        </div>
-      ) : (
-        <div
-          ref={dockRef}
-          className={styles.floatingDock}
-          role="toolbar"
-          aria-label="Formatting toolbar"
-        >
-          <button
-            type="button"
-            className={styles.btn}
-            data-active={editorState?.isBold ?? false}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            title="Bold"
-            aria-label="Bold"
-          >
-            <Bold size={17} />
-          </button>
+              <div className={styles.divider} />
 
-          <button
-            type="button"
-            className={styles.btn}
-            data-active={editorState?.isItalic ?? false}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            title="Italic"
-            aria-label="Italic"
-          >
-            <Italic size={17} />
-          </button>
+              <button
+                type="button"
+                className={styles.btn}
+                data-active={editorState?.isBold ?? false}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => editor.chain().focus().toggleBold().run()}
+                title="Bold"
+                aria-label="Bold"
+              >
+                <Bold size={17} />
+              </button>
 
-          <button
-            type="button"
-            className={styles.btn}
-            data-active={editorState?.isUnderline ?? false}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
-            title="Underline"
-            aria-label="Underline"
-          >
-            <Underline size={17} />
-          </button>
+              <button
+                type="button"
+                className={styles.btn}
+                data-active={editorState?.isItalic ?? false}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => editor.chain().focus().toggleItalic().run()}
+                title="Italic"
+                aria-label="Italic"
+              >
+                <Italic size={17} />
+              </button>
 
-          <button
-            type="button"
-            className={styles.btn}
-            data-active={editorState?.isStrike ?? false}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => editor.chain().focus().toggleStrike().run()}
-            title="Strikethrough"
-            aria-label="Strikethrough"
-          >
-            <Strikethrough size={17} />
-          </button>
+              <button
+                type="button"
+                className={styles.btn}
+                data-active={editorState?.isUnderline ?? false}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => editor.chain().focus().toggleUnderline().run()}
+                title="Underline"
+                aria-label="Underline"
+              >
+                <Underline size={17} />
+              </button>
 
-          <button
-            type="button"
-            className={styles.btn}
-            data-active={editorState?.isCode ?? false}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => editor.chain().focus().toggleCode().run()}
-            title="Inline code"
-            aria-label="Inline code"
-          >
-            <Code size={17} />
-          </button>
+              <button
+                type="button"
+                className={styles.btn}
+                data-active={editorState?.isStrike ?? false}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => editor.chain().focus().toggleStrike().run()}
+                title="Strikethrough"
+                aria-label="Strikethrough"
+              >
+                <Strikethrough size={17} />
+              </button>
 
-          <div className={styles.divider} />
+              <button
+                type="button"
+                className={styles.btn}
+                data-active={editorState?.isCode ?? false}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => editor.chain().focus().toggleCode().run()}
+                title="Inline code"
+                aria-label="Inline code"
+              >
+                <Code size={17} />
+              </button>
 
-          <InsertMenu editor={editor} />
+              <div className={styles.divider} />
 
-          <button
-            type="button"
-            className={styles.btn}
-            data-active={editorState?.isBulletList ?? false}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-            title="Bullet list"
-            aria-label="Bullet list"
-          >
-            <List size={17} />
-          </button>
+              <InsertMenu editor={editor} />
 
-          <button
-            type="button"
-            className={styles.btn}
-            data-active={editorState?.isOrderedList ?? false}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            title="Numbered list"
-            aria-label="Numbered list"
-          >
-            <ListOrdered size={17} />
-          </button>
+              <button
+                type="button"
+                className={styles.btn}
+                data-active={editorState?.isBulletList ?? false}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => editor.chain().focus().toggleBulletList().run()}
+                title="Bullet list"
+                aria-label="Bullet list"
+              >
+                <List size={17} />
+              </button>
 
-          <button
-            type="button"
-            className={styles.btn}
-            data-active={editorState?.isTaskList ?? false}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => editor.chain().focus().toggleTaskList().run()}
-            title="Task list"
-            aria-label="Task list"
-          >
-            <ListChecks size={17} />
-          </button>
+              <button
+                type="button"
+                className={styles.btn}
+                data-active={editorState?.isOrderedList ?? false}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                title="Numbered list"
+                aria-label="Numbered list"
+              >
+                <ListOrdered size={17} />
+              </button>
 
-          <button
-            type="button"
-            className={styles.btn}
-            data-active={editorState?.isBlockquote ?? false}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            title="Blockquote"
-            aria-label="Blockquote"
-          >
-            <Quote size={17} />
-          </button>
+              <button
+                type="button"
+                className={styles.btn}
+                data-active={editorState?.isTaskList ?? false}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => editor.chain().focus().toggleTaskList().run()}
+                title="Task list"
+                aria-label="Task list"
+              >
+                <ListChecks size={17} />
+              </button>
 
-          <button
-            type="button"
-            className={styles.btn}
-            data-active={editorState?.isCodeBlock ?? false}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-            title="Code block"
-            aria-label="Code block"
-          >
-            <Code2 size={17} />
-          </button>
+              <button
+                type="button"
+                className={styles.btn}
+                data-active={editorState?.isBlockquote ?? false}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                title="Blockquote"
+                aria-label="Blockquote"
+              >
+                <Quote size={17} />
+              </button>
 
-          <button
-            type="button"
-            className={styles.btn}
-            data-active={editorState?.isTable ?? false}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() =>
-              editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
-            }
-            title="Table"
-            aria-label="Insert table"
-          >
-            <Table size={17} />
-          </button>
+              <button
+                type="button"
+                className={styles.btn}
+                data-active={editorState?.isCodeBlock ?? false}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                title="Code block"
+                aria-label="Code block"
+              >
+                <Code2 size={17} />
+              </button>
 
-          <button
-            type="button"
-            className={styles.btn}
-            disabled={hasSelection}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => editor.chain().focus().setHorizontalRule().run()}
-            title={hasSelection ? "Deselect text to insert a horizontal rule" : "Horizontal rule"}
-            aria-label="Insert horizontal rule"
-          >
-            <Minus size={17} />
-          </button>
+              <button
+                type="button"
+                className={styles.btn}
+                data-active={editorState?.isTable ?? false}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() =>
+                  editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+                }
+                title="Table"
+                aria-label="Insert table"
+              >
+                <Table size={17} />
+              </button>
 
-          <button
-            ref={imageBtnRef}
-            type="button"
-            className={styles.btn}
-            data-active={pendingUrl?.field === "image"}
-            onClick={() => openPopover("image")}
-            title="Image"
-            aria-label="Insert image"
-          >
-            <ImageIcon size={17} />
-          </button>
+              <button
+                type="button"
+                className={styles.btn}
+                disabled={hasSelection}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => editor.chain().focus().setHorizontalRule().run()}
+                title={hasSelection ? "Deselect text to insert a horizontal rule" : "Horizontal rule"}
+                aria-label="Insert horizontal rule"
+              >
+                <Minus size={17} />
+              </button>
 
-          <button
-            ref={linkBtnRef}
-            type="button"
-            className={styles.btn}
-            data-active={(editorState?.isLink ?? false) || pendingUrl?.field === "link"}
-            onClick={() => openPopover("link")}
-            title="Link"
-            aria-label="Insert link"
-          >
-            <Link2 size={17} />
-          </button>
+              <button
+                ref={imageBtnRef}
+                type="button"
+                className={styles.btn}
+                data-active={pendingUrl?.field === "image"}
+                onClick={() => openPopover("image")}
+                title="Image"
+                aria-label="Insert image"
+              >
+                <ImageIcon size={17} />
+              </button>
 
-          <div className={styles.divider} />
-
-          <button
-            type="button"
-            className={`${styles.btn} ${styles.btnMic}`}
-            data-active={isRecording}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={handleMicClick}
-            title="Voice recording"
-            aria-label="Start voice recording"
-          >
-            <Mic size={17} />
-          </button>
-
-          {onAiSubmit && (
-            <button
-              type="button"
-              className={`${styles.btn} ${styles.btnAi}`}
-              data-active={isAiDockOpen}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={openAiDock}
-              title="Ask AI"
-              aria-label="Ask AI"
-            >
-              <Sparkles size={17} />
-            </button>
+              <button
+                ref={linkBtnRef}
+                type="button"
+                className={styles.btn}
+                data-active={(editorState?.isLink ?? false) || pendingUrl?.field === "link"}
+                onClick={() => openPopover("link")}
+                title="Link"
+                aria-label="Insert link"
+              >
+                <Link2 size={17} />
+              </button>
+            </motion.div>
           )}
-        </div>
-      )}
+        </AnimatePresence>
+      </motion.div>
 
       <ReviewAllFloatingMenu
         issueCount={issueCount}
@@ -838,5 +857,6 @@ export default function FloatingControls({
     </aside>
   );
 }
+
 
 

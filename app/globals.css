@@ -93,12 +93,13 @@
   --blockquote-border: #A6A099;
   --selection-bg: rgba(166, 160, 153, 0.3);
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 4px 14px -3px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 12px 36px -8px rgba(0, 0, 0, 0.55), 0 4px 12px -3px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 16px -3px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 38px -8px rgba(0, 0, 0, 0.65), 0 4px 12px -3px rgba(0, 0, 0, 0.5);
 
-  --float-bg: #2E3137;
-  --float-border: #444750;
+  /* Slightly darker than document canvas (--paper: #26282C) for floating dock & popovers */
+  --float-bg: #1A1C1F;
+  --float-border: #2E3238;
 
   --background: var(--paper-edge);
   --foreground: var(--ink);
