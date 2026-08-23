@@ -2,13 +2,19 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface UseAudioRecorderOptions {
   barCount?: number;
+  maxDurationSeconds?: number;
+  onMaxDurationReached?: () => void;
   onError?: (error: string) => void;
 }
 
 export interface UseAudioRecorderReturn {
   isRecording: boolean;
+  isPaused: boolean;
+  durationSeconds: number;
   audioAmplitudes: number[];
   startRecording: () => Promise<void>;
+  pauseRecording: () => void;
+  resumeRecording: () => void;
   stopRecording: () => void;
   stopAndGetBlob: () => Promise<Blob | null>;
   error: string | null;
@@ -35,12 +41,16 @@ function getSupportedMimeType(): string {
 
 export function useAudioRecorder({
   barCount = 28,
+  maxDurationSeconds = 180,
+  onMaxDurationReached,
   onError,
 }: UseAudioRecorderOptions = {}): UseAudioRecorderReturn {
   const [isRecording, setIsRecording] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [durationSeconds, setDurationSeconds] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [audioAmplitudes, setAudioAmplitudes] = useState<number[]>(() =>
-    new Array(barCount).fill(0.1)
+    new Array(barCount).fill(0.08)
   );
 
   const streamRef = useRef<MediaStream | null>(null);
@@ -49,8 +59,21 @@ export function useAudioRecorder({
   const animationFrameRef = useRef<number | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const amplitudeHistoryRef = useRef<number[]>(new Array(barCount).fill(0.08));
+  const isPausedRef = useRef(false);
+  const durationTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSampleTimeRef = useRef<number>(0);
+
+  const clearTimer = useCallback(() => {
+    if (durationTimerRef.current) {
+      clearInterval(durationTimerRef.current);
+      durationTimerRef.current = null;
+    }
+  }, []);
 
   const cleanupAudio = useCallback(() => {
+    clearTimer();
+
     if (animationFrameRef.current !== null) {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
@@ -77,16 +100,61 @@ export function useAudioRecorder({
     }
 
     analyserRef.current = null;
-    setAudioAmplitudes(new Array(barCount).fill(0.1));
-  }, [barCount]);
+    amplitudeHistoryRef.current = new Array(barCount).fill(0.08);
+    setAudioAmplitudes(new Array(barCount).fill(0.08));
+    setDurationSeconds(0);
+    setIsPaused(false);
+    isPausedRef.current = false;
+  }, [barCount, clearTimer]);
 
   const stopRecording = useCallback(() => {
     cleanupAudio();
     setIsRecording(false);
   }, [cleanupAudio]);
 
+  const pauseRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+      try {
+        mediaRecorderRef.current.pause();
+      } catch {}
+    }
+    setIsPaused(true);
+    isPausedRef.current = true;
+    clearTimer();
+  }, [clearTimer]);
+
+  const startTimer = useCallback(() => {
+    clearTimer();
+    durationTimerRef.current = setInterval(() => {
+      setDurationSeconds((prev) => {
+        const next = prev + 1;
+        if (next >= maxDurationSeconds) {
+          clearTimer();
+          onMaxDurationReached?.();
+          return maxDurationSeconds;
+        }
+        return next;
+      });
+    }, 1000);
+  }, [clearTimer, maxDurationSeconds, onMaxDurationReached]);
+
+  const resumeRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "paused") {
+      try {
+        mediaRecorderRef.current.resume();
+      } catch {}
+    }
+    if (audioContextRef.current && audioContextRef.current.state === "suspended") {
+      audioContextRef.current.resume().catch(() => {});
+    }
+    setIsPaused(false);
+    isPausedRef.current = false;
+    startTimer();
+  }, [startTimer]);
+
   const stopAndGetBlob = useCallback((): Promise<Blob | null> => {
     return new Promise((resolve) => {
+      clearTimer();
       const recorder = mediaRecorderRef.current;
 
       if (!recorder || recorder.state === "inactive") {
@@ -117,8 +185,7 @@ export function useAudioRecorder({
         resolve(null);
       }
     });
-  }, [cleanupAudio]);
-
+  }, [cleanupAudio, clearTimer]);
 
   const startRecording = useCallback(async () => {
     setError(null);
@@ -155,7 +222,7 @@ export function useAudioRecorder({
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.start(250);
 
-      // Setup Web Audio API analyser for live visualizer
+      // Setup Web Audio API analyser for flowing visualizer
       const AudioCtx =
         window.AudioContext ||
         (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -168,41 +235,57 @@ export function useAudioRecorder({
 
       const source = audioContext.createMediaStreamSource(stream);
       const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 128;
-      analyser.smoothingTimeConstant = 0.75;
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.5;
       source.connect(analyser);
       analyserRef.current = analyser;
 
+      amplitudeHistoryRef.current = new Array(barCount).fill(0.08);
+      lastSampleTimeRef.current = performance.now();
       setIsRecording(true);
+      setIsPaused(false);
+      isPausedRef.current = false;
+      setDurationSeconds(0);
+      startTimer();
 
       const bufferLength = analyser.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
 
-      const sampleAmplitudes = () => {
+      const sampleAmplitudes = (now: number) => {
         if (!analyserRef.current) return;
 
-        analyserRef.current.getByteFrequencyData(dataArray);
+        // Sample at ~25fps (every 40ms) for smooth scrolling waveform
+        if (now - lastSampleTimeRef.current >= 40) {
+          lastSampleTimeRef.current = now;
 
-        const amplitudes: number[] = [];
-        const step = Math.max(1, Math.floor(bufferLength / barCount));
+          if (isPausedRef.current) {
+            // Decay toward idle baseline when paused
+            const updated = amplitudeHistoryRef.current.slice(1);
+            updated.push(0.08);
+            amplitudeHistoryRef.current = updated;
+            setAudioAmplitudes([...updated]);
+          } else {
+            analyserRef.current.getByteFrequencyData(dataArray);
 
-        for (let i = 0; i < barCount; i++) {
-          let sum = 0;
-          let count = 0;
-          const startIndex = i * step;
-          const endIndex = Math.min(startIndex + step, bufferLength);
+            // Compute overall RMS energy / amplitude
+            let sumSquares = 0;
+            for (let i = 0; i < bufferLength; i++) {
+              const val = dataArray[i];
+              sumSquares += val * val;
+            }
+            const rms = Math.sqrt(sumSquares / bufferLength);
 
-          for (let j = startIndex; j < endIndex; j++) {
-            sum += dataArray[j];
-            count++;
+            // Normalize between 0.08 (idle) and 1.0 (max)
+            const normalized = Math.max(0.08, Math.min(1.0, (rms / 120) * 1.1));
+
+            // Shift FIFO buffer: push newest to right
+            const history = amplitudeHistoryRef.current.slice(1);
+            history.push(normalized);
+            amplitudeHistoryRef.current = history;
+            setAudioAmplitudes([...history]);
           }
-
-          const avg = count > 0 ? sum / count : 0;
-          const normalized = Math.max(0.08, Math.min(1.0, avg / 220));
-          amplitudes.push(normalized);
         }
 
-        setAudioAmplitudes(amplitudes);
         animationFrameRef.current = requestAnimationFrame(sampleAmplitudes);
       };
 
@@ -223,7 +306,7 @@ export function useAudioRecorder({
       setError(errMsg);
       onError?.(errMsg);
     }
-  }, [barCount, cleanupAudio, onError]);
+  }, [barCount, cleanupAudio, onError, startTimer]);
 
   // Clean up on unmount
   useEffect(() => {
@@ -234,10 +317,15 @@ export function useAudioRecorder({
 
   return {
     isRecording,
+    isPaused,
+    durationSeconds,
     audioAmplitudes,
     startRecording,
+    pauseRecording,
+    resumeRecording,
     stopRecording,
     stopAndGetBlob,
     error,
   };
 }
+

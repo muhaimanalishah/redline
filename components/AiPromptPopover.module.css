@@ -17,67 +17,6 @@
   animation: fadeIn 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.inputRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 10px 10px 16px;
-}
-
-.hasPresets .inputRow {
-  border-bottom: 1px solid var(--float-border);
-}
-
-.input {
-  flex: 1;
-  font-family: var(--sans);
-  font-size: 14px;
-  line-height: 1.45;
-  color: var(--ink);
-  background: transparent;
-  border: none;
-  outline: none;
-  resize: none;
-  max-height: 100px;
-  padding: 4px 0;
-}
-
-.input::placeholder {
-  color: var(--ink-subtle);
-}
-
-.input:disabled {
-  opacity: 0.6;
-}
-
-.submit {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: none;
-  background: var(--ink);
-  color: var(--paper);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: opacity 0.12s ease, transform 0.1s ease;
-}
-
-.submit:hover:not(:disabled) {
-  opacity: 0.85;
-}
-
-.submit:active:not(:disabled) {
-  transform: scale(0.94);
-}
-
-.submit:disabled {
-  opacity: 0.2;
-  cursor: not-allowed;
-}
-
 .menuSection {
   padding: 6px;
   display: flex;
@@ -162,19 +101,6 @@
 
 .menuItem[data-highlighted="true"] .chevron {
   color: var(--ink-soft);
-}
-
-.spin {
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 @keyframes fadeIn {

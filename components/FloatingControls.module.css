@@ -107,29 +107,53 @@
   background: var(--float-bg);
   border: 1px solid var(--float-border);
   border-radius: 9999px;
-  padding: 6px 10px;
+  padding: 7px 10px;
   box-shadow: var(--shadow-md);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  min-height: 52px;
+  min-width: 440px;
+}
+
+.recordingCenter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.recordingTimer {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+  min-width: 96px;
+  text-align: center;
+}
+
+.recordingTimer[data-paused="true"] {
+  opacity: 0.65;
 }
 
 .btnDiscard {
   color: var(--ink-faint);
 }
 
-.btnDiscard:hover {
+.btnDiscard:hover:not(:disabled) {
   background: var(--paper-subtle);
   color: var(--del-text);
 }
 
-.btnStop {
-  color: var(--del-text);
+.btnPause {
+  color: var(--ink-soft);
 }
 
-.btnStop:hover {
-  background: var(--del-bg);
+.btnPause:hover:not(:disabled) {
+  background: var(--paper-subtle);
+  color: var(--ink);
 }
 
 .btnDone {
@@ -137,9 +161,72 @@
   color: #ffffff;
 }
 
-.btnDone:hover {
+.btnDone:hover:not(:disabled) {
   background: var(--accent-blue-hover);
   color: #ffffff;
+}
+
+.aiDock {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--float-bg);
+  border: 1px solid var(--float-border);
+  border-radius: 9999px;
+  padding: 7px 10px;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 440px;
+}
+
+.aiDockInput {
+  flex: 1;
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0 4px;
+}
+
+.aiDockInput::placeholder {
+  color: var(--ink-subtle);
+}
+
+.aiDockInput:disabled {
+  opacity: 0.6;
+}
+
+.aiDockSubmit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.12s ease, transform 0.1s ease;
+}
+
+.aiDockSubmit:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.aiDockSubmit:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.aiDockSubmit:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
 }
 
 .recordingActions {
@@ -161,6 +248,7 @@
   }
 }
 
+
 .divider {
   width: 1px;
   height: 18px;
@@ -178,14 +266,17 @@
     max-width: calc(100vw - 24px);
   }
   .floatingDock,
-  .recordingDock {
+  .recordingDock,
+  .aiDock {
     padding: 4px 6px;
     max-width: 100%;
+    min-width: 0;
     overflow-x: auto;
     scrollbar-width: none;
   }
   .floatingDock::-webkit-scrollbar,
-  .recordingDock::-webkit-scrollbar {
+  .recordingDock::-webkit-scrollbar,
+  .aiDock::-webkit-scrollbar {
     display: none;
   }
   .btn {
@@ -194,4 +285,3 @@
     flex-shrink: 0;
   }
 }
-

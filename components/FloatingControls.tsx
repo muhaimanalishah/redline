@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Editor, useEditorState } from "@tiptap/react";
 import {
   Bold,
@@ -20,18 +20,26 @@ import {
   Sparkles,
   Mic,
   X,
-  Square,
   Check,
+  Pause,
+  Play,
+  ArrowUp,
+  LoaderCircle,
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import InsertMenu from "./InsertMenu";
 import UrlPopover from "./UrlPopover";
-import AiPromptPopover from "./AiPromptPopover";
+import AiPromptPopover, { ActivePresetView, MenuItemDef } from "./AiPromptPopover";
 import ReviewAllFloatingMenu from "./ReviewAllFloatingMenu";
 import AudioVisualizer from "./AudioVisualizer";
 import { DiffPluginKey } from "./DiffExtension";
-import { PresetId } from "@/lib/ai/presets";
+import {
+  PRESETS,
+  PRESET_CATEGORIES,
+  getPresetsByCategory,
+  PresetId,
+} from "@/lib/ai/presets";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import styles from "./FloatingControls.module.css";
 
@@ -53,6 +61,12 @@ interface PendingUrl {
   anchorRect: DOMRect;
 }
 
+function formatDuration(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+}
+
 export default function FloatingControls({
   editor,
   hasSelection,
@@ -64,24 +78,43 @@ export default function FloatingControls({
   aiLoading = false,
 }: FloatingControlsProps) {
   const [pendingUrl, setPendingUrl] = useState<PendingUrl | null>(null);
+  const [isAiDockOpen, setIsAiDockOpen] = useState(false);
+  const [aiPromptValue, setAiPromptValue] = useState("");
   const [aiAnchorRect, setAiAnchorRect] = useState<DOMRect | null>(null);
   const [savedRange, setSavedRange] = useState<{ from: number; to: number } | null>(null);
+  const [activePresetView, setActivePresetView] = useState<ActivePresetView>("root");
+  const [highlightedPresetIndex, setHighlightedPresetIndex] = useState<number>(-1);
   const [isTranscribing, setIsTranscribing] = useState(false);
+
   const imageBtnRef = useRef<HTMLButtonElement>(null);
   const linkBtnRef = useRef<HTMLButtonElement>(null);
   const dockRef = useRef<HTMLDivElement>(null);
+  const aiInputRef = useRef<HTMLInputElement>(null);
 
   const handleAudioError = useCallback((err: string) => {
     toast.error(err);
   }, []);
 
+  const handleFinishRecordingRef = useRef<() => Promise<void>>(async () => {});
+
+  const handleMaxDurationReached = useCallback(() => {
+    toast.info("Maximum recording limit reached (3:00). Transcribing...");
+    handleFinishRecordingRef.current();
+  }, []);
+
   const {
     isRecording,
+    isPaused,
+    durationSeconds,
     audioAmplitudes,
     startRecording,
+    pauseRecording,
+    resumeRecording,
     stopRecording,
     stopAndGetBlob,
   } = useAudioRecorder({
+    maxDurationSeconds: 180,
+    onMaxDurationReached: handleMaxDurationReached,
     onError: handleAudioError,
   });
 
@@ -139,70 +172,172 @@ export default function FloatingControls({
     [editor, closePopover]
   );
 
-  const closeAiPopover = useCallback(() => {
+  const closeAiDock = useCallback(() => {
     editor.view.dispatch(
       editor.state.tr.setMeta(DiffPluginKey, {
         type: "SET_ACTIVE_SELECTION_RANGE",
         range: null,
       })
     );
+    setIsAiDockOpen(false);
+    setAiPromptValue("");
     setSavedRange(null);
     setAiAnchorRect(null);
+    setActivePresetView("root");
+    setHighlightedPresetIndex(-1);
   }, [editor]);
 
-  const toggleAiPopover = useCallback(() => {
-    setAiAnchorRect((prev) => {
-      if (prev) {
-        editor.view.dispatch(
-          editor.state.tr.setMeta(DiffPluginKey, {
-            type: "SET_ACTIVE_SELECTION_RANGE",
-            range: null,
-          })
-        );
-        setSavedRange(null);
-        return null;
-      }
+  const openAiDock = useCallback(() => {
+    closePopover();
+    const { from, to, empty } = editor.state.selection;
+    if (!empty) {
+      setSavedRange({ from, to });
+      editor.view.dispatch(
+        editor.state.tr.setMeta(DiffPluginKey, {
+          type: "SET_ACTIVE_SELECTION_RANGE",
+          range: { from, to },
+        })
+      );
+    } else {
+      setSavedRange(null);
+    }
 
-      const { from, to, empty } = editor.state.selection;
-      if (!empty) {
-        setSavedRange({ from, to });
-        editor.view.dispatch(
-          editor.state.tr.setMeta(DiffPluginKey, {
-            type: "SET_ACTIVE_SELECTION_RANGE",
-            range: { from, to },
-          })
-        );
-      } else {
-        setSavedRange(null);
-      }
+    setIsAiDockOpen(true);
+    setActivePresetView("root");
+    setHighlightedPresetIndex(-1);
 
-      return dockRef.current?.getBoundingClientRect() ?? null;
-    });
-  }, [editor]);
-
-  const handleAiSubmit = useCallback(
-    async (prompt: string) => {
-      const rangeToUse = savedRange;
-      closeAiPopover();
-      if (rangeToUse) {
-        editor.commands.setTextSelection(rangeToUse);
-      }
-      await onAiSubmit?.(prompt);
-    },
-    [savedRange, closeAiPopover, editor, onAiSubmit]
-  );
+    // Auto-focus input and set anchor rect after render
+    setTimeout(() => {
+      aiInputRef.current?.focus();
+      const rect = dockRef.current?.getBoundingClientRect();
+      if (rect) setAiAnchorRect(rect);
+    }, 10);
+  }, [editor, closePopover]);
 
   const handleSelectPreset = useCallback(
     async (preset: PresetId) => {
       const rangeToUse = savedRange;
-      closeAiPopover();
+      closeAiDock();
       if (rangeToUse) {
         editor.commands.setTextSelection(rangeToUse);
       }
       await onSelectPreset?.(preset);
     },
-    [savedRange, closeAiPopover, editor, onSelectPreset]
+    [savedRange, closeAiDock, editor, onSelectPreset]
   );
+
+  // Compute current preset menu items for keyboard navigation and popover
+  const currentMenuItems = useMemo<MenuItemDef[]>(() => {
+    const hasActiveSelection = Boolean(savedRange) || hasSelection;
+    if (!hasActiveSelection) return [];
+
+    if (activePresetView === "root") {
+      const items: MenuItemDef[] = [];
+      const proofreadConfig = PRESETS.proofread;
+      if (proofreadConfig) {
+        items.push({
+          id: proofreadConfig.id,
+          label: proofreadConfig.label,
+          Icon: Sparkles,
+          action: () => handleSelectPreset(proofreadConfig.id),
+        });
+      }
+      PRESET_CATEGORIES.forEach((cat) => {
+        items.push({
+          id: cat.id,
+          label: cat.label,
+          Icon: Sparkles,
+          action: () => {
+            setHighlightedPresetIndex(-1);
+            setActivePresetView(cat.id);
+          },
+          hasSubmenu: true,
+        });
+      });
+      return items;
+    }
+
+    const subItems: MenuItemDef[] = [
+      {
+        id: "back",
+        label: "Back",
+        Icon: Sparkles,
+        action: () => {
+          setHighlightedPresetIndex(-1);
+          setActivePresetView("root");
+        },
+        isBack: true,
+      },
+    ];
+
+    const categoryPresets = getPresetsByCategory(activePresetView);
+    categoryPresets.forEach((preset) => {
+      subItems.push({
+        id: preset.id,
+        label: preset.label,
+        Icon: Sparkles,
+        action: () => handleSelectPreset(preset.id),
+      });
+    });
+
+    return subItems;
+  }, [savedRange, hasSelection, activePresetView, handleSelectPreset]);
+
+  const handleAiCustomSubmit = useCallback(async () => {
+    const trimmed = aiPromptValue.trim();
+    if (!trimmed || aiLoading) return;
+
+    const rangeToUse = savedRange;
+    closeAiDock();
+    if (rangeToUse) {
+      editor.commands.setTextSelection(rangeToUse);
+    }
+    await onAiSubmit?.(trimmed);
+  }, [aiPromptValue, aiLoading, savedRange, closeAiDock, editor, onAiSubmit]);
+
+  const handleAiInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      if (activePresetView !== "root") {
+        setActivePresetView("root");
+        setHighlightedPresetIndex(-1);
+      } else {
+        closeAiDock();
+      }
+      return;
+    }
+
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (
+        highlightedPresetIndex >= 0 &&
+        highlightedPresetIndex < currentMenuItems.length
+      ) {
+        currentMenuItems[highlightedPresetIndex].action();
+      } else {
+        handleAiCustomSubmit();
+      }
+      return;
+    }
+
+    if (e.key === "ArrowDown") {
+      if (currentMenuItems.length > 0) {
+        e.preventDefault();
+        setHighlightedPresetIndex((prev) =>
+          prev < currentMenuItems.length - 1 ? prev + 1 : 0
+        );
+      }
+      return;
+    }
+
+    if (e.key === "ArrowUp") {
+      if (currentMenuItems.length > 0 && highlightedPresetIndex >= 0) {
+        e.preventDefault();
+        setHighlightedPresetIndex((prev) => (prev > 0 ? prev - 1 : -1));
+      }
+      return;
+    }
+  };
 
   const handleMicClick = useCallback(async () => {
     if (isRecording || isTranscribing) {
@@ -211,18 +346,26 @@ export default function FloatingControls({
       setIsTranscribing(false);
     } else {
       closePopover();
-      closeAiPopover();
+      closeAiDock();
       const { from, to, empty } = editor.state.selection;
       setSavedRange(empty ? { from, to } : { from, to });
       await startRecording();
     }
-  }, [isRecording, isTranscribing, stopRecording, closePopover, closeAiPopover, editor, startRecording]);
+  }, [isRecording, isTranscribing, stopRecording, closePopover, closeAiDock, editor, startRecording]);
 
   const handleDiscardRecording = useCallback(() => {
     stopRecording();
     setSavedRange(null);
     setIsTranscribing(false);
   }, [stopRecording]);
+
+  const handleTogglePause = useCallback(() => {
+    if (isPaused) {
+      resumeRecording();
+    } else {
+      pauseRecording();
+    }
+  }, [isPaused, resumeRecording, pauseRecording]);
 
   const handleFinishRecording = useCallback(async () => {
     if (isTranscribing) return;
@@ -331,7 +474,11 @@ export default function FloatingControls({
     }
   }, [isTranscribing, savedRange, editor, stopAndGetBlob, stopRecording]);
 
+  handleFinishRecordingRef.current = handleFinishRecording;
+
   const showRecordingDock = isRecording || isTranscribing;
+  const showAiDock = isAiDockOpen || aiLoading;
+  const hasActiveSelection = Boolean(savedRange) || hasSelection;
 
   return (
     <aside aria-label="Editor controls" className={styles.dockContainer}>
@@ -353,18 +500,27 @@ export default function FloatingControls({
             <X size={17} />
           </button>
 
-          <AudioVisualizer amplitudes={isTranscribing ? new Array(28).fill(0.12) : audioAmplitudes} />
+          <div className={styles.recordingCenter}>
+            <AudioVisualizer amplitudes={isTranscribing ? new Array(28).fill(0.08) : audioAmplitudes} />
+            <span
+              className={styles.recordingTimer}
+              data-paused={isPaused}
+              aria-label={`Recording duration: ${formatDuration(durationSeconds)} of 3 minutes`}
+            >
+              {formatDuration(durationSeconds)} / 03:00
+            </span>
+          </div>
 
           <div className={styles.recordingActions}>
             <button
               type="button"
-              className={`${styles.btn} ${styles.btnStop}`}
-              onClick={handleFinishRecording}
+              className={`${styles.btn} ${styles.btnPause}`}
+              onClick={handleTogglePause}
               disabled={isTranscribing}
-              title="Stop & transcribe"
-              aria-label="Stop & transcribe"
+              title={isPaused ? "Resume recording" : "Pause recording"}
+              aria-label={isPaused ? "Resume recording" : "Pause recording"}
             >
-              <Square size={15} fill="currentColor" />
+              {isPaused ? <Play size={16} /> : <Pause size={16} />}
             </button>
             <button
               type="button"
@@ -377,6 +533,58 @@ export default function FloatingControls({
               {isTranscribing ? <Loader2 size={16} className={styles.spin} /> : <Check size={16} />}
             </button>
           </div>
+        </div>
+      ) : showAiDock ? (
+        <div
+          ref={dockRef}
+          className={styles.aiDock}
+          role="region"
+          aria-label="AI Prompt Input dock"
+        >
+          <button
+            type="button"
+            className={`${styles.btn} ${styles.btnDiscard}`}
+            onClick={closeAiDock}
+            disabled={aiLoading}
+            title="Cancel AI prompt"
+            aria-label="Cancel AI prompt"
+          >
+            <X size={17} />
+          </button>
+
+          <input
+            ref={aiInputRef}
+            type="text"
+            className={styles.aiDockInput}
+            placeholder={
+              hasActiveSelection
+                ? "Ask AI or select a preset above…"
+                : "Ask AI to write something…"
+            }
+            value={aiPromptValue}
+            disabled={aiLoading}
+            onChange={(e) => {
+              setAiPromptValue(e.target.value);
+              setHighlightedPresetIndex(-1);
+            }}
+            onKeyDown={handleAiInputKeyDown}
+            aria-label="Ask AI prompt"
+          />
+
+          <button
+            type="button"
+            className={styles.aiDockSubmit}
+            onClick={handleAiCustomSubmit}
+            disabled={!aiPromptValue.trim() || aiLoading}
+            title={aiLoading ? "Generating AI response..." : "Submit prompt"}
+            aria-label={aiLoading ? "Generating AI response..." : "Submit prompt"}
+          >
+            {aiLoading ? (
+              <LoaderCircle size={15} strokeWidth={2.5} className={styles.spin} />
+            ) : (
+              <ArrowUp size={15} strokeWidth={2.5} />
+            )}
+          </button>
         </div>
       ) : (
         <div
@@ -577,9 +785,9 @@ export default function FloatingControls({
             <button
               type="button"
               className={`${styles.btn} ${styles.btnAi}`}
-              data-active={!!aiAnchorRect}
+              data-active={isAiDockOpen}
               onMouseDown={(e) => e.preventDefault()}
-              onClick={toggleAiPopover}
+              onClick={openAiDock}
               title="Ask AI"
               aria-label="Ask AI"
             >
@@ -615,17 +823,20 @@ export default function FloatingControls({
         />
       )}
 
-      {aiAnchorRect && (
+      {isAiDockOpen && hasActiveSelection && aiAnchorRect && (
         <AiPromptPopover
           anchorRect={aiAnchorRect}
-          hasSelection={hasSelection}
           loading={aiLoading}
-          onSubmit={handleAiSubmit}
+          activeView={activePresetView}
+          highlightedIndex={highlightedPresetIndex}
+          onHighlightIndex={setHighlightedPresetIndex}
+          onChangeView={setActivePresetView}
           onSelectPreset={handleSelectPreset}
-          onClose={closeAiPopover}
+          onClose={closeAiDock}
         />
       )}
     </aside>
   );
 }
+
 

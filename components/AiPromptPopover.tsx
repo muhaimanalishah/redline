@@ -1,10 +1,8 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
-  ArrowUp,
-  LoaderCircle,
   SpellCheck,
   MoveHorizontal,
   SlidersHorizontal,
@@ -30,24 +28,26 @@ import {
 } from "@/lib/ai";
 import styles from "./AiPromptPopover.module.css";
 
-interface AiPromptPopoverProps {
-  anchorRect: DOMRect;
-  hasSelection: boolean;
-  loading: boolean;
-  onSubmit: (prompt: string) => void | Promise<void>;
-  onSelectPreset?: (presetId: PresetId) => void | Promise<void>;
-  onClose: () => void;
-}
+export type ActivePresetView = "root" | PresetCategory;
 
-type ActiveView = "root" | PresetCategory;
-
-interface MenuItemDef {
+export interface MenuItemDef {
   id: string;
   label: string;
   Icon: LucideIcon;
   action: () => void;
   isBack?: boolean;
   hasSubmenu?: boolean;
+}
+
+interface AiPromptPopoverProps {
+  anchorRect: DOMRect;
+  loading: boolean;
+  activeView: ActivePresetView;
+  highlightedIndex: number;
+  onHighlightIndex: (idx: number) => void;
+  onChangeView: (view: ActivePresetView) => void;
+  onSelectPreset: (presetId: PresetId) => void | Promise<void>;
+  onClose: () => void;
 }
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -67,67 +67,31 @@ const ICON_MAP: Record<string, LucideIcon> = {
 
 export default function AiPromptPopover({
   anchorRect,
-  hasSelection,
   loading,
-  onSubmit,
+  activeView,
+  highlightedIndex,
+  onHighlightIndex,
+  onChangeView,
   onSelectPreset,
   onClose,
 }: AiPromptPopoverProps) {
-  const [value, setValue] = useState("");
-  const [activeView, setActiveView] = useState<ActiveView>("root");
-  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
-
-  const changeView = (view: ActiveView) => {
-    setHighlightedIndex(-1);
-    setActiveView(view);
-  };
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, [activeView]);
 
   useEffect(() => {
     if (loading) return;
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (activeView !== "root") {
-          changeView("root");
-        } else {
-          onClose();
-        }
-      }
-    };
     const handleClickOutside = (e: MouseEvent) => {
       if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
         onClose();
       }
     };
-    window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("mousedown", handleClickOutside);
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [onClose, loading, activeView]);
+  }, [onClose, loading]);
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    const trimmed = value.trim();
-    if (trimmed && !loading) onSubmit(trimmed);
-  };
-
-  const handlePresetClick = (presetId: PresetId) => {
-    if (loading) return;
-    onSelectPreset?.(presetId);
-  };
-
-  // Build current menu items list for keyboard navigation and rendering
   const menuItems = useMemo<MenuItemDef[]>(() => {
-    if (!hasSelection) return [];
-
     if (activeView === "root") {
       const items: MenuItemDef[] = [];
 
@@ -138,7 +102,7 @@ export default function AiPromptPopover({
           id: proofreadConfig.id,
           label: proofreadConfig.label,
           Icon: ICON_MAP[proofreadConfig.iconName] ?? SpellCheck,
-          action: () => handlePresetClick(proofreadConfig.id),
+          action: () => onSelectPreset(proofreadConfig.id),
         });
       }
 
@@ -148,7 +112,7 @@ export default function AiPromptPopover({
           id: cat.id,
           label: cat.label,
           Icon: ICON_MAP[cat.iconName] ?? List,
-          action: () => changeView(cat.id),
+          action: () => onChangeView(cat.id),
           hasSubmenu: true,
         });
       });
@@ -162,7 +126,7 @@ export default function AiPromptPopover({
         id: "back",
         label: "Back",
         Icon: ChevronLeft,
-        action: () => changeView("root"),
+        action: () => onChangeView("root"),
         isBack: true,
       },
     ];
@@ -173,40 +137,12 @@ export default function AiPromptPopover({
         id: preset.id,
         label: preset.label,
         Icon: ICON_MAP[preset.iconName] ?? FileText,
-        action: () => handlePresetClick(preset.id),
+        action: () => onSelectPreset(preset.id),
       });
     });
 
     return subItems;
-  }, [hasSelection, activeView, loading]);
-
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      if (highlightedIndex >= 0 && highlightedIndex < menuItems.length) {
-        menuItems[highlightedIndex].action();
-      } else {
-        handleSubmit(e);
-      }
-      return;
-    }
-
-    if (e.key === "ArrowDown") {
-      if (menuItems.length > 0) {
-        e.preventDefault();
-        setHighlightedIndex((prev) => (prev < menuItems.length - 1 ? prev + 1 : 0));
-      }
-      return;
-    }
-
-    if (e.key === "ArrowUp") {
-      if (menuItems.length > 0 && highlightedIndex >= 0) {
-        e.preventDefault();
-        setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
-      }
-      return;
-    }
-  };
+  }, [activeView, onSelectPreset, onChangeView]);
 
   return createPortal(
     <div
@@ -215,88 +151,51 @@ export default function AiPromptPopover({
       style={{ left: `${anchorRect.left + anchorRect.width / 2}px`, top: `${anchorRect.top}px` }}
       role="dialog"
       aria-modal="true"
-      aria-label="AI Assistant"
+      aria-label="AI Presets"
     >
-      <div className={`${styles.popover} ${hasSelection ? styles.hasPresets : ""}`}>
-        <form className={styles.inputRow} onSubmit={handleSubmit}>
-          <textarea
-            ref={inputRef}
-            className={styles.input}
-            placeholder={
-              hasSelection
-                ? "Ask AI or choose a preset below…"
-                : "Ask AI to write something…"
-            }
-            value={value}
-            disabled={loading}
-            onChange={(e) => {
-              setValue(e.target.value);
-              setHighlightedIndex(-1);
-            }}
-            onKeyDown={handleInputKeyDown}
-            rows={1}
-            aria-label="Prompt input"
-          />
-          <button
-            type="submit"
-            className={styles.submit}
-            aria-label={loading ? "Generating" : "Submit prompt"}
-            disabled={!value.trim() || loading}
-          >
-            {loading ? (
-              <LoaderCircle size={15} strokeWidth={2.5} className={styles.spin} />
-            ) : (
-              <ArrowUp size={15} strokeWidth={2.5} />
-            )}
-          </button>
-        </form>
+      <div className={styles.popover}>
+        <div className={styles.menuSection} role="menu">
+          {menuItems.map((item, idx) => {
+            const isHighlighted = highlightedIndex === idx;
+            const ItemIcon = item.Icon;
 
-        {hasSelection && menuItems.length > 0 && (
-          <div className={styles.menuSection} role="menu">
-            {menuItems.map((item, idx) => {
-              const isHighlighted = highlightedIndex === idx;
-              const ItemIcon = item.Icon;
-
-              if (item.isBack) {
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={styles.backBtn}
-                    data-highlighted={isHighlighted}
-                    onMouseEnter={() => setHighlightedIndex(idx)}
-                    onClick={item.action}
-                    role="menuitem"
-                  >
-                    <ItemIcon size={16} className={styles.itemIcon} />
-                    <span>{item.label}</span>
-                  </button>
-                );
-              }
-
+            if (item.isBack) {
               return (
                 <button
                   key={item.id}
                   type="button"
-                  className={styles.menuItem}
+                  className={styles.backBtn}
                   data-highlighted={isHighlighted}
-                  onMouseEnter={() => setHighlightedIndex(idx)}
-                  disabled={loading}
+                  onMouseEnter={() => onHighlightIndex(idx)}
                   onClick={item.action}
                   role="menuitem"
                 >
-                  <span className={styles.itemLabel}>
-                    <ItemIcon size={16} className={styles.itemIcon} />
-                    <span>{item.label}</span>
-                  </span>
-                  {item.hasSubmenu && (
-                    <ChevronRight size={15} className={styles.chevron} />
-                  )}
+                  <ItemIcon size={16} className={styles.itemIcon} />
+                  <span>{item.label}</span>
                 </button>
               );
-            })}
-          </div>
-        )}
+            }
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className={styles.menuItem}
+                data-highlighted={isHighlighted}
+                onMouseEnter={() => onHighlightIndex(idx)}
+                disabled={loading}
+                onClick={item.action}
+                role="menuitem"
+              >
+                <span className={styles.itemLabel}>
+                  <ItemIcon size={16} className={styles.itemIcon} />
+                  <span>{item.label}</span>
+                </span>
+                {item.hasSubmenu && <ChevronRight size={15} className={styles.chevron} />}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>,
     document.body
