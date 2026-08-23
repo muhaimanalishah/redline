@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Redline
+
+Redline is a minimalist, distraction-free Markdown editor featuring in-place AI writing assistance and inline redline diff reviews. Instead of replacing text wholesale or requiring external chat windows, Redline lets you review AI edits directly within your document using visual diff highlights and granular accept or reject controls.
+
+---
+
+## Features
+
+* **Inline Redline Diffs:** Inspect additions and deletions visually before committing them. Accept or reject changes per block or in bulk.
+* **ProseMirror & TipTap Core:** Rich-text editing with bidirectional Markdown synchronization, tables, task lists, code blocks, blockquotes, links, and images.
+* **AI Transformation Modes:**
+  * **Presets:** Proofread and fix, shorten, expand, summarize, tone adjustment, and markdown formatting.
+  * **Custom Instructions:** Custom prompts for in-place text replacement or generation from scratch.
+* **Voice Transcription:** In-memory audio recording with live waveform visualizer, pause/resume support, and direct transcription insertion via the OpenAI Whisper model.
+* **Interactive Controls:** Floating morphing dock powered by Framer Motion, keyboard-driven preset navigation, and raw Markdown source view toggle.
+* **Theme & Customization:** Multiple color themes (Dark, Charcoal, Nord, Sepia, High Contrast, Light) and viewport zoom controls (75% to 150%).
+
+---
+
+## Tech Stack
+
+* **Framework:** Next.js (App Router), React 19, TypeScript
+* **Rich Text:** TipTap v3, ProseMirror, tiptap-markdown
+* **AI Integration:** Vercel AI SDK (`ai`), `@ai-sdk/openai`
+* **Animations & UI:** Framer Motion, CSS Modules, Lucide Icons, Sonner
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+* Node.js 18+ or later
+* npm, pnpm, or yarn
+* An OpenAI API Key
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/redline.git
+   cd redline
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-## Learn More
+3. Configure environment variables:
+   Create a `.env.local` file in the root directory:
+   ```env
+   OPENAI_API_KEY=your_openai_api_key_here
+   OPENAI_MODEL=gpt-4o-mini
+   OPENAI_TRANSCRIPTION_MODEL=whisper-1
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+* `npm run dev`: Starts the Next.js development server.
+* `npm run build`: Builds the application for production.
+* `npm run start`: Starts the production build.
+* `npm run lint`: Runs ESLint checks.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## License
+
+MIT
