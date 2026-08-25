@@ -14,8 +14,8 @@
 }
 
 .inner {
-  width: 240px;
-  min-width: 240px;
+  width: 256px;
+  min-width: 256px;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -42,58 +42,86 @@
   background: var(--paper-card);
 }
 
-/* Quiet Header */
+/* 1. TOP HEADER */
 .header {
   height: 44px;
   min-height: 44px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 12px;
+  padding: 0 14px;
   border-bottom: 1px solid var(--rule-subtle);
 }
 
 .workspaceLabel {
-  font-size: 11.5px;
-  font-weight: 650;
+  font-size: 12px;
+  font-weight: 600;
   letter-spacing: 0.6px;
   text-transform: uppercase;
   color: var(--ink-faint);
 }
 
-.headerActions {
+/* 2. TOP ACTION BUTTONS (Full border-radius) */
+.actionButtonsContainer {
+  padding: 10px 12px;
   display: flex;
-  align-items: center;
-  gap: 2px;
+  flex-direction: column;
+  gap: 6px;
+  border-bottom: 1px solid var(--rule-subtle);
 }
 
-.activeHeaderBtn {
-  background-color: var(--accent-soft);
+.actionBtnFull {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 14px;
+  border-radius: 9999px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
   color: var(--ink);
+  background-color: var(--paper-card);
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.actionBtnFull:hover {
+  background-color: var(--paper-edge);
+  border-color: var(--ink-subtle);
+}
+
+.actionBtnFull:active {
+  transform: translateY(1px);
+}
+
+.actionBtnActive {
+  background-color: var(--paper-edge);
+  border-color: var(--accent-blue);
 }
 
 /* Search */
 .searchWrap {
   position: relative;
-  padding: 8px 12px;
+  margin-top: 4px;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--rule-subtle);
 }
 
 .searchIcon {
   position: absolute;
-  left: 20px;
+  left: 12px;
   color: var(--ink-faint);
   pointer-events: none;
 }
 
 .searchInput {
   width: 100%;
-  padding: 5px 24px 5px 26px;
+  padding: 6px 30px 6px 32px;
   font-family: var(--sans);
   font-size: 12px;
-  border-radius: 6px;
+  border-radius: 9999px;
   border: 1px solid var(--rule);
   background: var(--paper-card);
   color: var(--ink);
@@ -112,7 +140,7 @@
 
 .searchClearBtn {
   position: absolute;
-  right: 18px;
+  right: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -127,7 +155,7 @@
   color: var(--ink);
 }
 
-/* Document Lists */
+/* 3. DOCUMENTS / TRASH SCROLLABLE LIST */
 .docList {
   flex: 1;
   overflow-y: auto;
@@ -146,8 +174,16 @@
   border-radius: 4px;
 }
 
+.viewNormal,
+.viewTrash {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .section {
-  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
 }
 
 .sectionHeader {
@@ -155,15 +191,21 @@
 }
 
 .sectionLabel {
-  font-size: 10.5px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--ink-faint);
 }
 
-/* Document Row */
-.docRow {
+.sectionItems {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Document Item */
+.docItem {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -174,17 +216,17 @@
   color: var(--ink-soft);
   cursor: pointer;
   position: relative;
-  transition: all 0.12s ease;
+  transition: all 0.1s ease;
+  user-select: none;
   min-height: 32px;
-  margin-bottom: 2px;
 }
 
-.docRow:hover {
+.docItem:hover {
   background-color: var(--paper-edge);
   color: var(--ink);
 }
 
-.docRow[data-active="true"] {
+.docItem[data-active="true"] {
   background-color: var(--paper-card);
   color: var(--ink);
   font-weight: 500;
@@ -194,11 +236,11 @@
 .docIcon {
   color: var(--ink-faint);
   flex-shrink: 0;
-  transition: color 0.12s ease;
+  transition: color 0.1s ease;
 }
 
-.docRow:hover .docIcon,
-.docRow[data-active="true"] .docIcon {
+.docItem:hover .docIcon,
+.docItem[data-active="true"] .docIcon {
   color: var(--ink-soft);
 }
 
@@ -232,8 +274,8 @@
   margin-left: auto;
 }
 
-.docRow:hover .rowActions,
-.docRow[data-active="true"] .rowActions {
+.docItem:hover .rowActions,
+.docItem[data-active="true"] .rowActions {
   display: flex;
 }
 
@@ -265,34 +307,135 @@
   color: var(--ink-faint);
 }
 
-/* Footer */
-.footer {
-  height: 36px;
-  min-height: 36px;
+/* Trash Items */
+.trashDocItem {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 12px;
-  border-top: 1px solid var(--rule-subtle);
-  font-size: 11px;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
   color: var(--ink-faint);
+  min-height: 32px;
+}
+
+.trashDocLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  overflow: hidden;
+  opacity: 0.75;
+  text-decoration: line-through;
+}
+
+.trashDocTitle {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+}
+
+.restoreBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ins-text);
+  background-color: var(--ins-bg);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.restoreBtn:hover {
+  opacity: 0.85;
+}
+
+/* 4. BOTTOM ACTION FOOTER (Subtle styling, Full border-radius) */
+.footer {
+  padding: 10px 12px;
+  border-top: 1px solid var(--rule-subtle);
   background-color: var(--paper-subtle);
 }
 
-.syncStatus {
-  display: inline-flex;
+.subtleArchiveBtn {
+  display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  background-color: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.subtleArchiveBtn:hover {
+  background-color: var(--paper-edge);
+  border-color: var(--rule);
+  color: var(--ink);
+}
+
+.trashFooterActions {
+  display: flex;
+  flex-direction: column;
   gap: 6px;
 }
 
-.syncDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: var(--ins-text);
+.emptyTrashBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--del-text);
+  background-color: var(--paper-card);
+  border: 1px solid var(--del-bg);
+  cursor: pointer;
+  transition: all 0.12s ease;
 }
 
-.docTotalCount {
-  font-weight: 450;
-  color: var(--ink-faint);
+.emptyTrashBtn:hover {
+  background-color: var(--del-bg);
+}
+
+.backToDocsBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+  background-color: var(--paper-card);
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.backToDocsBtn:hover {
+  background-color: var(--paper-edge);
+  border-color: var(--ink-subtle);
 }

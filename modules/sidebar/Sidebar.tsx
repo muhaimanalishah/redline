@@ -12,6 +12,9 @@ import {
   MoreHorizontal,
   Pencil,
   X,
+  Archive,
+  ArrowLeft,
+  RotateCcw,
 } from "lucide-react";
 import { IconButton, DropdownMenu, DropdownMenuItem } from "@/modules/shared";
 import { SidebarDocument } from "./types";
@@ -42,9 +45,12 @@ export default function Sidebar({
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [currentView, setCurrentView] = useState<"normal" | "trash">("normal");
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
+  const [archivedDocs, setArchivedDocs] = useState<SidebarDocument[]>([]);
+
   const renameInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -96,6 +102,20 @@ export default function Sidebar({
     }
   };
 
+  const handleDelete = (doc: SidebarDocument) => {
+    setArchivedDocs((prev) => [doc, ...prev.filter((d) => d.id !== doc.id)]);
+    onDeleteDoc(doc.id);
+  };
+
+  const handleRestore = (doc: SidebarDocument) => {
+    setArchivedDocs((prev) => prev.filter((d) => d.id !== doc.id));
+    onCreateDoc();
+  };
+
+  const handleEmptyTrash = () => {
+    setArchivedDocs([]);
+  };
+
   const renderDocRow = (doc: SidebarDocument) => {
     const isActive = doc.id === activeDocId;
     const isMenuOpen = menuOpenId === doc.id;
@@ -119,14 +139,14 @@ export default function Sidebar({
         label: "Delete",
         icon: Trash2,
         danger: true,
-        onClick: () => onDeleteDoc(doc.id),
+        onClick: () => handleDelete(doc),
       },
     ];
 
     return (
       <div
         key={doc.id}
-        className={styles.docRow}
+        className={styles.docItem}
         data-active={isActive}
         onClick={() => {
           if (!isEditing) onSelectDoc(doc.id);
@@ -215,7 +235,7 @@ export default function Sidebar({
         className={styles.sidebar}
         initial={false}
         animate={{
-          width: isOpen ? 240 : 0,
+          width: isOpen ? 256 : 0,
         }}
         transition={{
           type: "spring",
@@ -224,100 +244,166 @@ export default function Sidebar({
         }}
       >
         <div className={styles.inner}>
-          {/* Quiet Header (Workspace + Actions) */}
+          {/* 1. TOP HEADER */}
           <div className={styles.header}>
             <span className={styles.workspaceLabel}>Workspace</span>
-
-            <div className={styles.headerActions}>
-              <IconButton
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsSearchOpen((prev) => !prev)}
-                tooltip="Quick Search"
-                className={isSearchOpen ? styles.activeHeaderBtn : undefined}
-              >
-                <Search size={14} />
-              </IconButton>
-              <IconButton
-                variant="ghost"
-                size="sm"
-                onClick={onCreateDoc}
-                tooltip="New Document"
-              >
-                <Plus size={15} />
-              </IconButton>
-            </div>
           </div>
 
-          {/* Collapsible Search Box */}
-          <AnimatePresence>
-            {(isSearchOpen || searchQuery) && (
-              <motion.div
-                className={styles.searchWrap}
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
-                <Search size={13} className={styles.searchIcon} />
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  className={styles.searchInput}
-                  placeholder="Search notes…"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    className={styles.searchClearBtn}
-                    onClick={() => setSearchQuery("")}
-                    aria-label="Clear search"
-                  >
-                    <X size={12} />
-                  </button>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* 2. TOP ACTION BUTTONS (Full border-radius) */}
+          <div className={styles.actionButtonsContainer}>
+            <button
+              type="button"
+              className={styles.actionBtnFull}
+              onClick={onCreateDoc}
+              title="Create New Page"
+            >
+              <Plus size={15} strokeWidth={2.2} />
+              <span>New Page</span>
+            </button>
 
-          {/* Document Lists */}
+            <button
+              type="button"
+              className={`${styles.actionBtnFull} ${isSearchOpen ? styles.actionBtnActive : ""}`}
+              onClick={() => setIsSearchOpen((prev) => !prev)}
+              title="Search Documents"
+            >
+              <Search size={14} />
+              <span>Search</span>
+            </button>
+
+            {/* Collapsible Search Input (Full border-radius) */}
+            <AnimatePresence>
+              {(isSearchOpen || searchQuery) && (
+                <motion.div
+                  className={styles.searchWrap}
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <Search size={13} className={styles.searchIcon} />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    className={styles.searchInput}
+                    placeholder="Search notes…"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      className={styles.searchClearBtn}
+                      onClick={() => setSearchQuery("")}
+                      aria-label="Clear search"
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* 3. DOCUMENTS / TRASH SCROLLABLE LIST */}
           <div className={styles.docList}>
-            {pinnedDocs.length > 0 && (
-              <div className={styles.section}>
-                <div className={styles.sectionHeader}>
-                  <span className={styles.sectionLabel}>Pinned</span>
+            {currentView === "normal" ? (
+              <div className={styles.viewNormal}>
+                {/* PINNED SECTION (Rendered ONLY when pinned docs exist) */}
+                {pinnedDocs.length > 0 && (
+                  <div className={styles.section}>
+                    <div className={styles.sectionHeader}>
+                      <span className={styles.sectionLabel}>Pinned</span>
+                    </div>
+                    <div className={styles.sectionItems}>{pinnedDocs.map(renderDocRow)}</div>
+                  </div>
+                )}
+
+                {/* DOCUMENTS SECTION (ALWAYS VISIBLE) */}
+                <div className={styles.section}>
+                  <div className={styles.sectionHeader}>
+                    <span className={styles.sectionLabel}>Documents</span>
+                  </div>
+                  <div className={styles.sectionItems}>
+                    {normalDocs.length === 0 && pinnedDocs.length === 0 ? (
+                      <div className={styles.emptyState}>
+                        {searchQuery ? "No matching documents" : "No documents yet"}
+                      </div>
+                    ) : (
+                      normalDocs.map(renderDocRow)
+                    )}
+                  </div>
                 </div>
-                {pinnedDocs.map(renderDocRow)}
+              </div>
+            ) : (
+              /* TRASH / ARCHIVED VIEW */
+              <div className={styles.viewTrash}>
+                <div className={styles.section}>
+                  <div className={styles.sectionHeader}>
+                    <span className={styles.sectionLabel}>Archived</span>
+                  </div>
+                  <div className={styles.sectionItems}>
+                    {archivedDocs.length === 0 ? (
+                      <div className={styles.emptyState}>Trash is empty</div>
+                    ) : (
+                      archivedDocs.map((doc) => (
+                        <div key={doc.id} className={styles.trashDocItem}>
+                          <div className={styles.trashDocLeft}>
+                            <FileText size={14} className={styles.docIcon} />
+                            <span className={styles.trashDocTitle}>{doc.title || "Untitled"}</span>
+                          </div>
+                          <button
+                            type="button"
+                            className={styles.restoreBtn}
+                            onClick={() => handleRestore(doc)}
+                            title="Restore Document"
+                          >
+                            <RotateCcw size={11} />
+                            <span>Restore</span>
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
               </div>
             )}
-
-            <div className={styles.section}>
-              {pinnedDocs.length > 0 && (
-                <div className={styles.sectionHeader}>
-                  <span className={styles.sectionLabel}>Documents</span>
-                </div>
-              )}
-              {normalDocs.length === 0 && pinnedDocs.length === 0 ? (
-                <div className={styles.emptyState}>
-                  {searchQuery ? "No matching documents" : "No documents yet"}
-                </div>
-              ) : (
-                normalDocs.map(renderDocRow)
-              )}
-            </div>
           </div>
 
-          {/* Quiet Sidebar Footer (Local DB Synced status) */}
+          {/* 4. BOTTOM ACTION FOOTER */}
           <div className={styles.footer}>
-            <span className={styles.syncStatus}>
-              <span className={styles.syncDot} />
-              Local DB Synced
-            </span>
-            <span className={styles.docTotalCount}>
-              {documents.length} {documents.length === 1 ? "note" : "notes"}
-            </span>
+            {currentView === "normal" ? (
+              <button
+                type="button"
+                className={styles.subtleArchiveBtn}
+                onClick={() => setCurrentView("trash")}
+                title="View Archived Pages"
+              >
+                <Archive size={14} />
+                <span>Archived Pages</span>
+              </button>
+            ) : (
+              <div className={styles.trashFooterActions}>
+                <button
+                  type="button"
+                  className={styles.emptyTrashBtn}
+                  onClick={handleEmptyTrash}
+                  title="Empty Trash"
+                >
+                  <Trash2 size={13} />
+                  <span>Empty Trash</span>
+                </button>
+                <button
+                  type="button"
+                  className={styles.backToDocsBtn}
+                  onClick={() => setCurrentView("normal")}
+                  title="Back to Notes"
+                >
+                  <ArrowLeft size={13} />
+                  <span>Back to Notes</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </motion.aside>
