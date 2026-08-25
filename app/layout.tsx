@@ -57,7 +57,7 @@ export default function RootLayout({
       <body>
         {children}
         <Toaster
-          position="top-right"
+          position="top-center"
           offset={20}
           expand={false}
           toastOptions={{

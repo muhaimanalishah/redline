@@ -1,0 +1,84 @@
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.iconBtn:hover:not(:disabled) {
+  background: var(--rule-subtle);
+  color: var(--ink);
+}
+
+.iconBtn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.iconBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Sizes */
+.sm {
+  width: 24px;
+  height: 24px;
+}
+
+.md {
+  width: 28px;
+  height: 28px;
+}
+
+.lg {
+  width: 32px;
+  height: 32px;
+}
+
+/* Variants */
+.ghost {
+  background: transparent;
+}
+
+.subtle {
+  background: var(--paper-card);
+  border-color: var(--rule);
+  color: var(--ink);
+}
+
+.subtle:hover:not(:disabled) {
+  background: var(--paper-subtle);
+  border-color: var(--ink-subtle);
+}
+
+.primary {
+  background: var(--accent-blue);
+  color: #ffffff;
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--accent-blue-hover);
+  color: #ffffff;
+}
+
+.danger {
+  color: var(--del-text);
+}
+
+.danger:hover:not(:disabled) {
+  background: var(--del-bg);
+  color: var(--del-text);
+}
+
+.active {
+  background: var(--accent-soft);
+  color: var(--accent-blue);
+}

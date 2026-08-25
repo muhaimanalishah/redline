@@ -1,0 +1,298 @@
+.sidebar {
+  height: 100vh;
+  background-color: var(--paper-subtle);
+  border-right: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+  font-family: var(--sans);
+  z-index: 30;
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+
+.inner {
+  width: 240px;
+  min-width: 240px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.floatingToggleWrap {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  z-index: 45;
+  pointer-events: auto;
+}
+
+.collapsedToggle {
+  box-shadow: var(--shadow-sm);
+  background: var(--float-bg);
+  border-color: var(--float-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.collapsedToggle:hover {
+  box-shadow: var(--shadow-md);
+  background: var(--paper-card);
+}
+
+/* Quiet Header */
+.header {
+  height: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--rule-subtle);
+}
+
+.workspaceLabel {
+  font-size: 11.5px;
+  font-weight: 650;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.activeHeaderBtn {
+  background-color: var(--accent-soft);
+  color: var(--ink);
+}
+
+/* Search */
+.searchWrap {
+  position: relative;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--rule-subtle);
+}
+
+.searchIcon {
+  position: absolute;
+  left: 20px;
+  color: var(--ink-faint);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 5px 24px 5px 26px;
+  font-family: var(--sans);
+  font-size: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--rule);
+  background: var(--paper-card);
+  color: var(--ink);
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.searchInput::placeholder {
+  color: var(--ink-faint);
+}
+
+.searchInput:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-blue) 15%, transparent);
+}
+
+.searchClearBtn {
+  position: absolute;
+  right: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+
+.searchClearBtn:hover {
+  color: var(--ink);
+}
+
+/* Document Lists */
+.docList {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+}
+
+.docList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.docList::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border-radius: 4px;
+}
+
+.section {
+  margin-bottom: 14px;
+}
+
+.sectionHeader {
+  padding: 4px 8px 4px 8px;
+}
+
+.sectionLabel {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--ink-faint);
+}
+
+/* Document Row */
+.docRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.12s ease;
+  min-height: 32px;
+  margin-bottom: 2px;
+}
+
+.docRow:hover {
+  background-color: var(--paper-edge);
+  color: var(--ink);
+}
+
+.docRow[data-active="true"] {
+  background-color: var(--paper-card);
+  color: var(--ink);
+  font-weight: 500;
+  box-shadow: var(--shadow-sm);
+}
+
+.docIcon {
+  color: var(--ink-faint);
+  flex-shrink: 0;
+  transition: color 0.12s ease;
+}
+
+.docRow:hover .docIcon,
+.docRow[data-active="true"] .docIcon {
+  color: var(--ink-soft);
+}
+
+.docTitle {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.inlineRenameInput {
+  flex: 1;
+  padding: 2px 6px;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--accent-blue);
+  border-radius: 4px;
+  outline: none;
+  box-shadow: 0 0 0 1px var(--accent-blue);
+}
+
+.rowActions {
+  display: none;
+  align-items: center;
+  gap: 1px;
+  margin-left: auto;
+}
+
+.docRow:hover .rowActions,
+.docRow[data-active="true"] .rowActions {
+  display: flex;
+}
+
+.actionBtn {
+  opacity: 0.75;
+}
+
+.actionBtn:hover {
+  opacity: 1;
+}
+
+.pinnedBtn {
+  opacity: 1;
+  color: var(--ink-faint);
+}
+
+.pinnedIcon {
+  fill: currentColor;
+}
+
+.menuAnchor {
+  position: relative;
+}
+
+.emptyState {
+  padding: 16px 10px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+/* Footer */
+.footer {
+  height: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  border-top: 1px solid var(--rule-subtle);
+  font-size: 11px;
+  color: var(--ink-faint);
+  background-color: var(--paper-subtle);
+}
+
+.syncStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.syncDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--ins-text);
+}
+
+.docTotalCount {
+  font-weight: 450;
+  color: var(--ink-faint);
+}

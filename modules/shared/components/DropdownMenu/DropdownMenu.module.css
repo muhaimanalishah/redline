@@ -1,0 +1,81 @@
+.menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  z-index: 50;
+  min-width: 140px;
+  background: var(--float-bg);
+  border: 1px solid var(--float-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  padding: 4px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: menuAppear 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.left {
+  left: 0;
+}
+
+.right {
+  right: 0;
+}
+
+@keyframes menuAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 450;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.1s ease;
+}
+
+.item:hover:not(:disabled) {
+  background: var(--rule-subtle);
+  color: var(--ink);
+}
+
+.item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.danger {
+  color: var(--del-text);
+}
+
+.danger:hover:not(:disabled) {
+  background: var(--del-bg);
+  color: var(--del-text);
+}
+
+.icon {
+  flex-shrink: 0;
+  color: inherit;
+  opacity: 0.85;
+}
+
+.label {
+  flex: 1;
+}

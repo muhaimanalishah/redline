@@ -1,58 +1,109 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Editor, DiffIssue, ExecuteAiOptions } from "@/modules/editor";
-import { safeStorage } from "@/modules/editor/lib/storage";
+import { Sidebar, useDocuments } from "@/modules/sidebar";
+import styles from "./page.module.css";
 
-const STORAGE_KEY = "redline-document-content-v2";
+const AUTOSAVE_DELAY_MS = 600;
 
-
-const INITIAL_MARKDOWN = `# Redline
-
-A fast, distraction-free markdown editor with **instant inline revisions** and intelligent AI writing assistance.
-
-## Key Features
-
-- **Inline Diffs:** Inspect suggestions and accept or decline changes per paragraph.
-- **Client-Side Export:** Download cleanly formatted \`.md\` files with a single click.
-- **Rich Elements:** Headings, blockquotes, code blocks, task lists, and structured tables.
-
-> "Simplicity is about subtracting the obvious and adding the meaningful." — *John Maeda*
-
-### Overview
-
-| Feature | Status | Description |
-| :--- | :--- | :--- |
-| Live Diff Review | Supported | Per-block redline diffing |
-| Markdown Tables | Supported | High-contrast styled tables |
-| AI Transformations | Supported | Proofread, clarify, and summarize |
-
-\`\`\`ts
-// AI-assisted editing workflow
-async function polishDraft(content: string) {
-  return await redline.proofread({ content, mode: "concise" });
+function extractDocumentTitle(markdown: string, fallback = "Untitled"): string {
+  const match = markdown.match(/^#\s+(.+)$/m);
+  if (match && match[1]?.trim()) {
+    return match[1].trim();
+  }
+  const firstLine = markdown.trim().split("\n")[0]?.replace(/^[#*->\s]+/, "").trim();
+  return firstLine && firstLine.length > 0
+    ? firstLine.slice(0, 40)
+    : fallback;
 }
-\`\`\`
-
-## Sample Draft (Needs Proofreading)
-
-Their are alot of reasons why a person might wants to improve they're writing, but the most importantest one is clarity. When you're sentences is confusing, the reader loose interest quick and dont finish what you wrote, which effect how well you're ideas gets recieved by other peoples.
-
-Me and him was discussing yesterday about how good writers doesn't never use to many words when less would of been better. Its a common mistake to think that longer sentences sounds more smarter, but actually it just make the reader more confuseder and less likely to remember what the point were.
-`;
 
 export default function Home() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [issues, setIssues] = useState<DiffIssue[]>([]);
-  const [initialContent] = useState<string>(() => {
-    const saved = safeStorage.get(STORAGE_KEY, "");
-    return saved.trim().length > 0 ? saved : INITIAL_MARKDOWN;
-  });
+  const [currentContent, setCurrentContent] = useState<string>("");
+  const [contentLoading, setContentLoading] = useState(true);
 
-  const handleContentChange = useCallback((markdown: string) => {
-    safeStorage.set(STORAGE_KEY, markdown);
-  }, []);
+  const {
+    documents,
+    activeDocId,
+    setActiveDocId,
+    loading: docsLoading,
+    createNewDocument,
+    deleteDoc,
+    togglePinDoc,
+    renameDoc,
+  } = useDocuments();
 
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Load active document content when activeDocId changes
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadDocument() {
+      if (!activeDocId) {
+        if (!ignore) {
+          setCurrentContent("");
+          setContentLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/documents/${activeDocId}`);
+        if (!res.ok) throw new Error("Failed to load document");
+        const data = await res.json();
+        if (!ignore) {
+          setCurrentContent(data.content || "");
+        }
+      } catch (err) {
+        console.error(err);
+        if (!ignore) {
+          toast.error("Failed to load document content");
+        }
+      } finally {
+        if (!ignore) {
+          setContentLoading(false);
+        }
+      }
+    }
+
+    loadDocument();
+
+    return () => {
+      ignore = true;
+    };
+  }, [activeDocId]);
+
+  // Debounced autosave handler
+  const handleContentChange = useCallback(
+    (markdown: string) => {
+      if (!activeDocId) return;
+
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+
+      saveTimerRef.current = setTimeout(async () => {
+        try {
+          const autoTitle = extractDocumentTitle(markdown);
+          await fetch(`/api/documents/${activeDocId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: markdown, title: autoTitle }),
+          });
+          renameDoc(activeDocId, autoTitle);
+        } catch (err) {
+          console.error("Autosave failed:", err);
+        }
+      }, AUTOSAVE_DELAY_MS);
+    },
+    [activeDocId, renameDoc]
+  );
+
+  // AI execution handler
   const handleAiExecute = async (options: ExecuteAiOptions): Promise<string> => {
     const payload =
       options.mode === "preset"
@@ -80,9 +131,7 @@ export default function Home() {
       throw new Error(message);
     }
 
-    if (!res.body) {
-      throw new Error("No response body received");
-    }
+    if (!res.body) throw new Error("No response body received");
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -98,16 +147,61 @@ export default function Home() {
     return fullText;
   };
 
+  // Keyboard shortcut: Cmd/Ctrl + \ to toggle sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "\\") {
+        e.preventDefault();
+        setIsSidebarOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
-    <main className="main">
-      <Editor
-        initialContent={initialContent}
-        issues={issues}
-        onChange={handleContentChange}
-        onIssuesChange={setIssues}
-        placeholder="Start writing here..."
-        onAiExecute={handleAiExecute}
+    <div className={styles.container}>
+      <Sidebar
+        documents={documents}
+        activeDocId={activeDocId}
+        onSelectDoc={setActiveDocId}
+        onCreateDoc={() => createNewDocument("Untitled", "# Untitled\n\n")}
+        onDeleteDoc={deleteDoc}
+        onTogglePinDoc={togglePinDoc}
+        onRenameDoc={renameDoc}
+        isOpen={isSidebarOpen}
+        onToggleOpen={() => setIsSidebarOpen((prev) => !prev)}
       />
-    </main>
+
+      <main className={styles.main}>
+        {docsLoading || contentLoading ? (
+          <div className={styles.loadingState}>Loading document...</div>
+        ) : activeDocId ? (
+          <Editor
+            key={activeDocId}
+            initialContent={currentContent}
+            issues={issues}
+            onChange={handleContentChange}
+            onIssuesChange={setIssues}
+            placeholder="Start writing here..."
+            onAiExecute={handleAiExecute}
+            isSidebarOpen={isSidebarOpen}
+            onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+          />
+        ) : (
+          <div className={styles.emptyContainer}>
+            <h2>No document selected</h2>
+            <p>Select a document from the sidebar or create a new one to begin.</p>
+            <button
+              type="button"
+              className={styles.emptyActionBtn}
+              onClick={() => createNewDocument("Untitled", "# Untitled\n\n")}
+            >
+              Create New Page
+            </button>
+          </div>
+        )}
+      </main>
+    </div>
   );
 }

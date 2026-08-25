@@ -6,7 +6,7 @@ import { DiffPluginKey } from "@/modules/editor/extensions/DiffExtension";
 import DiffToolbar from "@/modules/editor/components/DiffToolbar";
 import TableToolbar from "@/modules/editor/components/TableToolbar";
 import FloatingControls from "@/modules/editor/components/FloatingControls";
-import TopControls from "@/modules/editor/components/TopControls";
+import TopStrip from "@/modules/editor/components/TopStrip";
 import MarkdownSourceView from "@/modules/editor/components/MarkdownSourceView";
 import { DiffIssue, ExecuteAiOptions } from "@/modules/editor/types";
 import { PresetId } from "@/modules/editor/lib/ai/presets";
@@ -26,6 +26,8 @@ export interface EditorProps {
   onChange?: (markdown: string) => void;
   onIssuesChange?: (issues: DiffIssue[]) => void;
   onAiExecute?: (options: ExecuteAiOptions) => Promise<string>;
+  isSidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 export default function Editor({
@@ -35,9 +37,13 @@ export default function Editor({
   onChange,
   onIssuesChange,
   onAiExecute,
+  isSidebarOpen = true,
+  onToggleSidebar = () => {},
 }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const voiceTriggerRef = useRef<(() => Promise<void>) | null>(null);
   const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [isAiDockOpen, setIsAiDockOpen] = useState(false);
   const [sourceMode, setSourceMode] = useState(false);
   const [sourceText, setSourceText] = useState("");
 
@@ -193,7 +199,6 @@ export default function Editor({
     [editor, onAiExecute]
   );
 
-
   const handleAiSubmit = useCallback(
     async (prompt: string) => {
       await runAiTransformation({ mode: "custom", prompt });
@@ -221,16 +226,43 @@ export default function Editor({
       onMouseOver={handleContainerMouseOver}
       onMouseOut={handleContainerMouseOut}
     >
-      <div className={styles.editorWrapper} style={{ maxWidth: `${maxWidthPx}px` }}>
-        {sourceMode ? (
-          <MarkdownSourceView
-            value={sourceText}
-            onChange={handleSourceTextChange}
-            placeholder={placeholder}
-          />
-        ) : (
-          <EditorContent editor={editor} className={styles.editorContent} />
-        )}
+      {/* Attached Top Formatting Strip (Prototype Match) */}
+      <TopStrip
+        editor={editor}
+        zoom={zoom}
+        onZoomIn={zoomIn}
+        onZoomOut={zoomOut}
+        onZoomReset={zoomReset}
+        onZoomSet={zoomSet}
+        theme={theme}
+        onThemeChange={changeTheme}
+        onCopyMarkdown={handleCopyMarkdown}
+        onExportMarkdown={handleExportMarkdown}
+        onImportMarkdown={handleImportMarkdown}
+        sourceMode={sourceMode}
+        onToggleSourceMode={handleToggleSourceMode}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        isSidebarOpen={isSidebarOpen}
+        onToggleSidebar={onToggleSidebar}
+        onOpenAiPrompt={onAiExecute ? () => setIsAiDockOpen(true) : undefined}
+        onStartVoiceRecording={() => voiceTriggerRef.current?.()}
+        isAiDockOpen={isAiDockOpen}
+      />
+
+      {/* Editor Canvas Container */}
+      <div className={styles.canvasViewport}>
+        <div className={styles.editorWrapper} style={{ maxWidth: `${maxWidthPx}px` }}>
+          {sourceMode ? (
+            <MarkdownSourceView
+              value={sourceText}
+              onChange={handleSourceTextChange}
+              placeholder={placeholder}
+            />
+          ) : (
+            <EditorContent editor={editor} className={styles.editorContent} />
+          )}
+        </div>
       </div>
 
       {/* Floating table controls */}
@@ -256,26 +288,7 @@ export default function Editor({
         />
       )}
 
-      {/* Top Document controls */}
-      <TopControls
-        editor={editor}
-        zoom={zoom}
-        onZoomIn={zoomIn}
-        onZoomOut={zoomOut}
-        onZoomReset={zoomReset}
-        onZoomSet={zoomSet}
-        theme={theme}
-        onThemeChange={changeTheme}
-        onCopyMarkdown={handleCopyMarkdown}
-        onExportMarkdown={handleExportMarkdown}
-        onImportMarkdown={handleImportMarkdown}
-        sourceMode={sourceMode}
-        onToggleSourceMode={handleToggleSourceMode}
-        canUndo={canUndo}
-        canRedo={canRedo}
-      />
-
-      {/* Unified Dock at the bottom */}
+      {/* Floating AI / Voice Active Input Dock */}
       {!sourceMode && (
         <FloatingControls
           editor={editor}
@@ -286,6 +299,9 @@ export default function Editor({
           onAiSubmit={onAiExecute ? handleAiSubmit : undefined}
           onSelectPreset={onAiExecute ? handleSelectPreset : undefined}
           aiLoading={isAiGenerating}
+          isAiDockOpen={isAiDockOpen}
+          onCloseAiDock={() => setIsAiDockOpen(false)}
+          voiceTriggerRef={voiceTriggerRef}
         />
       )}
     </div>
