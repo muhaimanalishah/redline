@@ -1,20 +1,18 @@
 import { useCallback, useLayoutEffect, useState } from "react";
 import { ThemeMode } from "@/modules/editor/components/TopControls";
+import { safeStorage } from "@/modules/editor/lib/storage";
 
 const THEME_KEY = "redline-theme";
 
 export function useEditorTheme() {
   const [theme, setTheme] = useState<ThemeMode>(() => {
-    if (typeof window === "undefined") return "light";
-    try {
-      const saved = localStorage.getItem(THEME_KEY) as ThemeMode | null;
-      if (saved && ["light", "dark"].includes(saved)) {
-        return saved;
-      }
-      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-        return "dark";
-      }
-    } catch {}
+    const saved = safeStorage.get<ThemeMode | "">(THEME_KEY, "");
+    if (saved === "light" || saved === "dark") {
+      return saved;
+    }
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      return "dark";
+    }
     return "light";
   });
 
@@ -28,10 +26,9 @@ export function useEditorTheme() {
 
   const changeTheme = useCallback((next: ThemeMode) => {
     setTheme(next);
-    try {
-      localStorage.setItem(THEME_KEY, next);
-    } catch {}
+    safeStorage.set(THEME_KEY, next);
   }, []);
 
   return { theme, changeTheme };
 }
+

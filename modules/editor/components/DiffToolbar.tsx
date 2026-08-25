@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useRef } from "react";
 import { Check, X } from "lucide-react";
 import { DiffIssue } from "@/modules/editor/types";
+import { useClickOutside } from "@/modules/editor/hooks/useClickOutside";
 import styles from "./DiffToolbar.module.css";
 
 interface DiffToolbarProps {
@@ -32,15 +33,8 @@ export default function DiffToolbar({
   const left = anchorRect.left - containerRect.left + anchorRect.width / 2;
   const top = anchorRect.top - containerRect.top;
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  useClickOutside(toolbarRef, onClose, { listenClick: false, listenEscape: true });
+
 
   return (
     <div

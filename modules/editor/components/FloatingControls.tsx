@@ -27,11 +27,11 @@ import {
   ArrowUp,
   LoaderCircle,
   Loader2,
+  ChevronLeft,
 } from "lucide-react";
-import { toast } from "sonner";
 import InsertMenu from "./InsertMenu";
 import UrlPopover from "./UrlPopover";
-import AiPromptPopover, { ActivePresetView, MenuItemDef } from "./AiPromptPopover";
+import AiPromptPopover, { ActivePresetView, MenuItemDef, ICON_MAP } from "./AiPromptPopover";
 import ReviewAllFloatingMenu from "./ReviewAllFloatingMenu";
 import AudioVisualizer from "./AudioVisualizer";
 import { DiffPluginKey } from "@/modules/editor/extensions/DiffExtension";
@@ -41,7 +41,7 @@ import {
   getPresetsByCategory,
   PresetId,
 } from "@/modules/editor/lib/ai/presets";
-import { useAudioRecorder } from "@/modules/editor/hooks/useAudioRecorder";
+import { useVoiceTranscription } from "@/modules/editor/hooks/useVoiceTranscription";
 import styles from "./FloatingControls.module.css";
 
 interface FloatingControlsProps {
@@ -51,7 +51,7 @@ interface FloatingControlsProps {
   onAcceptAll?: () => void;
   onRejectAll?: () => void;
   onAiSubmit?: (prompt: string) => Promise<void>;
-  onSelectPreset?: (preset: PresetId) => Promise<void>;
+  onSelectPreset?: (presetId: PresetId) => Promise<void>;
   aiLoading?: boolean;
 }
 
@@ -67,6 +67,23 @@ function formatDuration(seconds: number): string {
   const secs = seconds % 60;
   return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 }
+
+const INLINE_FORMAT_BUTTONS = [
+  { id: "bold", label: "Bold", icon: Bold, activeKey: "isBold" as const, action: (ed: Editor) => ed.chain().focus().toggleBold().run() },
+  { id: "italic", label: "Italic", icon: Italic, activeKey: "isItalic" as const, action: (ed: Editor) => ed.chain().focus().toggleItalic().run() },
+  { id: "underline", label: "Underline", icon: Underline, activeKey: "isUnderline" as const, action: (ed: Editor) => ed.chain().focus().toggleUnderline().run() },
+  { id: "strike", label: "Strikethrough", icon: Strikethrough, activeKey: "isStrike" as const, action: (ed: Editor) => ed.chain().focus().toggleStrike().run() },
+  { id: "code", label: "Inline code", icon: Code, activeKey: "isCode" as const, action: (ed: Editor) => ed.chain().focus().toggleCode().run() },
+];
+
+const BLOCK_FORMAT_BUTTONS = [
+  { id: "bulletList", label: "Bullet list", icon: List, activeKey: "isBulletList" as const, action: (ed: Editor) => ed.chain().focus().toggleBulletList().run() },
+  { id: "orderedList", label: "Numbered list", icon: ListOrdered, activeKey: "isOrderedList" as const, action: (ed: Editor) => ed.chain().focus().toggleOrderedList().run() },
+  { id: "taskList", label: "Task list", icon: ListChecks, activeKey: "isTaskList" as const, action: (ed: Editor) => ed.chain().focus().toggleTaskList().run() },
+  { id: "blockquote", label: "Blockquote", icon: Quote, activeKey: "isBlockquote" as const, action: (ed: Editor) => ed.chain().focus().toggleBlockquote().run() },
+  { id: "codeBlock", label: "Code block", icon: Code2, activeKey: "isCodeBlock" as const, action: (ed: Editor) => ed.chain().focus().toggleCodeBlock().run() },
+  { id: "table", label: "Table", icon: Table, activeKey: "isTable" as const, action: (ed: Editor) => ed.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run() },
+];
 
 export default function FloatingControls({
   editor,
@@ -85,38 +102,26 @@ export default function FloatingControls({
   const [savedRange, setSavedRange] = useState<{ from: number; to: number } | null>(null);
   const [activePresetView, setActivePresetView] = useState<ActivePresetView>("root");
   const [highlightedPresetIndex, setHighlightedPresetIndex] = useState<number>(-1);
-  const [isTranscribing, setIsTranscribing] = useState(false);
 
   const imageBtnRef = useRef<HTMLButtonElement>(null);
   const linkBtnRef = useRef<HTMLButtonElement>(null);
   const dockRef = useRef<HTMLDivElement>(null);
   const aiInputRef = useRef<HTMLInputElement>(null);
 
-  const handleAudioError = useCallback((err: string) => {
-    toast.error(err);
-  }, []);
-
-  const handleFinishRecordingRef = useRef<() => Promise<void>>(async () => {});
-
-  const handleMaxDurationReached = useCallback(() => {
-    toast.info("Maximum recording limit reached (3:00). Transcribing...");
-    handleFinishRecordingRef.current();
-  }, []);
-
   const {
     isRecording,
     isPaused,
+    isTranscribing,
     durationSeconds,
     audioAmplitudes,
     startRecording,
-    pauseRecording,
-    resumeRecording,
-    stopRecording,
-    stopAndGetBlob,
-  } = useAudioRecorder({
-    maxDurationSeconds: 180,
-    onMaxDurationReached: handleMaxDurationReached,
-    onError: handleAudioError,
+    discardRecording,
+    togglePause,
+    finishRecording,
+  } = useVoiceTranscription({
+    editor,
+    savedRange,
+    onClearSavedRange: () => setSavedRange(null),
   });
 
   // Official TipTap React reactive state hook for toolbar sync
@@ -237,7 +242,7 @@ export default function FloatingControls({
         items.push({
           id: proofreadConfig.id,
           label: proofreadConfig.label,
-          Icon: Sparkles,
+          Icon: ICON_MAP[proofreadConfig.iconName] ?? Sparkles,
           action: () => handleSelectPreset(proofreadConfig.id),
         });
       }
@@ -245,7 +250,7 @@ export default function FloatingControls({
         items.push({
           id: cat.id,
           label: cat.label,
-          Icon: Sparkles,
+          Icon: ICON_MAP[cat.iconName] ?? Sparkles,
           action: () => {
             setHighlightedPresetIndex(-1);
             setActivePresetView(cat.id);
@@ -260,7 +265,7 @@ export default function FloatingControls({
       {
         id: "back",
         label: "Back",
-        Icon: Sparkles,
+        Icon: ChevronLeft,
         action: () => {
           setHighlightedPresetIndex(-1);
           setActivePresetView("root");
@@ -274,7 +279,7 @@ export default function FloatingControls({
       subItems.push({
         id: preset.id,
         label: preset.label,
-        Icon: Sparkles,
+        Icon: ICON_MAP[preset.iconName] ?? Sparkles,
         action: () => handleSelectPreset(preset.id),
       });
     });
@@ -340,139 +345,15 @@ export default function FloatingControls({
 
   const handleMicClick = useCallback(async () => {
     if (isRecording || isTranscribing) {
-      stopRecording();
-      setSavedRange(null);
-      setIsTranscribing(false);
+      discardRecording();
     } else {
       closePopover();
       closeAiDock();
-      const { from, to, empty } = editor.state.selection;
-      setSavedRange(empty ? { from, to } : { from, to });
+      const { from, to } = editor.state.selection;
+      setSavedRange({ from, to });
       await startRecording();
     }
-  }, [isRecording, isTranscribing, stopRecording, closePopover, closeAiDock, editor, startRecording]);
-
-  const handleDiscardRecording = useCallback(() => {
-    stopRecording();
-    setSavedRange(null);
-    setIsTranscribing(false);
-  }, [stopRecording]);
-
-  const handleTogglePause = useCallback(() => {
-    if (isPaused) {
-      resumeRecording();
-    } else {
-      pauseRecording();
-    }
-  }, [isPaused, resumeRecording, pauseRecording]);
-
-  const handleFinishRecording = useCallback(async () => {
-    if (isTranscribing) return;
-
-    const rangeToUse = savedRange || {
-      from: editor.state.selection.from,
-      to: editor.state.selection.to,
-    };
-
-    setIsTranscribing(true);
-
-    try {
-      const blob = await stopAndGetBlob();
-
-      if (!blob || blob.size === 0) {
-        stopRecording();
-        setSavedRange(null);
-        setIsTranscribing(false);
-        return;
-      }
-
-      editor.view.dispatch(
-        editor.state.tr.setMeta(DiffPluginKey, {
-          type: "SET_PROCESSING_RANGE",
-          range: rangeToUse,
-        })
-      );
-
-      const formData = new FormData();
-      formData.append("audio", blob, "recording.webm");
-
-      const res = await fetch("/api/transcribe", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => null);
-        const errMsg = errorData?.error || "Voice transcription failed";
-        toast.error(errMsg);
-        editor.view.dispatch(
-          editor.state.tr.setMeta(DiffPluginKey, {
-            type: "SET_PROCESSING_RANGE",
-            range: null,
-          })
-        );
-        stopRecording();
-        setSavedRange(null);
-        setIsTranscribing(false);
-        return;
-      }
-
-      const data = (await res.json()) as { text?: string };
-      const transcribedText = (data.text || "").trim();
-
-      if (!transcribedText) {
-        toast.info("No speech detected");
-        editor.view.dispatch(
-          editor.state.tr.setMeta(DiffPluginKey, {
-            type: "SET_PROCESSING_RANGE",
-            range: null,
-          })
-        );
-        stopRecording();
-        setSavedRange(null);
-        setIsTranscribing(false);
-        return;
-      }
-
-      const originalText =
-        rangeToUse.from !== rangeToUse.to
-          ? editor.state.doc.textBetween(rangeToUse.from, rangeToUse.to, " ")
-          : "";
-
-      editor.view.dispatch(
-        editor.state.tr.setMeta(DiffPluginKey, {
-          type: "ADD_DIFF_ISSUE",
-          issue: {
-            id: crypto.randomUUID(),
-            type: "ai",
-            original: originalText,
-            suggestion: transcribedText,
-            range: rangeToUse,
-          },
-        })
-      );
-
-      toast.success("Voice transcription ready for review");
-      stopRecording();
-      setSavedRange(null);
-    } catch (err: unknown) {
-      console.error("Transcription error:", err);
-      const errMsg = err instanceof Error ? err.message : "Voice transcription failed";
-      toast.error(errMsg);
-      editor.view.dispatch(
-        editor.state.tr.setMeta(DiffPluginKey, {
-          type: "SET_PROCESSING_RANGE",
-          range: null,
-        })
-      );
-      stopRecording();
-      setSavedRange(null);
-    } finally {
-      setIsTranscribing(false);
-    }
-  }, [isTranscribing, savedRange, editor, stopAndGetBlob, stopRecording]);
-
-  handleFinishRecordingRef.current = handleFinishRecording;
+  }, [isRecording, isTranscribing, discardRecording, closePopover, closeAiDock, editor, startRecording]);
 
   const showRecordingDock = isRecording || isTranscribing;
   const showAiDock = isAiDockOpen || aiLoading;
@@ -501,7 +382,7 @@ export default function FloatingControls({
               <button
                 type="button"
                 className={`${styles.btn} ${styles.btnDiscard}`}
-                onClick={handleDiscardRecording}
+                onClick={discardRecording}
                 disabled={isTranscribing}
                 title="Cancel recording"
                 aria-label="Cancel recording"
@@ -524,7 +405,7 @@ export default function FloatingControls({
                 <button
                   type="button"
                   className={`${styles.btn} ${styles.btnPause}`}
-                  onClick={handleTogglePause}
+                  onClick={togglePause}
                   disabled={isTranscribing}
                   title={isPaused ? "Resume recording" : "Pause recording"}
                   aria-label={isPaused ? "Resume recording" : "Pause recording"}
@@ -534,7 +415,7 @@ export default function FloatingControls({
                 <button
                   type="button"
                   className={`${styles.btn} ${styles.btnDone}`}
-                  onClick={handleFinishRecording}
+                  onClick={finishRecording}
                   disabled={isTranscribing}
                   title={isTranscribing ? "Transcribing voice note..." : "Done & transcribe"}
                   aria-label={isTranscribing ? "Transcribing voice note..." : "Done & transcribe"}
@@ -638,143 +519,39 @@ export default function FloatingControls({
 
               <div className={styles.divider} />
 
-              <button
-                type="button"
-                className={styles.btn}
-                data-active={editorState?.isBold ?? false}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => editor.chain().focus().toggleBold().run()}
-                title="Bold"
-                aria-label="Bold"
-              >
-                <Bold size={17} />
-              </button>
-
-              <button
-                type="button"
-                className={styles.btn}
-                data-active={editorState?.isItalic ?? false}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => editor.chain().focus().toggleItalic().run()}
-                title="Italic"
-                aria-label="Italic"
-              >
-                <Italic size={17} />
-              </button>
-
-              <button
-                type="button"
-                className={styles.btn}
-                data-active={editorState?.isUnderline ?? false}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => editor.chain().focus().toggleUnderline().run()}
-                title="Underline"
-                aria-label="Underline"
-              >
-                <Underline size={17} />
-              </button>
-
-              <button
-                type="button"
-                className={styles.btn}
-                data-active={editorState?.isStrike ?? false}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => editor.chain().focus().toggleStrike().run()}
-                title="Strikethrough"
-                aria-label="Strikethrough"
-              >
-                <Strikethrough size={17} />
-              </button>
-
-              <button
-                type="button"
-                className={styles.btn}
-                data-active={editorState?.isCode ?? false}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => editor.chain().focus().toggleCode().run()}
-                title="Inline code"
-                aria-label="Inline code"
-              >
-                <Code size={17} />
-              </button>
+              {INLINE_FORMAT_BUTTONS.map(({ id, label, icon: Icon, activeKey, action }) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={styles.btn}
+                  data-active={editorState?.[activeKey] ?? false}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => action(editor)}
+                  title={label}
+                  aria-label={label}
+                >
+                  <Icon size={17} />
+                </button>
+              ))}
 
               <div className={styles.divider} />
 
               <InsertMenu editor={editor} />
 
-              <button
-                type="button"
-                className={styles.btn}
-                data-active={editorState?.isBulletList ?? false}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => editor.chain().focus().toggleBulletList().run()}
-                title="Bullet list"
-                aria-label="Bullet list"
-              >
-                <List size={17} />
-              </button>
-
-              <button
-                type="button"
-                className={styles.btn}
-                data-active={editorState?.isOrderedList ?? false}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                title="Numbered list"
-                aria-label="Numbered list"
-              >
-                <ListOrdered size={17} />
-              </button>
-
-              <button
-                type="button"
-                className={styles.btn}
-                data-active={editorState?.isTaskList ?? false}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => editor.chain().focus().toggleTaskList().run()}
-                title="Task list"
-                aria-label="Task list"
-              >
-                <ListChecks size={17} />
-              </button>
-
-              <button
-                type="button"
-                className={styles.btn}
-                data-active={editorState?.isBlockquote ?? false}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                title="Blockquote"
-                aria-label="Blockquote"
-              >
-                <Quote size={17} />
-              </button>
-
-              <button
-                type="button"
-                className={styles.btn}
-                data-active={editorState?.isCodeBlock ?? false}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-                title="Code block"
-                aria-label="Code block"
-              >
-                <Code2 size={17} />
-              </button>
-
-              <button
-                type="button"
-                className={styles.btn}
-                data-active={editorState?.isTable ?? false}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() =>
-                  editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
-                }
-                title="Table"
-                aria-label="Insert table"
-              >
-                <Table size={17} />
-              </button>
+              {BLOCK_FORMAT_BUTTONS.map(({ id, label, icon: Icon, activeKey, action }) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={styles.btn}
+                  data-active={editorState?.[activeKey] ?? false}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => action(editor)}
+                  title={label}
+                  aria-label={label}
+                >
+                  <Icon size={17} />
+                </button>
+              ))}
 
               <button
                 type="button"
@@ -857,6 +634,3 @@ export default function FloatingControls({
     </aside>
   );
 }
-
-
-

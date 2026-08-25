@@ -2,7 +2,6 @@
 
 import { useCallback, useRef, useState } from "react";
 import { EditorContent } from "@tiptap/react";
-import { MarkdownStorage } from "tiptap-markdown";
 import { DiffPluginKey } from "@/modules/editor/extensions/DiffExtension";
 import DiffToolbar from "@/modules/editor/components/DiffToolbar";
 import TableToolbar from "@/modules/editor/components/TableToolbar";
@@ -11,6 +10,7 @@ import TopControls from "@/modules/editor/components/TopControls";
 import MarkdownSourceView from "@/modules/editor/components/MarkdownSourceView";
 import { DiffIssue, ExecuteAiOptions } from "@/modules/editor/types";
 import { PresetId } from "@/modules/editor/lib/ai/presets";
+import { getEditorMarkdown } from "@/modules/editor/lib/markdown";
 import { useDiffEditor } from "@/modules/editor/hooks/useDiffEditor";
 import { useHoverToolbar } from "@/modules/editor/hooks/useHoverToolbar";
 import { useDiffActions } from "@/modules/editor/hooks/useDiffActions";
@@ -67,9 +67,7 @@ export default function Editor({
   const { theme, changeTheme } = useEditorTheme();
 
   const getMarkdown = useCallback((): string => {
-    if (!editor) return "";
-    const storage = editor.storage as { markdown?: MarkdownStorage };
-    return storage.markdown?.getMarkdown() ?? "";
+    return getEditorMarkdown(editor);
   }, [editor]);
 
   const handleSourceTextChange = useCallback(
@@ -131,7 +129,7 @@ export default function Editor({
       const { from, to, empty } = editor.state.selection;
 
       // Extract all selected text blocks to support per-paragraph independent diffs
-      const blocks: { from: number; to: number; text: string }[] = [];
+      const targets: { from: number; to: number; text: string }[] = [];
       if (!empty) {
         editor.state.doc.nodesBetween(from, to, (node, pos) => {
           if (node.isTextblock) {
@@ -140,104 +138,61 @@ export default function Editor({
             if (start < end) {
               const text = editor.state.doc.textBetween(start, end, " ");
               if (text.trim()) {
-                blocks.push({ from: start, to: end, text });
+                targets.push({ from: start, to: end, text });
               }
             }
           }
         });
       }
 
-      if (blocks.length > 1) {
-        editor.view.dispatch(
-          editor.state.tr.setMeta(DiffPluginKey, {
-            type: "SET_PROCESSING_RANGE",
-            range: { from, to },
-          })
+      // Fallback if empty or no text blocks matched
+      if (targets.length === 0) {
+        targets.push({ from, to, text: empty ? "" : editor.state.doc.textBetween(from, to, " ") });
+      }
+
+      editor.view.dispatch(
+        editor.state.tr.setMeta(DiffPluginKey, {
+          type: "SET_PROCESSING_RANGE",
+          range: { from, to },
+        })
+      );
+      setIsAiGenerating(true);
+
+      try {
+        const generatedIssues: DiffIssue[] = await Promise.all(
+          targets.map(async (t) => ({
+            id: crypto.randomUUID(),
+            type: "ai" as const,
+            original: t.text,
+            suggestion: await onAiExecute({
+              ...options,
+              selectedText: t.text,
+            }),
+            range: { from: t.from, to: t.to },
+          }))
         );
-        setIsAiGenerating(true);
-
-        try {
-          const generatedIssues: DiffIssue[] = await Promise.all(
-            blocks.map(async (b) => {
-              const suggestion = await onAiExecute({
-                ...options,
-                selectedText: b.text,
-              });
-              return {
-                id: crypto.randomUUID(),
-                type: "ai" as const,
-                original: b.text,
-                suggestion,
-                range: { from: b.from, to: b.to },
-              };
-            })
-          );
-
-          editor.view.dispatch(
-            editor.state.tr.setMeta(DiffPluginKey, {
-              type: "ADD_DIFF_ISSUES",
-              issues: generatedIssues,
-            })
-          );
-        } catch (err) {
-          editor.view.dispatch(
-            editor.state.tr.setMeta(DiffPluginKey, {
-              type: "SET_PROCESSING_RANGE",
-              range: null,
-            })
-          );
-          throw err;
-        } finally {
-          setIsAiGenerating(false);
-        }
-      } else {
-        const selectedText = empty ? "" : editor.state.doc.textBetween(from, to, " ");
-        const range = { from, to };
 
         editor.view.dispatch(
           editor.state.tr.setMeta(DiffPluginKey, {
-            type: "SET_PROCESSING_RANGE",
-            range,
+            type: "ADD_DIFF_ISSUES",
+            issues: generatedIssues,
           })
         );
-        setIsAiGenerating(true);
-
-        try {
-          const generatedText = await onAiExecute({
-            ...options,
-            selectedText,
-          });
-
-          const pluginState = DiffPluginKey.getState(editor.state);
-          const currentRange = pluginState?.processingRange ?? range;
-
-          editor.view.dispatch(
-            editor.state.tr.setMeta(DiffPluginKey, {
-              type: "ADD_DIFF_ISSUE",
-              issue: {
-                id: crypto.randomUUID(),
-                type: "ai",
-                original: selectedText,
-                suggestion: generatedText,
-                range: currentRange,
-              },
-            })
-          );
-        } catch (err) {
-          editor.view.dispatch(
-            editor.state.tr.setMeta(DiffPluginKey, {
-              type: "SET_PROCESSING_RANGE",
-              range: null,
-            })
-          );
-          throw err;
-        } finally {
-          setIsAiGenerating(false);
-        }
+      } catch (err) {
+        editor.view.dispatch(
+          editor.state.tr.setMeta(DiffPluginKey, {
+            type: "SET_PROCESSING_RANGE",
+            range: null,
+          })
+        );
+        throw err;
+      } finally {
+        setIsAiGenerating(false);
       }
     },
     [editor, onAiExecute]
   );
+
 
   const handleAiSubmit = useCallback(
     async (prompt: string) => {

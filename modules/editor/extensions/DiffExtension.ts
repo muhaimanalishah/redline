@@ -28,7 +28,7 @@ export interface AddDiffIssueMeta {
 
 export interface AddDiffIssuesMeta {
   type: "ADD_DIFF_ISSUES";
-  issues: DiffIssue[];
+  issues: DiffIssue[] | DiffIssue;
 }
 
 export interface RemoveDiffMeta {
@@ -174,114 +174,67 @@ export const DiffExtension = Extension.create({
               issues = mappedIssues;
             }
 
+            let stateModified = tr.docChanged;
+
             if (meta) {
-              if (meta.type === "SET_DIFF_ISSUES") {
-                issues.clear();
-                meta.issues.forEach((issue) => issues.set(issue.id, issue));
-                processingRange = null;
-                activeDiffId = null;
-                const decorations = buildDecorations(
-                  newState.doc,
-                  issues,
-                  processingRange,
-                  activeSelectionRange,
-                  activeDiffId
-                );
-                return { decorations, issues, processingRange, activeSelectionRange, activeDiffId };
-              } else if (meta.type === "ADD_DIFF_ISSUE") {
-                issues.set(meta.issue.id, meta.issue);
-                processingRange = null;
-                activeSelectionRange = null;
-                const decorations = buildDecorations(
-                  newState.doc,
-                  issues,
-                  processingRange,
-                  activeSelectionRange,
-                  activeDiffId
-                );
-                return { decorations, issues, processingRange, activeSelectionRange, activeDiffId };
-              } else if (meta.type === "ADD_DIFF_ISSUES") {
-                meta.issues.forEach((issue) => issues.set(issue.id, issue));
-                processingRange = null;
-                activeSelectionRange = null;
-                const decorations = buildDecorations(
-                  newState.doc,
-                  issues,
-                  processingRange,
-                  activeSelectionRange,
-                  activeDiffId
-                );
-                return { decorations, issues, processingRange, activeSelectionRange, activeDiffId };
-              } else if (meta.type === "REMOVE_DIFF") {
-                issues.delete(meta.issueId);
-                if (activeDiffId === meta.issueId) activeDiffId = null;
-                const decorations = buildDecorations(
-                  newState.doc,
-                  issues,
-                  processingRange,
-                  activeSelectionRange,
-                  activeDiffId
-                );
-                return { decorations, issues, processingRange, activeSelectionRange, activeDiffId };
-              } else if (meta.type === "CLEAR_ALL_DIFFS") {
-                issues.clear();
-                activeDiffId = null;
-                return {
-                  decorations: DecorationSet.empty,
-                  issues,
-                  processingRange,
-                  activeSelectionRange,
-                  activeDiffId,
-                };
-              } else if (meta.type === "SET_PROCESSING_RANGE") {
-                processingRange = meta.range;
-                activeSelectionRange = null;
-                const decorations = buildDecorations(
-                  newState.doc,
-                  issues,
-                  processingRange,
-                  activeSelectionRange,
-                  activeDiffId
-                );
-                return { decorations, issues, processingRange, activeSelectionRange, activeDiffId };
-              } else if (meta.type === "SET_ACTIVE_SELECTION_RANGE") {
-                activeSelectionRange = meta.range;
-                const decorations = buildDecorations(
-                  newState.doc,
-                  issues,
-                  processingRange,
-                  activeSelectionRange,
-                  activeDiffId
-                );
-                return { decorations, issues, processingRange, activeSelectionRange, activeDiffId };
-              } else if (meta.type === "SET_ACTIVE_DIFF_ID") {
-                activeDiffId = meta.issueId;
-                const decorations = buildDecorations(
-                  newState.doc,
-                  issues,
-                  processingRange,
-                  activeSelectionRange,
-                  activeDiffId
-                );
-                return { decorations, issues, processingRange, activeSelectionRange, activeDiffId };
+              stateModified = true;
+              switch (meta.type) {
+                case "SET_DIFF_ISSUES":
+                  issues.clear();
+                  meta.issues.forEach((issue) => issues.set(issue.id, issue));
+                  processingRange = null;
+                  activeDiffId = null;
+                  break;
+                case "ADD_DIFF_ISSUE":
+                  issues.set(meta.issue.id, meta.issue);
+                  processingRange = null;
+                  activeSelectionRange = null;
+                  break;
+                case "ADD_DIFF_ISSUES": {
+                  const toAdd = Array.isArray(meta.issues) ? meta.issues : [meta.issues];
+                  toAdd.forEach((issue) => issues.set(issue.id, issue));
+                  processingRange = null;
+                  activeSelectionRange = null;
+                  break;
+                }
+                case "REMOVE_DIFF":
+                  issues.delete(meta.issueId);
+                  if (activeDiffId === meta.issueId) activeDiffId = null;
+                  break;
+                case "CLEAR_ALL_DIFFS":
+                  issues.clear();
+                  activeDiffId = null;
+                  break;
+                case "SET_PROCESSING_RANGE":
+                  processingRange = meta.range;
+                  activeSelectionRange = null;
+                  break;
+                case "SET_ACTIVE_SELECTION_RANGE":
+                  activeSelectionRange = meta.range;
+                  break;
+                case "SET_ACTIVE_DIFF_ID":
+                  activeDiffId = meta.issueId;
+                  break;
               }
             }
 
-            // Rebuild decorations if doc changed or meta updated
-            if (tr.docChanged) {
-              const decorations = buildDecorations(
-                newState.doc,
-                issues,
-                processingRange,
-                activeSelectionRange,
-                activeDiffId
-              );
+            if (stateModified) {
+              const decorations = issues.size === 0 && !processingRange && !activeSelectionRange
+                ? DecorationSet.empty
+                : buildDecorations(
+                    newState.doc,
+                    issues,
+                    processingRange,
+                    activeSelectionRange,
+                    activeDiffId
+                  );
               return { decorations, issues, processingRange, activeSelectionRange, activeDiffId };
             }
 
             return prev;
           },
         },
+
         props: {
           decorations(state) {
             return this.getState(state)?.decorations ?? DecorationSet.empty;

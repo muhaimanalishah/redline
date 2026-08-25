@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Download } from "lucide-react";
+import { useClickOutside } from "@/modules/editor/hooks/useClickOutside";
 import styles from "./ExportPopover.module.css";
 
 interface ExportPopoverProps {
@@ -22,27 +23,13 @@ export default function ExportPopover({
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
 
+  useClickOutside(wrapRef, onClose);
+
   useEffect(() => {
     inputRef.current?.focus();
     inputRef.current?.select();
   }, []);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    const handleClickOutside = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [onClose]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();

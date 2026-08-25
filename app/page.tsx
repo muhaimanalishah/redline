@@ -2,10 +2,11 @@
 
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import Editor from "@/modules/editor/Editor";
-import { DiffIssue, ExecuteAiOptions } from "@/modules/editor/types";
+import { Editor, DiffIssue, ExecuteAiOptions } from "@/modules/editor";
+import { safeStorage } from "@/modules/editor/lib/storage";
 
 const STORAGE_KEY = "redline-document-content-v2";
+
 
 const INITIAL_MARKDOWN = `# Redline
 
@@ -44,18 +45,12 @@ Me and him was discussing yesterday about how good writers doesn't never use to 
 export default function Home() {
   const [issues, setIssues] = useState<DiffIssue[]>([]);
   const [initialContent] = useState<string>(() => {
-    if (typeof window === "undefined") return INITIAL_MARKDOWN;
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved !== null && saved.trim().length > 0) return saved;
-    } catch {}
-    return INITIAL_MARKDOWN;
+    const saved = safeStorage.get(STORAGE_KEY, "");
+    return saved.trim().length > 0 ? saved : INITIAL_MARKDOWN;
   });
 
   const handleContentChange = useCallback((markdown: string) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, markdown);
-    } catch {}
+    safeStorage.set(STORAGE_KEY, markdown);
   }, []);
 
   const handleAiExecute = async (options: ExecuteAiOptions): Promise<string> => {

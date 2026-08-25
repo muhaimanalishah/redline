@@ -1,28 +1,17 @@
 import { useCallback, useState } from "react";
+import { safeStorage } from "@/modules/editor/lib/storage";
 
 const ZOOM_KEY = "redline-zoom";
 const MIN_ZOOM = 80;
 const MAX_ZOOM = 160;
 
 export function useZoom() {
-  const [zoom, setZoom] = useState<number>(() => {
-    if (typeof window === "undefined") return 100;
-    try {
-      const saved = localStorage.getItem(ZOOM_KEY);
-      if (saved) {
-        const parsed = parseInt(saved, 10);
-        if (!isNaN(parsed) && parsed >= MIN_ZOOM && parsed <= MAX_ZOOM) {
-          return parsed;
-        }
-      }
-    } catch {}
-    return 100;
-  });
+  const [zoom, setZoom] = useState<number>(() =>
+    safeStorage.getNumber(ZOOM_KEY, 100, MIN_ZOOM, MAX_ZOOM)
+  );
 
   const persist = (value: number) => {
-    try {
-      localStorage.setItem(ZOOM_KEY, String(value));
-    } catch {}
+    safeStorage.set(ZOOM_KEY, value);
   };
 
   const zoomIn = useCallback(() => {
@@ -54,3 +43,4 @@ export function useZoom() {
 
   return { zoom, zoomIn, zoomOut, zoomReset, zoomSet };
 }
+

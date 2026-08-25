@@ -8,10 +8,11 @@ import { Link } from "@tiptap/extension-link";
 import { Underline } from "@tiptap/extension-underline";
 import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table";
 import { Image } from "@tiptap/extension-image";
-import { Markdown, type MarkdownStorage } from "tiptap-markdown";
+import { Markdown } from "tiptap-markdown";
 import { DiffExtension, DiffPluginKey } from "@/modules/editor/extensions/DiffExtension";
 import { findIssueRange } from "@/modules/editor/extensions/diffDoc";
 import { DiffIssue } from "@/modules/editor/types";
+import { getEditorMarkdown } from "@/modules/editor/lib/markdown";
 
 export interface UseDiffEditorOptions {
   initialContent: string;
@@ -81,9 +82,9 @@ export function useDiffEditor({
       }
     },
     onUpdate: ({ editor: ed }) => {
-      const storage = ed.storage as unknown as Record<string, MarkdownStorage>;
-      const markdown = storage.markdown?.getMarkdown?.() ?? "";
+      const markdown = getEditorMarkdown(ed);
       onChange?.(markdown);
+
 
       const pluginState = DiffPluginKey.getState(ed.state);
       if (onIssuesChange && pluginState) {

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Editor, useEditorState } from "@tiptap/react";
 import { ChevronDown, Pilcrow, Heading1, Heading2, Heading3, Heading4 } from "lucide-react";
+import { useClickOutside } from "@/modules/editor/hooks/useClickOutside";
 import styles from "./InsertMenu.module.css";
 
 interface InsertMenuProps {
@@ -20,6 +21,8 @@ export default function InsertMenu({ editor }: InsertMenuProps) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
+  useClickOutside(wrapRef, () => setOpen(false), open);
+
   const activeLevelNum = useEditorState({
     editor,
     selector: ({ editor: ed }) => {
@@ -36,28 +39,9 @@ export default function InsertMenu({ editor }: InsertMenuProps) {
     selector: ({ editor: ed }) => ed.isActive("paragraph") && !ed.isActive("heading"),
   });
 
-  useEffect(() => {
-    if (!open) return;
-
-    const handleClickOutside = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    window.addEventListener("mousedown", handleClickOutside);
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("mousedown", handleClickOutside);
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [open]);
-
   const activeLevel = LEVELS.find(({ level }) => level === activeLevelNum);
   const CurrentIcon = activeLevel?.Icon ?? Pilcrow;
-  const currentLabel = activeLevel ? `H${activeLevel.level}` : "Text";
+
 
   return (
     <div ref={wrapRef} className={styles.wrap}>

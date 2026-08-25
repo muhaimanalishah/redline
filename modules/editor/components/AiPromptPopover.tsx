@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   SpellCheck,
@@ -19,6 +19,7 @@ import {
   GraduationCap,
   type LucideIcon,
 } from "lucide-react";
+import { useClickOutside } from "@/modules/editor/hooks/useClickOutside";
 import {
   PRESETS,
   PRESET_CATEGORIES,
@@ -50,7 +51,7 @@ interface AiPromptPopoverProps {
   onClose: () => void;
 }
 
-const ICON_MAP: Record<string, LucideIcon> = {
+export const ICON_MAP: Record<string, LucideIcon> = {
   SpellCheck,
   MoveHorizontal,
   SlidersHorizontal,
@@ -77,19 +78,8 @@ export default function AiPromptPopover({
 }: AiPromptPopoverProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (loading) return;
+  useClickOutside(wrapRef, onClose, { enabled: !loading });
 
-    const handleClickOutside = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        onClose();
-      }
-    };
-    window.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      window.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [onClose, loading]);
 
   const menuItems = useMemo<MenuItemDef[]>(() => {
     if (activeView === "root") {

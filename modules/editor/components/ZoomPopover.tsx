@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { createPortal } from "react-dom";
 import { Minus, Plus, RotateCcw } from "lucide-react";
+import { useClickOutside } from "@/modules/editor/hooks/useClickOutside";
 import styles from "./ZoomPopover.module.css";
 
 interface ZoomPopoverProps {
@@ -28,22 +29,8 @@ export default function ZoomPopover({
 }: ZoomPopoverProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    const handleClickOutside = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [onClose]);
+  useClickOutside(wrapRef, onClose);
+
 
   const rightOffset =
     typeof window !== "undefined"

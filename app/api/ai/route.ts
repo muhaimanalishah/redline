@@ -55,36 +55,23 @@ export async function POST(req: Request) {
 
   const data = parsed.data;
 
-  // --- Preset Mode ---
-  if (data.mode === "preset") {
-    const presetId = data.preset as PresetId;
-    const config = getPresetConfig(presetId);
+  const prompt =
+    data.mode === "preset"
+      ? getPresetConfig(data.preset as PresetId).prompt
+      : data.prompt;
+  const text = data.text;
 
-    try {
-      const result = streamGenerate(config.prompt, data.text);
-      return createTextStreamResponse({
-        stream: toTextStream({ stream: result.stream }),
-      });
-    } catch (err) {
-      console.error(`Preset '${presetId}' streaming failed:`, err);
-      return Response.json(
-        { error: `Preset '${config.label}' execution failed. Please try again.` },
-        { status: 502 }
-      );
-    }
-  }
-
-  // --- Custom Mode ---
   try {
-    const result = streamGenerate(data.prompt, data.text);
+    const result = streamGenerate(prompt, text);
     return createTextStreamResponse({
       stream: toTextStream({ stream: result.stream }),
     });
   } catch (err) {
-    console.error("Custom generate streaming failed:", err);
+    console.error("AI Generation error:", err);
     return Response.json(
-      { error: "Generate request failed. Please try again." },
+      { error: "AI execution failed. Please try again." },
       { status: 502 }
     );
   }
+
 }
