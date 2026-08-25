@@ -1,7 +1,7 @@
 .sidebar {
   height: 100vh;
-  background-color: var(--paper-subtle);
-  border-right: 1px solid var(--rule);
+  background-color: var(--chrome-bg);
+  border-right: 1px solid var(--chrome-border);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -10,7 +10,7 @@
   overflow: hidden;
   font-family: var(--sans);
   z-index: 30;
-  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .inner {
@@ -21,27 +21,6 @@
   flex-direction: column;
 }
 
-.floatingToggleWrap {
-  position: fixed;
-  top: 18px;
-  left: 18px;
-  z-index: 45;
-  pointer-events: auto;
-}
-
-.collapsedToggle {
-  box-shadow: var(--shadow-sm);
-  background: var(--float-bg);
-  border-color: var(--float-border);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.collapsedToggle:hover {
-  box-shadow: var(--shadow-md);
-  background: var(--paper-card);
-}
-
 /* 1. TOP HEADER */
 .header {
   height: 44px;
@@ -49,7 +28,7 @@
   display: flex;
   align-items: center;
   padding: 0 14px;
-  border-bottom: 1px solid var(--rule-subtle);
+  border-bottom: 1px solid var(--chrome-border-subtle);
 }
 
 .workspaceLabel {
@@ -66,7 +45,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  border-bottom: 1px solid var(--rule-subtle);
+  border-bottom: 1px solid var(--chrome-border-subtle);
 }
 
 .actionBtnFull {
@@ -80,16 +59,15 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--ink);
-  background-color: var(--paper-card);
-  border: 1px solid var(--rule);
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: all 0.12s ease;
 }
 
 .actionBtnFull:hover {
-  background-color: var(--paper-edge);
-  border-color: var(--ink-subtle);
+  background-color: var(--card-hover);
 }
 
 .actionBtnFull:active {
@@ -97,7 +75,7 @@
 }
 
 .actionBtnActive {
-  background-color: var(--paper-edge);
+  background-color: var(--card-hover);
   border-color: var(--accent-blue);
 }
 
@@ -122,8 +100,8 @@
   font-family: var(--sans);
   font-size: 12px;
   border-radius: 9999px;
-  border: 1px solid var(--rule);
-  background: var(--paper-card);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
   color: var(--ink);
   outline: none;
   transition: all 0.15s ease;
@@ -162,7 +140,7 @@
   overflow-x: hidden;
   padding: 10px 8px;
   scrollbar-width: thin;
-  scrollbar-color: var(--rule) transparent;
+  scrollbar-color: var(--chrome-border) transparent;
 }
 
 .docList::-webkit-scrollbar {
@@ -170,7 +148,7 @@
 }
 
 .docList::-webkit-scrollbar-thumb {
-  background: var(--rule);
+  background: var(--chrome-border);
   border-radius: 4px;
 }
 
@@ -187,7 +165,7 @@
 }
 
 .sectionHeader {
-  padding: 4px 8px 4px 8px;
+  padding: 4px 10px 4px 10px;
 }
 
 .sectionLabel {
@@ -219,17 +197,19 @@
   transition: all 0.1s ease;
   user-select: none;
   min-height: 32px;
+  border: 1px solid transparent;
 }
 
 .docItem:hover {
-  background-color: var(--paper-edge);
+  background-color: var(--accent-soft);
   color: var(--ink);
 }
 
 .docItem[data-active="true"] {
-  background-color: var(--paper-card);
+  background-color: var(--card-bg);
   color: var(--ink);
   font-weight: 500;
+  border: 1px solid var(--card-border);
   box-shadow: var(--shadow-sm);
 }
 
@@ -360,8 +340,8 @@
 /* 4. BOTTOM ACTION FOOTER (Subtle styling, Full border-radius) */
 .footer {
   padding: 10px 12px;
-  border-top: 1px solid var(--rule-subtle);
-  background-color: var(--paper-subtle);
+  border-top: 1px solid var(--chrome-border-subtle);
+  background-color: var(--chrome-bg);
 }
 
 .subtleArchiveBtn {
@@ -383,8 +363,8 @@
 }
 
 .subtleArchiveBtn:hover {
-  background-color: var(--paper-edge);
-  border-color: var(--rule);
+  background-color: var(--accent-soft);
+  border-color: var(--chrome-border-subtle);
   color: var(--ink);
 }
 
@@ -406,7 +386,7 @@
   font-size: 12px;
   font-weight: 500;
   color: var(--del-text);
-  background-color: var(--paper-card);
+  background-color: var(--card-bg);
   border: 1px solid var(--del-bg);
   cursor: pointer;
   transition: all 0.12s ease;
@@ -428,14 +408,13 @@
   font-size: 12px;
   font-weight: 500;
   color: var(--ink);
-  background-color: var(--paper-card);
-  border: 1px solid var(--rule);
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: all 0.12s ease;
 }
 
 .backToDocsBtn:hover {
-  background-color: var(--paper-edge);
-  border-color: var(--ink-subtle);
+  background-color: var(--card-hover);
 }

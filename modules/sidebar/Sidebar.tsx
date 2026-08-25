@@ -8,7 +8,6 @@ import {
   Search,
   Pin,
   Trash2,
-  ChevronRight,
   MoreHorizontal,
   Pencil,
   X,
@@ -41,7 +40,6 @@ export default function Sidebar({
   onTogglePinDoc,
   onRenameDoc,
   isOpen,
-  onToggleOpen,
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -208,35 +206,12 @@ export default function Sidebar({
   };
 
   return (
-    <>
-      <AnimatePresence>
-        {!isOpen && (
-          <motion.div
-            className={styles.floatingToggleWrap}
-            initial={{ opacity: 0, scale: 0.85, x: -10 }}
-            animate={{ opacity: 1, scale: 1, x: 0 }}
-            exit={{ opacity: 0, scale: 0.85, x: -10 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-          >
-            <IconButton
-              variant="subtle"
-              size="lg"
-              onClick={onToggleOpen}
-              tooltip="Open Sidebar (⌘\)"
-              className={styles.collapsedToggle}
-            >
-              <ChevronRight size={17} />
-            </IconButton>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <motion.aside
-        className={styles.sidebar}
-        initial={false}
-        animate={{
-          width: isOpen ? 256 : 0,
-        }}
+    <motion.aside
+      className={styles.sidebar}
+      initial={false}
+      animate={{
+        width: isOpen ? 256 : 0,
+      }}
         transition={{
           type: "spring",
           stiffness: 400,
@@ -407,6 +382,5 @@ export default function Sidebar({
           </div>
         </div>
       </motion.aside>
-    </>
   );
 }

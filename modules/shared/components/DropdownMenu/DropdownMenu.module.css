@@ -52,7 +52,7 @@
 }
 
 .item:hover:not(:disabled) {
-  background: var(--rule-subtle);
+  background: var(--accent-soft);
   color: var(--ink);
 }
 

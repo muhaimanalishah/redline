@@ -1,14 +1,14 @@
 .topStrip {
-  height: 44px;
-  min-height: 44px;
+  height: 48px;
+  min-height: 48px;
   width: 100%;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 12px;
-  background-color: var(--paper-subtle);
-  border-bottom: 1px solid var(--rule);
+  padding: 0 14px;
+  background-color: var(--chrome-bg, var(--paper-subtle));
+  border-bottom: 1px solid var(--chrome-border, var(--rule));
   user-select: none;
   font-family: var(--sans);
   position: sticky;
@@ -21,7 +21,7 @@
 .rightZone {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   min-width: 140px;
 }
 
@@ -32,7 +32,7 @@
 .centerZone {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   flex-wrap: nowrap;
 }
 
@@ -40,9 +40,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
   color: var(--ink-soft);
   background: transparent;
   border: none;

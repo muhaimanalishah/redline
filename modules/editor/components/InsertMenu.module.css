@@ -6,28 +6,26 @@
   display: flex;
   align-items: center;
   gap: 3px;
-  height: 38px;
-  padding: 0 8px;
-  border-radius: 9999px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 6px;
   border: none;
   background: transparent;
-  color: var(--ink-faint);
+  color: var(--ink-soft);
   cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.12s ease;
 }
 
 .trigger:hover {
-  background: var(--paper-subtle);
+  background: var(--accent-soft);
   color: var(--ink);
 }
 
 .trigger[data-active="true"] {
-  background: transparent;
-  color: var(--ink);
-}
-
-.trigger[data-active="true"]:hover {
-  background: var(--paper-subtle);
+  background: var(--accent-soft);
   color: var(--ink);
 }
 
@@ -35,64 +33,58 @@
   opacity: 0.6;
 }
 
-.trigger[data-active="true"] .chevron {
-  opacity: 0.9;
-  color: var(--ink);
-}
-
 .menu {
   position: absolute;
-  bottom: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
+  top: calc(100% + 4px);
+  left: 0;
   display: flex;
   flex-direction: column;
   gap: 1px;
-  min-width: 150px;
+  min-width: 140px;
   background: var(--float-bg);
   border: 1px solid var(--float-border);
-  border-radius: 12px;
-  padding: 5px;
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: var(--shadow-md);
+  z-index: 50;
   animation: fadeIn 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .item {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 7px 10px;
-  border-radius: 7px;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 5px;
   border: none;
   background: transparent;
   color: var(--ink-soft);
   font-family: var(--sans);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 12.5px;
+  font-weight: 450;
   cursor: pointer;
   text-align: left;
-  transition: all 0.12s ease;
+  transition: all 0.1s ease;
 }
 
 .item:hover {
-  background: var(--paper-subtle);
+  background: var(--accent-soft);
   color: var(--ink);
 }
 
 .item[data-active="true"] {
-  background: color-mix(in srgb, var(--accent-blue) 12%, transparent);
-  color: var(--accent-blue);
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-weight: 600;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(4px);
+    transform: translateY(-3px);
   }
   to {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
   }
 }

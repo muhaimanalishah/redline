@@ -36,7 +36,7 @@ export default function UrlPopover({ label, placeholder, anchorRect, onSubmit, o
     <div
       ref={wrapRef}
       className={styles.wrap}
-      style={{ left: `${anchorRect.left + anchorRect.width / 2}px`, top: `${anchorRect.top}px` }}
+      style={{ left: `${anchorRect.left + anchorRect.width / 2}px`, top: `${anchorRect.bottom + 10}px` }}
       role="dialog"
       aria-modal="true"
       aria-label={label}

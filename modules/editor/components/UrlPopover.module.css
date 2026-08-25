@@ -1,6 +1,6 @@
 .wrap {
   position: fixed;
-  transform: translate(-50%, -100%) translateY(-12px);
+  transform: translateX(-50%);
   z-index: 55;
   pointer-events: auto;
 }

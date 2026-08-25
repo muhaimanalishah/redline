@@ -1,20 +1,35 @@
 :root {
-  /* Warm Editorial Parchment (Eye-friendly Light) */
-  --paper: #FBF6EC;
-  --paper-subtle: #F6EEDD;
-  --paper-edge: #EFE6D2;
+  /* Chrome / Menus / Top Strip / Sidebar / Dropdowns (Unified darker cream tone) */
+  --chrome-bg: #F5EEDC;
+  --chrome-border: #E8DFC7;
+  --chrome-border-subtle: #EDE4CE;
+
+  /* Editor Canvas (Lighter & elevated for reading) */
+  --editor-canvas: #FCF8F0;
+  --paper: #FCF8F0;
+  --paper-subtle: #F5EEDC;
+  --paper-edge: #F5EEDC;
+
+  /* Card Elements / Action Buttons */
+  --card-bg: #FFFDF8;
+  --card-border: #E5DCBF;
+  --card-hover: #ECE4D0;
   --paper-card: #FFFDF8;
+
+  /* Typography / Ink */
   --ink: #2B2620;
   --ink-soft: #675F53;
-  --ink-faint: #A0967E;
+  --ink-faint: #9E947D;
   --ink-subtle: #C6BBA0;
 
+  /* Rules & Accents */
   --rule: #E8DFC7;
-  --rule-subtle: #F1E9D6;
+  --rule-subtle: #EDE4CE;
   --accent: #5B5650;
-  --accent-soft: rgba(91, 86, 80, 0.09);
+  --accent-soft: rgba(91, 86, 80, 0.08);
   --accent-hover: #423E39;
 
+  /* Diff Marks */
   --del-bg: rgba(205, 75, 60, 0.12);
   --del-text: #A33827;
   --ins-bg: rgba(46, 125, 82, 0.12);
@@ -35,14 +50,15 @@
   --table-zebra-bg: rgba(91, 86, 80, 0.035);
   --blockquote-bg: rgba(91, 86, 80, 0.035);
   --blockquote-border: #8A8378;
-  --selection-bg: rgba(91, 86, 80, 0.18);
+  --selection-bg: rgba(91, 86, 80, 0.15);
 
   --shadow-sm: 0 1px 3px rgba(44, 40, 36, 0.06), 0 1px 2px rgba(44, 40, 36, 0.04);
-  --shadow-md: 0 4px 14px -3px rgba(44, 40, 36, 0.1), 0 2px 6px -2px rgba(44, 40, 36, 0.06);
+  --shadow-md: 0 4px 16px -2px rgba(44, 40, 36, 0.12), 0 2px 6px -1px rgba(44, 40, 36, 0.06);
   --shadow-lg: 0 10px 30px -8px rgba(44, 40, 36, 0.16), 0 4px 10px -3px rgba(44, 40, 36, 0.08);
 
-  --float-bg: #FFFDF8;
-  --float-border: #E5DCBF;
+  /* Menus / Popovers match chrome tone */
+  --float-bg: #F5EEDC;
+  --float-border: #E8DFC7;
 
   --mono: var(--font-ibm-plex-mono), "SF Mono", ui-monospace, Consolas, monospace;
   --serif: var(--font-source-serif-4), "Iowan Old Style", "Palatino Linotype", Georgia, serif;
@@ -55,22 +71,37 @@
 }
 
 [data-theme="dark"] {
-  /* Lifted Warm Slate (Eye-friendly Dark, NO near-black) */
-  --paper: #26282C;
-  --paper-subtle: #2B2E34;
-  --paper-edge: #1E2024;
-  --paper-card: #2E3137;
+  /* Chrome / Menus / Top Strip / Sidebar / Dropdowns (Unified darker slate tone) */
+  --chrome-bg: #181A1D;
+  --chrome-border: #282B30;
+  --chrome-border-subtle: #212428;
+
+  /* Editor Canvas (Refined deeper slate for comfortable contrast) */
+  --editor-canvas: #202226;
+  --paper: #202226;
+  --paper-subtle: #181A1D;
+  --paper-edge: #181A1D;
+
+  /* Card Elements / Action Buttons */
+  --card-bg: #1E2024;
+  --card-border: #31353C;
+  --card-hover: #2B2E34;
+  --paper-card: #1E2024;
+
+  /* Typography / Ink */
   --ink: #E4DFD3;
   --ink-soft: #ACA495;
   --ink-faint: #7C7669;
   --ink-subtle: #58524A;
 
-  --rule: #383B42;
-  --rule-subtle: #2F3238;
+  /* Rules & Accents */
+  --rule: #282B30;
+  --rule-subtle: #212428;
   --accent: #A6A099;
-  --accent-soft: rgba(166, 160, 153, 0.15);
+  --accent-soft: rgba(228, 223, 211, 0.08);
   --accent-hover: #B8B2AB;
 
+  /* Diff Marks */
   --del-bg: rgba(220, 80, 70, 0.2);
   --del-text: #EB7C71;
   --ins-bg: rgba(60, 155, 98, 0.2);
@@ -91,15 +122,15 @@
   --table-zebra-bg: rgba(255, 255, 255, 0.025);
   --blockquote-bg: rgba(166, 160, 153, 0.07);
   --blockquote-border: #A6A099;
-  --selection-bg: rgba(166, 160, 153, 0.3);
+  --selection-bg: rgba(228, 223, 211, 0.18);
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 4px 16px -3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.6), 0 2px 8px -2px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 12px 38px -8px rgba(0, 0, 0, 0.65), 0 4px 12px -3px rgba(0, 0, 0, 0.5);
 
-  /* Slightly darker than document canvas (--paper: #26282C) for floating dock & popovers */
-  --float-bg: #1A1C1F;
-  --float-border: #2E3238;
+  /* Menus / Popovers match chrome tone (#181A1D) */
+  --float-bg: #181A1D;
+  --float-border: #282B30;
 
   --background: var(--paper-edge);
   --foreground: var(--ink);
