@@ -1,4 +1,4 @@
-import { PresetId } from "@/lib/ai/presets";
+import { PresetId } from "@/modules/editor/lib/ai/presets";
 
 export type DiffType = "grammar" | "clarity" | "spelling" | "word-choice" | "ai";
 

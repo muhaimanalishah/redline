@@ -3,20 +3,20 @@
 import { useCallback, useRef, useState } from "react";
 import { EditorContent } from "@tiptap/react";
 import { MarkdownStorage } from "tiptap-markdown";
-import { DiffPluginKey } from "./DiffExtension";
-import DiffToolbar from "./DiffToolbar";
-import TableToolbar from "./TableToolbar";
-import FloatingControls from "./FloatingControls";
-import TopControls from "./TopControls";
-import MarkdownSourceView from "./MarkdownSourceView";
-import { DiffIssue, ExecuteAiOptions } from "@/types";
-import { PresetId } from "@/lib/ai/presets";
-import { useDiffEditor } from "@/hooks/useDiffEditor";
-import { useHoverToolbar } from "@/hooks/useHoverToolbar";
-import { useDiffActions } from "@/hooks/useDiffActions";
-import { useTableToolbar } from "@/hooks/useTableToolbar";
-import { useZoom } from "@/hooks/useZoom";
-import { useEditorTheme } from "@/hooks/useEditorTheme";
+import { DiffPluginKey } from "@/modules/editor/extensions/DiffExtension";
+import DiffToolbar from "@/modules/editor/components/DiffToolbar";
+import TableToolbar from "@/modules/editor/components/TableToolbar";
+import FloatingControls from "@/modules/editor/components/FloatingControls";
+import TopControls from "@/modules/editor/components/TopControls";
+import MarkdownSourceView from "@/modules/editor/components/MarkdownSourceView";
+import { DiffIssue, ExecuteAiOptions } from "@/modules/editor/types";
+import { PresetId } from "@/modules/editor/lib/ai/presets";
+import { useDiffEditor } from "@/modules/editor/hooks/useDiffEditor";
+import { useHoverToolbar } from "@/modules/editor/hooks/useHoverToolbar";
+import { useDiffActions } from "@/modules/editor/hooks/useDiffActions";
+import { useTableToolbar } from "@/modules/editor/hooks/useTableToolbar";
+import { useZoom } from "@/modules/editor/hooks/useZoom";
+import { useEditorTheme } from "@/modules/editor/hooks/useEditorTheme";
 import styles from "./Editor.module.css";
 
 export interface EditorProps {

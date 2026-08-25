@@ -9,9 +9,9 @@ import { Underline } from "@tiptap/extension-underline";
 import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table";
 import { Image } from "@tiptap/extension-image";
 import { Markdown, type MarkdownStorage } from "tiptap-markdown";
-import { DiffExtension, DiffPluginKey } from "@/components/DiffExtension";
-import { findIssueRange } from "./diffDoc";
-import { DiffIssue } from "@/types";
+import { DiffExtension, DiffPluginKey } from "@/modules/editor/extensions/DiffExtension";
+import { findIssueRange } from "@/modules/editor/extensions/diffDoc";
+import { DiffIssue } from "@/modules/editor/types";
 
 export interface UseDiffEditorOptions {
   initialContent: string;

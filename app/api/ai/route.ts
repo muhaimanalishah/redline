@@ -7,7 +7,7 @@ import {
   PresetId,
   MAX_PROMPT_LENGTH,
   MAX_SELECTION_LENGTH,
-} from "@/lib/ai";
+} from "@/modules/editor/lib/ai";
 
 const PresetRequestSchema = z.object({
   mode: z.literal("preset"),

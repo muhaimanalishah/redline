@@ -1,9 +1,9 @@
 import { useCallback } from "react";
 import { Editor } from "@tiptap/react";
 import { toast } from "sonner";
-import { DiffPluginKey } from "@/components/DiffExtension";
-import { DiffIssue } from "@/types";
-import { resolveIssueRange, findIssueRanges } from "./diffDoc";
+import { DiffPluginKey } from "@/modules/editor/extensions/DiffExtension";
+import { DiffIssue } from "@/modules/editor/types";
+import { resolveIssueRange, findIssueRanges } from "@/modules/editor/extensions/diffDoc";
 
 export function useDiffActions(editor: Editor | null, onDiffResolved: () => void) {
   const handleAccept = useCallback(

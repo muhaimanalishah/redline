@@ -1,6 +1,6 @@
 import { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { Mapping } from "@tiptap/pm/transform";
-import { DiffIssue } from "@/types";
+import { DiffIssue } from "@/modules/editor/types";
 
 /**
  * Searches the document for the first occurrence of the target text string.

@@ -2,9 +2,9 @@ import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { Node as ProseMirrorNode } from "@tiptap/pm/model";
-import { DiffIssue } from "@/types";
-import { parseMarkdownToHtml } from "@/lib/markdownPreview";
-import { resolveIssueRange, mapIssueRange } from "@/hooks/diffDoc";
+import { DiffIssue } from "@/modules/editor/types";
+import { parseMarkdownToHtml } from "@/modules/editor/lib/markdownPreview";
+import { resolveIssueRange, mapIssueRange } from "@/modules/editor/extensions/diffDoc";
 
 export interface DiffPluginState {
   decorations: DecorationSet;

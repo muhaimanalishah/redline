@@ -2,8 +2,8 @@
 
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import Editor from "@/components/Editor";
-import { DiffIssue, ExecuteAiOptions } from "@/types";
+import Editor from "@/modules/editor/Editor";
+import { DiffIssue, ExecuteAiOptions } from "@/modules/editor/types";
 
 const STORAGE_KEY = "redline-document-content-v2";
 

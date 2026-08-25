@@ -1,7 +1,7 @@
 import { RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { Editor } from "@tiptap/react";
-import { DiffPluginKey } from "@/components/DiffExtension";
-import { ActiveDiffState } from "@/types";
+import { DiffPluginKey } from "@/modules/editor/extensions/DiffExtension";
+import { ActiveDiffState } from "@/modules/editor/types";
 
 const CLOSE_DELAY_MS = 150;
 

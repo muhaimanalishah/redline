@@ -25,7 +25,7 @@ import {
   getPresetsByCategory,
   PresetId,
   PresetCategory,
-} from "@/lib/ai";
+} from "@/modules/editor/lib/ai";
 import styles from "./AiPromptPopover.module.css";
 
 export type ActivePresetView = "root" | PresetCategory;

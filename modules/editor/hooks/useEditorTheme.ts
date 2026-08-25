@@ -1,5 +1,5 @@
 import { useCallback, useLayoutEffect, useState } from "react";
-import { ThemeMode } from "@/components/TopControls";
+import { ThemeMode } from "@/modules/editor/components/TopControls";
 
 const THEME_KEY = "redline-theme";
 

@@ -34,14 +34,14 @@ import UrlPopover from "./UrlPopover";
 import AiPromptPopover, { ActivePresetView, MenuItemDef } from "./AiPromptPopover";
 import ReviewAllFloatingMenu from "./ReviewAllFloatingMenu";
 import AudioVisualizer from "./AudioVisualizer";
-import { DiffPluginKey } from "./DiffExtension";
+import { DiffPluginKey } from "@/modules/editor/extensions/DiffExtension";
 import {
   PRESETS,
   PRESET_CATEGORIES,
   getPresetsByCategory,
   PresetId,
-} from "@/lib/ai/presets";
-import { useAudioRecorder } from "@/hooks/useAudioRecorder";
+} from "@/modules/editor/lib/ai/presets";
+import { useAudioRecorder } from "@/modules/editor/hooks/useAudioRecorder";
 import styles from "./FloatingControls.module.css";
 
 interface FloatingControlsProps {
