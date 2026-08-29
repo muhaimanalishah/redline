@@ -103,12 +103,14 @@ export default function FloatingControls({
   }, [voiceTriggerRef, handleVoiceTrigger]);
 
   const handleCloseAi = useCallback(() => {
-    editor.view.dispatch(
-      editor.state.tr.setMeta(DiffPluginKey, {
-        type: "SET_ACTIVE_SELECTION_RANGE",
-        range: null,
-      })
-    );
+    if (editor?.view) {
+      editor.view.dispatch(
+        editor.state.tr.setMeta(DiffPluginKey, {
+          type: "SET_ACTIVE_SELECTION_RANGE",
+          range: null,
+        })
+      );
+    }
     setAiPromptValue("");
     setSavedRange(null);
     setAiAnchorRect(null);
@@ -119,10 +121,10 @@ export default function FloatingControls({
 
   // Position AI Anchor rect when AI dock opens
   useEffect(() => {
-    if (!isAiDockOpen) return;
+    if (!isAiDockOpen || !editor) return;
 
     const { from, to, empty } = editor.state.selection;
-    if (!empty) {
+    if (!empty && editor.view) {
       editor.view.dispatch(
         editor.state.tr.setMeta(DiffPluginKey, {
           type: "SET_ACTIVE_SELECTION_RANGE",
@@ -151,7 +153,7 @@ export default function FloatingControls({
     async (preset: PresetId) => {
       const rangeToUse = savedRange;
       handleCloseAi();
-      if (rangeToUse) {
+      if (rangeToUse && editor) {
         editor.commands.setTextSelection(rangeToUse);
       }
       await onSelectPreset?.(preset);
@@ -221,7 +223,7 @@ export default function FloatingControls({
 
     const rangeToUse = savedRange;
     handleCloseAi();
-    if (rangeToUse) {
+    if (rangeToUse && editor) {
       editor.commands.setTextSelection(rangeToUse);
     }
     await onAiSubmit?.(trimmed);
