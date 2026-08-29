@@ -1,5 +1,11 @@
 import { z } from "zod";
-import { getDocumentsList, createDocument, searchDocuments } from "@/db/queries";
+import {
+  getDocumentsList,
+  getArchivedDocumentsList,
+  createDocument,
+  searchDocuments,
+  emptyTrash,
+} from "@/db/queries";
 import { extractSnippet } from "@/modules/shared/lib/textUtils";
 
 const CreateDocSchema = z.object({
@@ -12,6 +18,12 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("q");
+    const isArchived = searchParams.get("archived") === "true";
+
+    if (isArchived) {
+      const archived = await getArchivedDocumentsList();
+      return Response.json(archived);
+    }
 
     if (query !== null) {
       const cleanQuery = query.trim();
@@ -38,6 +50,26 @@ export async function GET(req: Request) {
     console.error("Failed to fetch documents:", error);
     return Response.json(
       { error: "Failed to fetch documents" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const isTrash = searchParams.get("trash") === "true";
+
+    if (isTrash) {
+      await emptyTrash();
+      return Response.json({ success: true });
+    }
+
+    return Response.json({ error: "Invalid delete action" }, { status: 400 });
+  } catch (error) {
+    console.error("Failed to empty trash:", error);
+    return Response.json(
+      { error: "Failed to empty trash" },
       { status: 500 },
     );
   }

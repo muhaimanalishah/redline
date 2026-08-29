@@ -154,6 +154,49 @@ export async function updateDocument(
   return updated[0];
 }
 
+export async function getArchivedDocumentsList(): Promise<Omit<Document, "content">[]> {
+  if (isPostgres) {
+    const db = getPgDb();
+    return db
+      .select({
+        id: pgDocs.id,
+        title: pgDocs.title,
+        isPinned: pgDocs.isPinned,
+        isArchived: pgDocs.isArchived,
+        createdAt: pgDocs.createdAt,
+        updatedAt: pgDocs.updatedAt,
+      })
+      .from(pgDocs)
+      .where(eq(pgDocs.isArchived, true))
+      .orderBy(desc(pgDocs.updatedAt));
+  }
+
+  const db = getSqliteDb();
+  return db
+    .select({
+      id: sqliteDocs.id,
+      title: sqliteDocs.title,
+      isPinned: sqliteDocs.isPinned,
+      isArchived: sqliteDocs.isArchived,
+      createdAt: sqliteDocs.createdAt,
+      updatedAt: sqliteDocs.updatedAt,
+    })
+    .from(sqliteDocs)
+    .where(eq(sqliteDocs.isArchived, true))
+    .orderBy(desc(sqliteDocs.updatedAt));
+}
+
+export async function emptyTrash(): Promise<void> {
+  if (isPostgres) {
+    const db = getPgDb();
+    await db.delete(pgDocs).where(eq(pgDocs.isArchived, true));
+    return;
+  }
+
+  const db = getSqliteDb();
+  await db.delete(sqliteDocs).where(eq(sqliteDocs.isArchived, true));
+}
+
 export async function deleteDocument(id: string, hardDelete = false): Promise<boolean> {
   if (isPostgres) {
     const db = getPgDb();

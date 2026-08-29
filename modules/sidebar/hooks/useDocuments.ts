@@ -6,16 +6,26 @@ import { SidebarDocument } from "../types";
 
 export function useDocuments(initialDocId?: string | null) {
   const [documents, setDocuments] = useState<SidebarDocument[]>([]);
+  const [archivedDocuments, setArchivedDocuments] = useState<SidebarDocument[]>([]);
   const [activeDocId, setActiveDocId] = useState<string | null>(initialDocId ?? null);
   const [loading, setLoading] = useState(true);
 
   const fetchDocuments = useCallback(async () => {
     try {
-      const res = await fetch("/api/documents");
-      if (!res.ok) throw new Error("Failed to load documents");
-      const data: SidebarDocument[] = await res.json();
+      const [docsRes, archivedRes] = await Promise.all([
+        fetch("/api/documents"),
+        fetch("/api/documents?archived=true"),
+      ]);
+
+      if (!docsRes.ok) throw new Error("Failed to load documents");
+      const data: SidebarDocument[] = await docsRes.json();
       setDocuments(data);
       setActiveDocId((prev) => prev ?? (data.length > 0 ? data[0].id : null));
+
+      if (archivedRes.ok) {
+        const archivedData: SidebarDocument[] = await archivedRes.json();
+        setArchivedDocuments(archivedData);
+      }
     } catch (err) {
       console.error(err);
       toast.error("Could not load documents");
@@ -29,12 +39,23 @@ export function useDocuments(initialDocId?: string | null) {
 
     async function load() {
       try {
-        const res = await fetch("/api/documents");
-        if (!res.ok) throw new Error("Failed to load documents");
-        const data: SidebarDocument[] = await res.json();
+        const [docsRes, archivedRes] = await Promise.all([
+          fetch("/api/documents"),
+          fetch("/api/documents?archived=true"),
+        ]);
+
+        if (!docsRes.ok) throw new Error("Failed to load documents");
+        const data: SidebarDocument[] = await docsRes.json();
         if (!ignore) {
           setDocuments(data);
           setActiveDocId((prev) => prev ?? (data.length > 0 ? data[0].id : null));
+        }
+
+        if (archivedRes.ok) {
+          const archivedData: SidebarDocument[] = await archivedRes.json();
+          if (!ignore) {
+            setArchivedDocuments(archivedData);
+          }
         }
       } catch (err) {
         if (!ignore) {
@@ -77,23 +98,73 @@ export function useDocuments(initialDocId?: string | null) {
     []
   );
 
-  const deleteDoc = useCallback(
+  const archiveDoc = useCallback(
     async (id: string) => {
       try {
+        const docToArchive = documents.find((d) => d.id === id);
+        if (docToArchive) {
+          setDocuments((prev) => prev.filter((d) => d.id !== id));
+          setArchivedDocuments((prev) => [
+            { ...docToArchive, isArchived: true },
+            ...prev.filter((d) => d.id !== id),
+          ]);
+        }
+
         const res = await fetch(`/api/documents/${id}`, { method: "DELETE" });
         if (!res.ok) throw new Error("Failed to delete document");
-        setDocuments((prev) => {
-          const next = prev.filter((d) => d.id !== id);
-          return next;
+
+        setActiveDocId((current) => {
+          if (current !== id) return current;
+          const remaining = documents.filter((d) => d.id !== id);
+          return remaining.length > 0 ? remaining[0].id : null;
         });
-        setActiveDocId((current) => (current === id ? null : current));
+
+        toast.success("Document moved to trash");
       } catch (err) {
         console.error(err);
         toast.error("Could not delete document");
       }
     },
-    []
+    [documents]
   );
+
+  const restoreDoc = useCallback(
+    async (id: string) => {
+      try {
+        const docToRestore = archivedDocuments.find((d) => d.id === id);
+        if (docToRestore) {
+          setArchivedDocuments((prev) => prev.filter((d) => d.id !== id));
+          setDocuments((prev) => [{ ...docToRestore, isArchived: false }, ...prev]);
+        }
+
+        const res = await fetch(`/api/documents/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isArchived: false }),
+        });
+        if (!res.ok) throw new Error("Failed to restore document");
+
+        setActiveDocId(id);
+        toast.success("Document restored");
+      } catch (err) {
+        console.error(err);
+        toast.error("Could not restore document");
+      }
+    },
+    [archivedDocuments]
+  );
+
+  const emptyTrash = useCallback(async () => {
+    try {
+      setArchivedDocuments([]);
+      const res = await fetch("/api/documents?trash=true", { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to empty trash");
+      toast.success("Trash emptied");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to empty trash");
+    }
+  }, []);
 
   const togglePinDoc = useCallback(
     async (id: string, currentPin: boolean) => {
@@ -140,12 +211,15 @@ export function useDocuments(initialDocId?: string | null) {
 
   return {
     documents,
+    archivedDocuments,
     activeDocId,
     setActiveDocId,
     loading,
     fetchDocuments,
     createNewDocument,
-    deleteDoc,
+    deleteDoc: archiveDoc,
+    restoreDoc,
+    emptyTrash,
     togglePinDoc,
     updateDocTitleLocally,
     renameDoc,

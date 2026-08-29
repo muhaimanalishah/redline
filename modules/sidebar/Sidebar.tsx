@@ -20,10 +20,13 @@ import styles from "./Sidebar.module.css";
 
 interface SidebarProps {
   documents: SidebarDocument[];
+  archivedDocuments?: SidebarDocument[];
   activeDocId: string | null;
   onSelectDoc: (id: string) => void;
   onCreateDoc: () => void;
   onDeleteDoc: (id: string) => void;
+  onRestoreDoc?: (id: string) => void;
+  onEmptyTrash?: () => void;
   onTogglePinDoc: (id: string, currentPin: boolean) => void;
   onRenameDoc?: (id: string, newTitle: string) => void;
   onOpenSearch?: () => void;
@@ -33,10 +36,13 @@ interface SidebarProps {
 
 export default function Sidebar({
   documents,
+  archivedDocuments = [],
   activeDocId,
   onSelectDoc,
   onCreateDoc,
   onDeleteDoc,
+  onRestoreDoc,
+  onEmptyTrash,
   onTogglePinDoc,
   onRenameDoc,
   onOpenSearch,
@@ -46,7 +52,6 @@ export default function Sidebar({
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
-  const [archivedDocs, setArchivedDocs] = useState<SidebarDocument[]>([]);
 
   const renameInputRef = useRef<HTMLInputElement>(null);
 
@@ -85,17 +90,15 @@ export default function Sidebar({
   };
 
   const handleDelete = (doc: SidebarDocument) => {
-    setArchivedDocs((prev) => [doc, ...prev.filter((d) => d.id !== doc.id)]);
     onDeleteDoc(doc.id);
   };
 
   const handleRestore = (doc: SidebarDocument) => {
-    setArchivedDocs((prev) => prev.filter((d) => d.id !== doc.id));
-    onCreateDoc();
+    onRestoreDoc?.(doc.id);
   };
 
   const handleEmptyTrash = () => {
-    setArchivedDocs([]);
+    onEmptyTrash?.();
   };
 
   const renderDocRow = (doc: SidebarDocument) => {
@@ -279,10 +282,10 @@ export default function Sidebar({
                     <span className={styles.sectionLabel}>Archived</span>
                   </div>
                   <div className={styles.sectionItems}>
-                    {archivedDocs.length === 0 ? (
+                    {archivedDocuments.length === 0 ? (
                       <div className={styles.emptyState}>Trash is empty</div>
                     ) : (
-                      archivedDocs.map((doc) => (
+                      archivedDocuments.map((doc) => (
                         <div key={doc.id} className={styles.trashDocItem}>
                           <div className={styles.trashDocLeft}>
                             <FileText size={14} className={styles.docIcon} />

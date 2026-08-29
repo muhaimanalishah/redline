@@ -13,11 +13,14 @@ export default function Home() {
 
   const {
     documents,
+    archivedDocuments,
     activeDocId,
     setActiveDocId,
     loading: docsLoading,
     createNewDocument,
     deleteDoc,
+    restoreDoc,
+    emptyTrash,
     togglePinDoc,
     updateDocTitleLocally,
     renameDoc,
@@ -49,10 +52,13 @@ export default function Home() {
       <div className={styles.container}>
         <Sidebar
           documents={documents}
+          archivedDocuments={archivedDocuments}
           activeDocId={activeDocId}
           onSelectDoc={setActiveDocId}
           onCreateDoc={() => createNewDocument("Untitled", "")}
           onDeleteDoc={deleteDoc}
+          onRestoreDoc={restoreDoc}
+          onEmptyTrash={emptyTrash}
           onTogglePinDoc={togglePinDoc}
           onRenameDoc={renameDoc}
           onOpenSearch={() => setIsSearchPaletteOpen(true)}
