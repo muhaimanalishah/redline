@@ -1,21 +1,31 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useSyncExternalStore } from "react";
 import { Monitor, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import styles from "./MobileNotice.module.css";
 
 const MODAL_STORAGE_KEY = "redline-mobile-modal-dismissed";
 
+const emptySubscribe = () => () => {};
+
+function getModalDismissedSnapshot() {
+  if (typeof window === "undefined") return true;
+  try {
+    return sessionStorage.getItem(MODAL_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
 export default function MobileNotice() {
-  const [isModalDismissed, setIsModalDismissed] = useState(() => {
-    if (typeof window === "undefined") return true;
-    try {
-      return sessionStorage.getItem(MODAL_STORAGE_KEY) === "true";
-    } catch {
-      return false;
-    }
-  });
+  const isDismissedInStorage = useSyncExternalStore(
+    emptySubscribe,
+    getModalDismissedSnapshot,
+    () => true
+  );
+  const [locallyDismissed, setLocallyDismissed] = useState(false);
+  const isModalDismissed = isDismissedInStorage || locallyDismissed;
 
   const [copied, setCopied] = useState(false);
 
@@ -33,7 +43,7 @@ export default function MobileNotice() {
   };
 
   const handleDismissModal = () => {
-    setIsModalDismissed(true);
+    setLocallyDismissed(true);
     try {
       sessionStorage.setItem(MODAL_STORAGE_KEY, "true");
     } catch {

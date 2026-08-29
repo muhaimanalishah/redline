@@ -3,16 +3,19 @@
 import { useState } from "react";
 import { Editor, DiffIssue, useAiExecution } from "@/modules/editor";
 import { Sidebar, useDocuments, useActiveDocument } from "@/modules/sidebar";
-import { CommandPalette, DemoBanner, MobileNotice, useAppShortcuts } from "@/modules/shared";
+import {
+  CommandPalette,
+  DemoBanner,
+  MobileNotice,
+  useAppShortcuts,
+  useIsMobile,
+} from "@/modules/shared";
 import styles from "./page.module.css";
 
 export default function Home() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
-    if (typeof window !== "undefined" && window.innerWidth < 768) {
-      return false;
-    }
-    return true;
-  });
+  const isMobile = useIsMobile();
+  const [sidebarToggled, setSidebarToggled] = useState<boolean | null>(null);
+  const isSidebarOpen = sidebarToggled ?? !isMobile;
   const [isSearchPaletteOpen, setIsSearchPaletteOpen] = useState(false);
   const [issues, setIssues] = useState<DiffIssue[]>([]);
 
@@ -40,15 +43,19 @@ export default function Home() {
 
   const { handleAiExecute } = useAiExecution();
 
+  const handleToggleSidebar = () => {
+    setSidebarToggled((prev) => !(prev ?? !isMobile));
+  };
+
   const handleSelectDoc = (id: string) => {
     setActiveDocId(id);
-    if (typeof window !== "undefined" && window.innerWidth < 768) {
-      setIsSidebarOpen(false);
+    if (isMobile) {
+      setSidebarToggled(false);
     }
   };
 
   useAppShortcuts({
-    onToggleSidebar: () => setIsSidebarOpen((prev) => !prev),
+    onToggleSidebar: handleToggleSidebar,
     onOpenSearch: () => setIsSearchPaletteOpen((prev) => !prev),
   });
 
@@ -76,7 +83,7 @@ export default function Home() {
           onRenameDoc={renameDoc}
           onOpenSearch={() => setIsSearchPaletteOpen(true)}
           isOpen={isSidebarOpen}
-          onToggleOpen={() => setIsSidebarOpen((prev) => !prev)}
+          onToggleOpen={handleToggleSidebar}
         />
 
       <main className={styles.main}>
@@ -93,7 +100,7 @@ export default function Home() {
             placeholder="Start typing..."
             onAiExecute={handleAiExecute}
             isSidebarOpen={isSidebarOpen}
-            onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+            onToggleSidebar={handleToggleSidebar}
           />
         ) : activeDocId ? (
           <div className={styles.loadingState}>Loading document...</div>

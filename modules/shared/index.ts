@@ -8,6 +8,7 @@ export { default as MobileNotice } from "./components/MobileNotice/MobileNotice"
 export * from "./components/MobileNotice/MobileNotice";
 export * from "./components/ThemeProvider";
 export * from "./hooks/useAppShortcuts";
+export * from "./hooks/useMediaQuery";
 export * from "./lib/textUtils";
 
 

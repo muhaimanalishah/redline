@@ -196,13 +196,12 @@ export default function Sidebar({
 
   return (
     <>
-      {isOpen && (
-        <div
-          className={styles.backdrop}
-          onClick={onToggleOpen}
-          aria-hidden="true"
-        />
-      )}
+      <div
+        className={styles.backdrop}
+        data-open={isOpen}
+        onClick={onToggleOpen}
+        aria-hidden="true"
+      />
       <motion.aside
         className={styles.sidebar}
         initial={false}
