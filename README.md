@@ -3,13 +3,8 @@
 Redline is a minimalist, distraction-free Markdown editor featuring in-place AI writing assistance and inline redline diff reviews. Instead of replacing text wholesale or requiring external chat windows, Redline lets you review AI edits directly within your document using visual diff highlights and granular accept or reject controls.
 
 <p align="center">
-  <img src=".github/readme-assets/editor-dark.jpg" alt="Redline editor in dark theme" width="49%" />
-  <img src=".github/readme-assets/editor-light.jpg" alt="Redline editor in light theme" width="49%" />
-</p>
-<p align="center">
-  <img src=".github/readme-assets/ai-menu.jpg" alt="AI preset menu with text selected" width="32%" />
-  <img src=".github/readme-assets/voice-recording.jpg" alt="Live voice recording with waveform" width="32%" />
-  <img src=".github/readme-assets/markdown-source.jpg" alt="Raw markdown source view" width="32%" />
+  <img src=".github/readme-assets/editor-dark.jpg" alt="Redline editor in dark theme with workspace sidebar" width="49%" />
+  <img src=".github/readme-assets/editor-light.jpg" alt="Redline editor in light theme with workspace sidebar" width="49%" />
 </p>
 
 ---
