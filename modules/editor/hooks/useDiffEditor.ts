@@ -73,7 +73,7 @@ export function useDiffEditor({
           if (node.type.name === "heading") {
             return `Heading ${node.attrs.level}`;
           }
-          return placeholder || "Write something, or '/' for commands...";
+          return placeholder || "Start typing...";
         },
         showOnlyCurrent: true,
         showOnlyWhenEditable: true,

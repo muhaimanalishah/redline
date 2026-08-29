@@ -69,7 +69,7 @@ export default function Home() {
             onChange={handleContentChange}
             onTitleChange={handleTitleChange}
             onIssuesChange={setIssues}
-            placeholder="Write something, or '/' for commands..."
+            placeholder="Start typing..."
             onAiExecute={handleAiExecute}
             isSidebarOpen={isSidebarOpen}
             onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
