@@ -20,7 +20,6 @@ export function useDocuments(initialDocId?: string | null) {
       if (!docsRes.ok) throw new Error("Failed to load documents");
       const data: SidebarDocument[] = await docsRes.json();
       setDocuments(data);
-      setActiveDocId((prev) => prev ?? (data.length > 0 ? data[0].id : null));
 
       if (archivedRes.ok) {
         const archivedData: SidebarDocument[] = await archivedRes.json();
@@ -48,7 +47,6 @@ export function useDocuments(initialDocId?: string | null) {
         const data: SidebarDocument[] = await docsRes.json();
         if (!ignore) {
           setDocuments(data);
-          setActiveDocId((prev) => prev ?? (data.length > 0 ? data[0].id : null));
         }
 
         if (archivedRes.ok) {

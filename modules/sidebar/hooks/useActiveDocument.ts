@@ -14,7 +14,8 @@ const AUTOSAVE_DELAY_MS = 600;
 
 export function useActiveDocument(
   activeDocId: string | null,
-  onUpdateTitleLocally?: (id: string, newTitle: string) => void
+  onUpdateTitleLocally?: (id: string, newTitle: string) => void,
+  onNotFound?: () => void
 ) {
   const [activeDocData, setActiveDocData] = useState<ActiveDocData | null>(null);
   const [contentLoading, setContentLoading] = useState(true);
@@ -73,8 +74,21 @@ export function useActiveDocument(
 
       try {
         const res = await fetch(`/api/documents/${activeDocId}`);
-        if (!res.ok) throw new Error("Failed to load document");
+        if (!res.ok) {
+          if (res.status === 404) {
+            toast.error("Document not found");
+            onNotFound?.();
+            return;
+          }
+          throw new Error("Failed to load document");
+        }
         const data = await res.json();
+        if (data.isArchived) {
+          toast.error("Document is in trash");
+          onNotFound?.();
+          return;
+        }
+
         if (!ignore) {
           setActiveDocData({
             id: activeDocId,
@@ -85,7 +99,8 @@ export function useActiveDocument(
       } catch (err) {
         console.error(err);
         if (!ignore) {
-          toast.error("Failed to load document content");
+          toast.error("Document not found");
+          onNotFound?.();
         }
       } finally {
         if (!ignore) {
@@ -99,7 +114,7 @@ export function useActiveDocument(
     return () => {
       ignore = true;
     };
-  }, [activeDocId, flushPendingSave]);
+  }, [activeDocId, flushPendingSave, onNotFound]);
 
   // Debounced title autosave handler
   const handleTitleChange = useCallback(

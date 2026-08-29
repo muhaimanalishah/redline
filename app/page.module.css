@@ -45,41 +45,70 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  gap: 8px;
-  color: var(--ink-soft);
-  font-family: var(--sans);
-  padding: 24px;
+  padding: 32px 20px;
   text-align: center;
+  user-select: none;
+}
+
+.emptyCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 380px;
+  width: 100%;
+}
+
+.emptyIconCircle {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: var(--accent-soft);
+  border: 1px solid var(--chrome-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-soft);
+  margin-bottom: 18px;
 }
 
 .emptyContainer h2 {
-  font-size: 18px;
-  font-weight: 650;
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 700;
   color: var(--ink);
-  margin: 0 0 4px 0;
-  letter-spacing: -0.02em;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.025em;
 }
 
 .emptyContainer p {
+  font-family: var(--sans);
   font-size: 13.5px;
   color: var(--ink-soft);
-  margin: 0 0 12px 0;
-  max-width: 320px;
+  margin: 0 0 20px 0;
   line-height: 1.5;
+}
+
+.emptyActionsRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 260px;
 }
 
 .emptyActionBtn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 8px 16px;
-  border-radius: 7px;
+  padding: 9px 16px;
+  border-radius: 8px;
   background: var(--accent-blue);
   color: #ffffff;
   border: none;
   font-family: var(--sans);
   font-size: 13px;
-  font-weight: 550;
+  font-weight: 600;
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
   transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
@@ -93,4 +122,27 @@
 
 .emptyActionBtn:active {
   transform: translateY(0);
+}
+
+.emptySecondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1px solid var(--chrome-border-subtle);
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.emptySecondaryBtn:hover {
+  background: var(--accent-soft);
+  color: var(--ink);
+  border-color: var(--chrome-border);
 }
