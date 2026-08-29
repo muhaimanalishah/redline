@@ -3,7 +3,6 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  PanelLeftClose,
   FileText,
   Plus,
   Search,
@@ -18,11 +17,13 @@ import {
 import { IconButton, DropdownMenu, DropdownMenuItem } from "@/modules/shared";
 import { SidebarDocument } from "./types";
 import styles from "./Sidebar.module.css";
+import { useRouter } from "next/navigation";
 
 interface SidebarProps {
   documents: SidebarDocument[];
   archivedDocuments?: SidebarDocument[];
   activeDocId: string | null;
+  loadingDocId?: string | null;
   loading?: boolean;
   onSelectDoc: (id: string) => void;
   onCreateDoc: () => void;
@@ -40,6 +41,7 @@ export default function Sidebar({
   documents,
   archivedDocuments = [],
   activeDocId,
+  loadingDocId = null,
   loading = false,
   onSelectDoc,
   onCreateDoc,
@@ -52,6 +54,7 @@ export default function Sidebar({
   isOpen,
   onToggleOpen,
 }: SidebarProps) {
+  const router = useRouter();
   const [currentView, setCurrentView] = useState<"normal" | "trash">("normal");
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -132,10 +135,12 @@ export default function Sidebar({
       },
     ];
 
+    const isDocLoading = doc.id === loadingDocId;
+
     return (
       <div
         key={doc.id}
-        className={styles.docItem}
+        className={`${styles.docItem} ${isDocLoading ? styles.docItemLoading : ""}`}
         data-active={isActive}
         onClick={() => {
           if (!isEditing) onSelectDoc(doc.id);
@@ -231,16 +236,9 @@ export default function Sidebar({
               </button>
             ) : (
               <div className={styles.headerTitleRow}>
-                <span className={styles.workspaceLabel}>Workspace</span>
-                <button
-                  type="button"
-                  className={styles.collapseBtn}
-                  onClick={onToggleOpen}
-                  title="Collapse Sidebar"
-                  aria-label="Collapse Sidebar"
-                >
-                  <PanelLeftClose size={15} />
-                </button>
+                <span className={styles.workspaceLabel} onClick={() => router.push("/")}>
+                  Redline Workspace
+                </span>
               </div>
             )}
           </div>

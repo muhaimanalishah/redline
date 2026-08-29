@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, FileText, PanelLeft } from "lucide-react";
-import { Editor, DiffIssue, useAiExecution } from "@/modules/editor";
+import { Editor, EditorSkeleton, DiffIssue, useAiExecution } from "@/modules/editor";
 import { Sidebar, useDocuments, useActiveDocument } from "@/modules/sidebar";
 import {
   CommandPalette,
@@ -108,6 +108,7 @@ export default function AppClient({ routeDocId = null }: AppClientProps) {
           documents={documents}
           archivedDocuments={archivedDocuments}
           activeDocId={activeDocId}
+          loadingDocId={contentLoading ? activeDocId : null}
           loading={docsLoading}
           onSelectDoc={handleSelectDoc}
           onCreateDoc={handleCreateDoc}
@@ -138,9 +139,10 @@ export default function AppClient({ routeDocId = null }: AppClientProps) {
               onToggleSidebar={handleToggleSidebar}
             />
           ) : activeDocId && contentLoading ? (
-            <div className={styles.loadingState}>
-              <span>Loading document...</span>
-            </div>
+            <EditorSkeleton
+              isSidebarOpen={isSidebarOpen}
+              onToggleSidebar={handleToggleSidebar}
+            />
           ) : (
             <div className={styles.emptyContainer}>
               <div className={styles.emptyCard}>

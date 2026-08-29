@@ -69,6 +69,11 @@
   letter-spacing: 0.6px;
   text-transform: uppercase;
   color: var(--ink-faint);
+  cursor: pointer;
+}
+
+.workspaceLabel:hover {
+  color: var(--ink);
 }
 
 .collapseBtn {
@@ -311,6 +316,12 @@
   white-space: nowrap;
   font-size: 12.5px;
   line-height: 26px;
+}
+
+.docItemLoading .docTitle,
+.docItemLoading .docIcon {
+  animation: shimmerPulse 1.4s infinite ease-in-out;
+  opacity: 0.6;
 }
 
 .inlineRenameInput {

@@ -1,0 +1,152 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background-color: var(--paper);
+  user-select: none;
+}
+
+/* 1. TOP STRIP SKELETON */
+.topStrip {
+  height: 48px;
+  min-height: 48px;
+  width: 100%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  background-color: var(--chrome-bg, var(--paper-subtle));
+  border-bottom: 1px solid var(--chrome-border, var(--rule));
+  position: sticky;
+  top: 0;
+  z-index: 35;
+}
+
+.leftZone,
+.rightZone {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+.rightZone {
+  justify-content: flex-end;
+}
+
+.centerZone {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
+.toolBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  color: var(--ink-soft);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.12s ease;
+  flex-shrink: 0;
+}
+
+.toolBtn:hover {
+  background-color: var(--accent-soft);
+  color: var(--ink);
+}
+
+.divider {
+  width: 1px;
+  height: 16px;
+  background-color: var(--rule);
+  margin: 0 3px;
+  flex-shrink: 0;
+}
+
+@keyframes skeletonPulse {
+  0% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.75;
+  }
+  100% {
+    opacity: 0.35;
+  }
+}
+
+.skeletonPill {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background-color: var(--chrome-border);
+  animation: skeletonPulse 1.6s infinite ease-in-out;
+}
+
+/* 2. CANVAS VIEWPORT SKELETON */
+.canvasViewport {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 44px 24px 60px;
+  overflow-y: auto;
+}
+
+@media (max-width: 640px) {
+  .canvasViewport {
+    padding: 20px 16px 40px;
+  }
+
+  .leftZone,
+  .rightZone {
+    min-width: auto;
+  }
+
+  .toolBtn {
+    width: 29px;
+    height: 29px;
+  }
+}
+
+.editorWrapper {
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.skeletonTitle {
+  width: 48%;
+  max-width: 320px;
+  height: 38px;
+  border-radius: 8px;
+  background-color: var(--chrome-border);
+  animation: skeletonPulse 1.6s infinite ease-in-out;
+  margin-bottom: 8px;
+}
+
+.skeletonParagraph {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeletonLine {
+  height: 13px;
+  border-radius: 4px;
+  background-color: var(--chrome-border);
+  animation: skeletonPulse 1.6s infinite ease-in-out;
+}
