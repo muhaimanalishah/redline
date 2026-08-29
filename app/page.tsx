@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Editor, DiffIssue, useAiExecution } from "@/modules/editor";
 import { Sidebar, useDocuments, useActiveDocument } from "@/modules/sidebar";
-import { CommandPalette, useAppShortcuts } from "@/modules/shared";
+import { CommandPalette, DemoBanner, useAppShortcuts } from "@/modules/shared";
 import styles from "./page.module.css";
 
 export default function Home() {
@@ -44,19 +44,21 @@ export default function Home() {
     activeDocData.id === activeDocId;
 
   return (
-    <div className={styles.container}>
-      <Sidebar
-        documents={documents}
-        activeDocId={activeDocId}
-        onSelectDoc={setActiveDocId}
-        onCreateDoc={() => createNewDocument("Untitled", "")}
-        onDeleteDoc={deleteDoc}
-        onTogglePinDoc={togglePinDoc}
-        onRenameDoc={renameDoc}
-        onOpenSearch={() => setIsSearchPaletteOpen(true)}
-        isOpen={isSidebarOpen}
-        onToggleOpen={() => setIsSidebarOpen((prev) => !prev)}
-      />
+    <div className={styles.appWrapper}>
+      <DemoBanner />
+      <div className={styles.container}>
+        <Sidebar
+          documents={documents}
+          activeDocId={activeDocId}
+          onSelectDoc={setActiveDocId}
+          onCreateDoc={() => createNewDocument("Untitled", "")}
+          onDeleteDoc={deleteDoc}
+          onTogglePinDoc={togglePinDoc}
+          onRenameDoc={renameDoc}
+          onOpenSearch={() => setIsSearchPaletteOpen(true)}
+          isOpen={isSidebarOpen}
+          onToggleOpen={() => setIsSidebarOpen((prev) => !prev)}
+        />
 
       <main className={styles.main}>
         {isDocReady ? (
@@ -90,6 +92,7 @@ export default function Home() {
           </div>
         )}
       </main>
+      </div>
 
       <CommandPalette
         isOpen={isSearchPaletteOpen}

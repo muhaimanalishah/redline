@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createTextStreamResponse, toTextStream } from "ai";
 import {
   streamGenerate,
+  streamMockAiResponse,
   isValidPreset,
   getPresetConfig,
   PresetId,
@@ -55,6 +56,15 @@ export async function POST(req: Request) {
 
   const data = parsed.data;
 
+  // In Demo Mode, stream realistic mocked AI transformations with zero external dependencies
+  const isDemoMode =
+    process.env.NEXT_PUBLIC_DEMO_MODE === "true" ||
+    process.env.DEMO_MODE === "true";
+
+  if (isDemoMode) {
+    return streamMockAiResponse(data);
+  }
+
   const prompt =
     data.mode === "preset"
       ? getPresetConfig(data.preset as PresetId).prompt
@@ -69,9 +79,8 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("AI Generation error:", err);
     return Response.json(
-      { error: "AI execution failed. Please try again." },
+      { error: "AI execution failed. Please check your OpenAI API key." },
       { status: 502 }
     );
   }
-
 }
