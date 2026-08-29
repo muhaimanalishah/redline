@@ -1,4 +1,4 @@
-import { and, desc, eq, like, ilike, or } from "drizzle-orm";
+import { and, desc, eq, or, sql } from "drizzle-orm";
 import { getSqliteDb, getPgDb, isPostgres } from "./index";
 import { documents as sqliteDocs } from "./schema.sqlite";
 import { documents as pgDocs } from "./schema.pg";
@@ -8,7 +8,7 @@ export async function searchDocuments(query: string): Promise<Document[]> {
   const cleanQuery = query.trim();
   if (!cleanQuery) return [];
 
-  const searchTerm = `%${cleanQuery}%`;
+  const lowerSearch = `%${cleanQuery.toLowerCase()}%`;
 
   if (isPostgres) {
     const db = getPgDb();
@@ -19,8 +19,8 @@ export async function searchDocuments(query: string): Promise<Document[]> {
         and(
           eq(pgDocs.isArchived, false),
           or(
-            ilike(pgDocs.title, searchTerm),
-            ilike(pgDocs.content, searchTerm)
+            sql`LOWER(COALESCE(NULLIF(${pgDocs.title}, ''), 'untitled')) LIKE ${lowerSearch}`,
+            sql`LOWER(${pgDocs.content}) LIKE ${lowerSearch}`
           )
         )
       )
@@ -36,8 +36,8 @@ export async function searchDocuments(query: string): Promise<Document[]> {
       and(
         eq(sqliteDocs.isArchived, false),
         or(
-          like(sqliteDocs.title, searchTerm),
-          like(sqliteDocs.content, searchTerm)
+          sql`LOWER(COALESCE(NULLIF(${sqliteDocs.title}, ''), 'untitled')) LIKE ${lowerSearch}`,
+          sql`LOWER(${sqliteDocs.content}) LIKE ${lowerSearch}`
         )
       )
     )
