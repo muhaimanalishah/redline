@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { IBM_Plex_Mono, Plus_Jakarta_Sans, Source_Serif_4 } from "next/font/google";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@/modules/shared";
 import "./globals.css";
 
 const ibmPlexMono = IBM_Plex_Mono({
@@ -28,18 +28,6 @@ export const metadata: Metadata = {
   description: "Distraction-free Markdown editor with revision redlines and eye-friendly themes",
 };
 
-const THEME_INIT_SCRIPT = `
-(function () {
-  try {
-    var saved = localStorage.getItem("redline-theme");
-    var theme = saved === "light" || saved === "dark"
-      ? saved
-      : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-    document.documentElement.setAttribute("data-theme", theme);
-  } catch (e) {}
-})();
-`;
-
 export default function RootLayout({
   children,
 }: {
@@ -48,35 +36,33 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      data-theme="light"
       suppressHydrationWarning
       className={`${sourceSerif4.variable} ${ibmPlexMono.variable} ${plusJakartaSans.variable}`}
     >
-      <head>
-        <Script
-          id="theme-init"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
-        />
-      </head>
       <body>
-        {children}
-        <Toaster
-          position="top-center"
-          offset={20}
-          expand={false}
-          toastOptions={{
-            duration: 2500,
-            style: {
-              background: "var(--float-bg)",
-              color: "var(--ink)",
-              border: "1px solid var(--float-border)",
-              boxShadow: "var(--shadow-md)",
-            },
-          }}
-        />
+        <ThemeProvider
+          attribute="data-theme"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster
+            position="top-center"
+            offset={20}
+            expand={false}
+            toastOptions={{
+              duration: 2500,
+              style: {
+                background: "var(--float-bg)",
+                color: "var(--ink)",
+                border: "1px solid var(--float-border)",
+                boxShadow: "var(--shadow-md)",
+              },
+            }}
+          />
+        </ThemeProvider>
       </body>
     </html>
   );
 }
-
