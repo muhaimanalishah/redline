@@ -1,3 +1,4 @@
 export { default as Sidebar } from "./Sidebar";
 export * from "./types";
 export * from "./hooks/useDocuments";
+export * from "./hooks/useActiveDocument";

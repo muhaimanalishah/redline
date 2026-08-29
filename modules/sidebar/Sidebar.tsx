@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useRef, useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   FileText,
   Plus,
@@ -10,7 +10,6 @@ import {
   Trash2,
   MoreHorizontal,
   Pencil,
-  X,
   Archive,
   ArrowLeft,
   RotateCcw,
@@ -43,8 +42,6 @@ export default function Sidebar({
   onOpenSearch,
   isOpen,
 }: SidebarProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [currentView, setCurrentView] = useState<"normal" | "trash">("normal");
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -52,18 +49,9 @@ export default function Sidebar({
   const [archivedDocs, setArchivedDocs] = useState<SidebarDocument[]>([]);
 
   const renameInputRef = useRef<HTMLInputElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const filteredDocs = useMemo(() => {
-    if (!searchQuery.trim()) return documents;
-    const q = searchQuery.toLowerCase();
-    return documents.filter((d) =>
-      (d.title || "Untitled").toLowerCase().includes(q)
-    );
-  }, [documents, searchQuery]);
-
-  const pinnedDocs = useMemo(() => filteredDocs.filter((d) => d.isPinned), [filteredDocs]);
-  const normalDocs = useMemo(() => filteredDocs.filter((d) => !d.isPinned), [filteredDocs]);
+  const pinnedDocs = useMemo(() => documents.filter((d) => d.isPinned), [documents]);
+  const normalDocs = useMemo(() => documents.filter((d) => !d.isPinned), [documents]);
 
   useEffect(() => {
     if (editingId && renameInputRef.current) {
@@ -71,12 +59,6 @@ export default function Sidebar({
       renameInputRef.current.select();
     }
   }, [editingId]);
-
-  useEffect(() => {
-    if (isSearchOpen && searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, [isSearchOpen]);
 
   const startRenaming = (doc: SidebarDocument) => {
     setEditingId(doc.id);
@@ -241,45 +223,12 @@ export default function Sidebar({
             <button
               type="button"
               className={styles.actionBtnFull}
-              onClick={onOpenSearch ?? (() => setIsSearchOpen((prev) => !prev))}
+              onClick={onOpenSearch}
               title="Search Documents (Cmd+K)"
             >
               <Search size={14} />
               <span>Search</span>
             </button>
-
-            {/* Collapsible Search Input (Full border-radius) */}
-            <AnimatePresence>
-              {(isSearchOpen || searchQuery) && (
-                <motion.div
-                  className={styles.searchWrap}
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <Search size={13} className={styles.searchIcon} />
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    className={styles.searchInput}
-                    placeholder="Search notes…"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      className={styles.searchClearBtn}
-                      onClick={() => setSearchQuery("")}
-                      aria-label="Clear search"
-                    >
-                      <X size={12} />
-                    </button>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
 
           {/* 3. DOCUMENTS / TRASH SCROLLABLE LIST */}
@@ -303,9 +252,7 @@ export default function Sidebar({
                   </div>
                   <div className={styles.sectionItems}>
                     {normalDocs.length === 0 && pinnedDocs.length === 0 ? (
-                      <div className={styles.emptyState}>
-                        {searchQuery ? "No matching documents" : "No documents yet"}
-                      </div>
+                      <div className={styles.emptyState}>No documents yet</div>
                     ) : (
                       normalDocs.map(renderDocRow)
                     )}

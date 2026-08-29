@@ -41,8 +41,10 @@ export const TitleInput = forwardRef<TitleInputRef, TitleInputProps>(function Ti
     textarea: textareaRef.current,
   }));
 
-  // Auto-resize textarea height
-  useEffect(() => {
+  // Auto-resize textarea height immediately before paint
+  const useIsomorphicLayoutEffect = typeof window !== "undefined" ? React.useLayoutEffect : useEffect;
+
+  useIsomorphicLayoutEffect(() => {
     const el = textareaRef.current;
     if (el) {
       el.style.height = "auto";

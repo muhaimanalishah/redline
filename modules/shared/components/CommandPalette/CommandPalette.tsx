@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FileText, Pin, Search, X } from "lucide-react";
+import { escapeRegExp } from "@/modules/shared/lib/textUtils";
 import styles from "./CommandPalette.module.css";
 
 export interface SearchResultItem {
@@ -17,10 +18,6 @@ export interface CommandPaletteProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectDoc: (id: string) => void;
-}
-
-function escapeRegExp(string: string): string {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 export function HighlightMatch({ text, query }: { text: string; query: string }) {
@@ -72,34 +69,31 @@ function CommandPaletteModal({
   const inputRef = useRef<HTMLInputElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Fetch results based on query
+  // Fetch results based on query with request cancellation
   useEffect(() => {
-    let ignore = false;
+    const controller = new AbortController();
 
     const timer = setTimeout(async () => {
       try {
         const url = query.trim()
           ? `/api/documents?q=${encodeURIComponent(query.trim())}`
           : `/api/documents`;
-        const res = await fetch(url);
+        const res = await fetch(url, { signal: controller.signal });
         if (!res.ok) throw new Error("Search failed");
         const data: SearchResultItem[] = await res.json();
-        if (!ignore) {
-          setResults(data);
-          setSelectedIndex(0);
-          setLoading(false);
-        }
-      } catch (err) {
+        setResults(data);
+        setSelectedIndex(0);
+        setLoading(false);
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === "AbortError") return;
         console.error(err);
-        if (!ignore) {
-          setResults([]);
-          setLoading(false);
-        }
+        setResults([]);
+        setLoading(false);
       }
     }, query.trim() ? 120 : 0);
 
     return () => {
-      ignore = true;
+      controller.abort();
       clearTimeout(timer);
     };
   }, [query]);

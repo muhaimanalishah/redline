@@ -1,48 +1,12 @@
 import { z } from "zod";
 import { getDocumentsList, createDocument, searchDocuments } from "@/db/queries";
+import { extractSnippet } from "@/modules/shared/lib/textUtils";
 
 const CreateDocSchema = z.object({
   title: z.string().optional(),
   content: z.string().optional(),
   isPinned: z.boolean().optional(),
 });
-
-function stripMarkdown(md: string): string {
-  return md
-    .replace(/!\[.*?\]\(.*?\)/g, "") // Images
-    .replace(/\[(.*?)\]\(.*?\)/g, "$1") // Links
-    .replace(/`{1,3}.*?`{1,3}/g, "") // Code
-    .replace(/^#+\s+/gm, "") // Headings
-    .replace(/^[\*\-+]\s+/gm, "") // List bullets
-    .replace(/^>\s+/gm, "") // Quotes
-    .replace(/[*_~]/g, "") // Bold/Italics/Strikethrough
-    .replace(/\s+/g, " ") // Normalize whitespace
-    .trim();
-}
-
-function extractSnippet(content: string, query: string, maxLength = 120): string | null {
-  if (!content) return null;
-  const clean = stripMarkdown(content);
-  if (!clean) return null;
-
-  const lowerContent = clean.toLowerCase();
-  const lowerQuery = query.toLowerCase();
-  const matchIndex = lowerContent.indexOf(lowerQuery);
-
-  if (matchIndex === -1) {
-    // If no direct content match (e.g. title matched), provide the beginning of the text
-    return clean.length > maxLength ? `${clean.slice(0, maxLength)}...` : clean;
-  }
-
-  const start = Math.max(0, matchIndex - 35);
-  const end = Math.min(clean.length, matchIndex + query.length + 65);
-
-  let snippet = clean.slice(start, end);
-  if (start > 0) snippet = `...${snippet}`;
-  if (end < clean.length) snippet = `${snippet}...`;
-
-  return snippet;
-}
 
 export async function GET(req: Request) {
   try {
