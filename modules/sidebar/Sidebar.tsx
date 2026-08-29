@@ -205,7 +205,19 @@ export default function Sidebar({
         <div className={styles.inner}>
           {/* 1. TOP HEADER */}
           <div className={styles.header}>
-            <span className={styles.workspaceLabel}>Workspace</span>
+            {currentView === "trash" ? (
+              <button
+                type="button"
+                className={styles.backHeaderBtn}
+                onClick={() => setCurrentView("normal")}
+                title="Back to Notes"
+              >
+                <ArrowLeft size={13} />
+                <span>Back to Notes</span>
+              </button>
+            ) : (
+              <span className={styles.workspaceLabel}>Workspace</span>
+            )}
           </div>
 
           {/* 2. TOP ACTION BUTTONS (Full border-radius) */}
