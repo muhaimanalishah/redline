@@ -3,6 +3,7 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
+  PanelLeftClose,
   FileText,
   Plus,
   Search,
@@ -47,6 +48,7 @@ export default function Sidebar({
   onRenameDoc,
   onOpenSearch,
   isOpen,
+  onToggleOpen,
 }: SidebarProps) {
   const [currentView, setCurrentView] = useState<"normal" | "trash">("normal");
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
@@ -193,12 +195,20 @@ export default function Sidebar({
   };
 
   return (
-    <motion.aside
-      className={styles.sidebar}
-      initial={false}
-      animate={{
-        width: isOpen ? 256 : 0,
-      }}
+    <>
+      {isOpen && (
+        <div
+          className={styles.backdrop}
+          onClick={onToggleOpen}
+          aria-hidden="true"
+        />
+      )}
+      <motion.aside
+        className={styles.sidebar}
+        initial={false}
+        animate={{
+          width: isOpen ? 256 : 0,
+        }}
         transition={{
           type: "spring",
           stiffness: 400,
@@ -219,7 +229,18 @@ export default function Sidebar({
                 <span>Back to Notes</span>
               </button>
             ) : (
-              <span className={styles.workspaceLabel}>Workspace</span>
+              <div className={styles.headerTitleRow}>
+                <span className={styles.workspaceLabel}>Workspace</span>
+                <button
+                  type="button"
+                  className={styles.collapseBtn}
+                  onClick={onToggleOpen}
+                  title="Collapse Sidebar"
+                  aria-label="Collapse Sidebar"
+                >
+                  <PanelLeftClose size={15} />
+                </button>
+              </div>
             )}
           </div>
 
@@ -346,5 +367,6 @@ export default function Sidebar({
           </div>
         </div>
       </motion.aside>
+    </>
   );
 }
