@@ -1,14 +1,14 @@
 "use client";
 
 import React from "react";
-import { ExternalLink } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import styles from "./DemoBanner.module.css";
 
 export interface DemoBannerProps {
   githubUrl?: string;
 }
 
-function GithubIcon({ size = 13 }: { size?: number }) {
+function GithubIcon({ size = 12 }: { size?: number }) {
   return (
     <svg
       width={size}
@@ -42,7 +42,7 @@ export default function DemoBanner({
           Demo Mode
         </span>
         <span className={styles.message}>
-          Mocked AI transformations and local SQLite storage are active.
+          Running on local SQLite with simulated AI transformations & dictation.
         </span>
       </div>
 
@@ -51,11 +51,11 @@ export default function DemoBanner({
         target="_blank"
         rel="noopener noreferrer"
         className={styles.githubBtn}
-        title="View Source Code on GitHub"
+        title="View source code on GitHub"
       >
-        <GithubIcon size={13} />
-        <span>Source Code</span>
-        <ExternalLink size={11} opacity={0.7} />
+        <GithubIcon size={12} />
+        <span>View on GitHub</span>
+        <ArrowRight size={11} className={styles.arrowIcon} />
       </a>
     </div>
   );

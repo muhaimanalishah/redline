@@ -1,89 +1,104 @@
 .banner {
   width: 100%;
-  height: 34px;
-  min-height: 34px;
-  background-color: color-mix(in srgb, var(--accent-blue) 8%, var(--paper));
-  border-bottom: 1px solid color-mix(in srgb, var(--accent-blue) 20%, var(--rule));
+  height: 30px;
+  min-height: 30px;
+  background-color: var(--chrome-bg);
+  border-bottom: 1px solid var(--chrome-border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 0 14px;
   font-family: var(--sans);
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--ink);
   z-index: 100;
   box-sizing: border-box;
+  user-select: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .leftSection {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   overflow: hidden;
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   padding: 2px 7px;
-  background-color: var(--accent-blue);
-  color: #ffffff;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
   text-transform: uppercase;
   border-radius: 9999px;
   line-height: 1;
   flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
 }
 
 .badgeDot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background-color: #ffffff;
+  background-color: var(--accent-blue);
+  box-shadow: 0 0 6px var(--accent-blue);
   animation: pulse 2s infinite ease-in-out;
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
 }
 
 .message {
-  color: var(--ink-soft);
+  color: var(--ink-faint);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.message strong {
-  color: var(--ink);
-  font-weight: 600;
+  font-size: 11.5px;
+  font-weight: 450;
 }
 
 .githubBtn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 10px;
-  background-color: var(--card-bg);
-  color: var(--ink);
-  font-size: 11.5px;
+  gap: 5px;
+  padding: 2px 9px;
+  background-color: transparent;
+  color: var(--ink-soft);
+  font-size: 11px;
   font-weight: 500;
-  border: 1px solid var(--card-border);
-  border-radius: 9999px;
+  border-radius: 6px;
   text-decoration: none;
   transition: all 0.12s ease;
   flex-shrink: 0;
-  box-shadow: var(--shadow-sm);
 }
 
 .githubBtn:hover {
-  background-color: var(--card-hover);
-  border-color: var(--accent-blue);
-  color: var(--accent-blue);
+  background-color: var(--accent-soft);
+  color: var(--ink);
+}
+
+.arrowIcon {
+  color: var(--ink-faint);
+  transition: transform 0.12s ease, color 0.12s ease;
+}
+
+.githubBtn:hover .arrowIcon {
+  color: var(--ink);
+  transform: translateX(1px);
 }
 
 @media (max-width: 640px) {
