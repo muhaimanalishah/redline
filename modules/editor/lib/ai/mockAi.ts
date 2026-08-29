@@ -198,6 +198,20 @@ export function generateMockAiContent(payload: MockAiPayload): string {
   return text;
 }
 
+const MOCK_DICTATIONS = [
+  "Here is a dictated paragraph demonstrating Redline's speech-to-text integration with live diff reviews.",
+  "Let's outline our roadmap for the upcoming quarter, focusing on user experience, performance, and clean offline-first architecture.",
+  "In this draft, we explore how seamless inline visual diffs streamline markdown editing and review workflows.",
+  "Notes from today's sync: finalize database adapters, verify responsive layouts, and prepare release documentation.",
+];
+
+export async function mockTranscribeAudio(): Promise<string> {
+  // Simulate realistic processing latency
+  await new Promise((resolve) => setTimeout(resolve, 350));
+  const randomIndex = Math.floor(Math.random() * MOCK_DICTATIONS.length);
+  return MOCK_DICTATIONS[randomIndex];
+}
+
 /**
  * Creates a stream that emits the simulated output word-by-word with realistic typing latency.
  */

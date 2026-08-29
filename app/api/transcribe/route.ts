@@ -1,8 +1,18 @@
 import { transcribe } from "ai";
 import { openai } from "@ai-sdk/openai";
+import { mockTranscribeAudio } from "@/modules/editor/lib/ai";
 
 export async function POST(req: Request) {
   try {
+    const isDemoMode =
+      process.env.NEXT_PUBLIC_DEMO_MODE === "true" ||
+      process.env.DEMO_MODE === "true";
+
+    if (isDemoMode) {
+      const text = await mockTranscribeAudio();
+      return Response.json({ text });
+    }
+
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return Response.json(

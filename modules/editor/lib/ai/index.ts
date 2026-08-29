@@ -10,5 +10,6 @@ export type { PresetId, PresetConfig, PresetCategory, PresetCategoryConfig } fro
 
 // Generation & Transforms — free-form writing, presets, and selection transforms
 export { generate, streamGenerate, MAX_PROMPT_LENGTH, MAX_SELECTION_LENGTH } from "./generate";
-export { streamMockAiResponse, generateMockAiContent } from "./mockAi";
+export { streamMockAiResponse, generateMockAiContent, mockTranscribeAudio } from "./mockAi";
+
 
