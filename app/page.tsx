@@ -7,7 +7,12 @@ import { CommandPalette, DemoBanner, MobileNotice, useAppShortcuts } from "@/mod
 import styles from "./page.module.css";
 
 export default function Home() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      return false;
+    }
+    return true;
+  });
   const [isSearchPaletteOpen, setIsSearchPaletteOpen] = useState(false);
   const [issues, setIssues] = useState<DiffIssue[]>([]);
 
@@ -35,6 +40,13 @@ export default function Home() {
 
   const { handleAiExecute } = useAiExecution();
 
+  const handleSelectDoc = (id: string) => {
+    setActiveDocId(id);
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
+  };
+
   useAppShortcuts({
     onToggleSidebar: () => setIsSidebarOpen((prev) => !prev),
     onOpenSearch: () => setIsSearchPaletteOpen((prev) => !prev),
@@ -55,7 +67,7 @@ export default function Home() {
           documents={documents}
           archivedDocuments={archivedDocuments}
           activeDocId={activeDocId}
-          onSelectDoc={setActiveDocId}
+          onSelectDoc={handleSelectDoc}
           onCreateDoc={() => createNewDocument("Untitled", "")}
           onDeleteDoc={deleteDoc}
           onRestoreDoc={restoreDoc}

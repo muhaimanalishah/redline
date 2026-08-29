@@ -17,6 +17,12 @@
   padding: 44px 24px 60px;
 }
 
+@media (max-width: 640px) {
+  .canvasViewport {
+    padding: 20px 16px 40px;
+  }
+}
+
 .editorWrapper {
   width: 100%;
   max-width: 720px;

@@ -34,3 +34,14 @@
   outline: none;
   box-shadow: none;
 }
+
+@media (max-width: 640px) {
+  .titleContainer {
+    margin-bottom: 6px;
+  }
+
+  .titleTextarea {
+    font-size: calc(1.85em * var(--editor-zoom, 1));
+    line-height: 1.22;
+  }
+}
