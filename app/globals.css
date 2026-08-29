@@ -60,6 +60,11 @@
   --float-bg: #F5EEDC;
   --float-border: #E8DFC7;
 
+  /* Theme-specific Scrollbar */
+  --scrollbar-thumb: #DCD3BF;
+  --scrollbar-thumb-hover: #C5BBA4;
+  --scrollbar-track: transparent;
+
   --mono: var(--font-ibm-plex-mono), "SF Mono", ui-monospace, Consolas, monospace;
   --serif: var(--font-source-serif-4), "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --sans: var(--font-plus-jakarta-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -132,8 +137,44 @@
   --float-bg: #181A1D;
   --float-border: #282B30;
 
+  /* Theme-specific Scrollbar */
+  --scrollbar-thumb: #353941;
+  --scrollbar-thumb-hover: #484E59;
+  --scrollbar-track: transparent;
+
   --background: var(--paper-edge);
   --foreground: var(--ink);
+}
+
+/* Custom Theme-Aware Global Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.15s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 * {
