@@ -2,6 +2,8 @@
 
 Redline is a minimalist, distraction-free Markdown editor featuring in-place AI writing assistance and inline redline diff reviews. Instead of replacing text wholesale or requiring external chat windows, Redline lets you review AI edits directly within your document using visual diff highlights and granular accept or reject controls.
 
+**[Live Demo](https://redline-delta-ruby.vercel.app/)**
+
 <p align="center">
   <img src=".github/readme-assets/editor-dark.jpg" alt="Redline editor in dark theme with workspace sidebar" width="49%" />
   <img src=".github/readme-assets/editor-light.jpg" alt="Redline editor in light theme with workspace sidebar" width="49%" />
