@@ -23,6 +23,7 @@ interface SidebarProps {
   documents: SidebarDocument[];
   archivedDocuments?: SidebarDocument[];
   activeDocId: string | null;
+  loading?: boolean;
   onSelectDoc: (id: string) => void;
   onCreateDoc: () => void;
   onDeleteDoc: (id: string) => void;
@@ -39,6 +40,7 @@ export default function Sidebar({
   documents,
   archivedDocuments = [],
   activeDocId,
+  loading = false,
   onSelectDoc,
   onCreateDoc,
   onDeleteDoc,
@@ -268,7 +270,28 @@ export default function Sidebar({
 
           {/* 3. DOCUMENTS / TRASH SCROLLABLE LIST */}
           <div className={styles.docList}>
-            {currentView === "normal" ? (
+            {loading ? (
+              <div className={styles.skeletonContainer} aria-label="Loading documents">
+                <div className={styles.section}>
+                  <div className={styles.sectionHeader}>
+                    <div className={styles.skeletonHeader} />
+                  </div>
+                  <div className={styles.sectionItems}>
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div key={i} className={styles.skeletonRow}>
+                        <div className={styles.skeletonIcon} />
+                        <div
+                          className={styles.skeletonLine}
+                          style={{
+                            width: i === 1 ? "75%" : i === 2 ? "55%" : i === 3 ? "85%" : i === 4 ? "60%" : "70%",
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : currentView === "normal" ? (
               <div className={styles.viewNormal}>
                 {/* PINNED SECTION (Rendered ONLY when pinned docs exist) */}
                 {pinnedDocs.length > 0 && (

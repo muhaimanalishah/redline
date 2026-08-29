@@ -108,6 +108,7 @@ export default function AppClient({ routeDocId = null }: AppClientProps) {
           documents={documents}
           archivedDocuments={archivedDocuments}
           activeDocId={activeDocId}
+          loading={docsLoading}
           onSelectDoc={handleSelectDoc}
           onCreateDoc={handleCreateDoc}
           onDeleteDoc={handleDeleteDoc}
