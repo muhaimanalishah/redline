@@ -54,13 +54,13 @@
 }
 
 /* Paragraphs */
-.editorContent :global(.tiptap > *:first-child) {
-  margin-top: 0;
-}
-
 .editorContent :global(.tiptap p) {
   margin: 0 0 1.4em 0;
   letter-spacing: -0.003em;
+}
+
+.editorContent :global(.tiptap p:first-child) {
+  margin-top: 0;
 }
 
 .editorContent :global(.tiptap p:last-child) {
