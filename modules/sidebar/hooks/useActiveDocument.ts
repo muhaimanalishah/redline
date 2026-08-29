@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { sanitizeContent, sanitizeTitle } from "@/modules/shared/lib/textUtils";
 
@@ -17,8 +18,7 @@ export function useActiveDocument(
   onUpdateTitleLocally?: (id: string, newTitle: string) => void,
   onNotFound?: () => void
 ) {
-  const [activeDocData, setActiveDocData] = useState<ActiveDocData | null>(null);
-  const [contentLoading, setContentLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   const pendingSaveRef = useRef<{
     id: string;
@@ -52,69 +52,50 @@ export function useActiveDocument(
     }
   }, []);
 
-  // Load active document content when activeDocId changes
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadDocument() {
-      // Flush previous document changes if any
+  // Fetch document via TanStack Query (cached in memory)
+  const {
+    data: activeDocData = null,
+    isLoading: isDocLoading,
+    isError,
+  } = useQuery<ActiveDocData | null>({
+    queryKey: ["document", activeDocId],
+    queryFn: async () => {
+      if (!activeDocId) return null;
       await flushPendingSave();
 
-      if (!activeDocId) {
-        if (!ignore) {
-          setActiveDocData(null);
-          setContentLoading(false);
-        }
-        return;
-      }
-
-      if (!ignore) {
-        setContentLoading(true);
-      }
-
-      try {
-        const res = await fetch(`/api/documents/${activeDocId}`);
-        if (!res.ok) {
-          if (res.status === 404) {
-            toast.error("Document not found");
-            onNotFound?.();
-            return;
-          }
-          throw new Error("Failed to load document");
-        }
-        const data = await res.json();
-        if (data.isArchived) {
-          toast.error("Document is in trash");
-          onNotFound?.();
-          return;
-        }
-
-        if (!ignore) {
-          setActiveDocData({
-            id: activeDocId,
-            title: sanitizeTitle(data.title),
-            content: sanitizeContent(data.content),
-          });
-        }
-      } catch (err) {
-        console.error(err);
-        if (!ignore) {
+      const res = await fetch(`/api/documents/${activeDocId}`);
+      if (!res.ok) {
+        if (res.status === 404) {
           toast.error("Document not found");
           onNotFound?.();
+          return null;
         }
-      } finally {
-        if (!ignore) {
-          setContentLoading(false);
-        }
+        throw new Error("Failed to load document");
       }
+
+      const data = await res.json();
+      if (data.isArchived) {
+        toast.error("Document is in trash");
+        onNotFound?.();
+        return null;
+      }
+
+      return {
+        id: activeDocId,
+        title: sanitizeTitle(data.title),
+        content: sanitizeContent(data.content),
+      };
+    },
+    enabled: !!activeDocId,
+  });
+
+  // Handle errors
+  useEffect(() => {
+    if (isError && activeDocId) {
+      toast.error("Document not found");
+      onNotFound?.();
     }
-
-    loadDocument();
-
-    return () => {
-      ignore = true;
-    };
-  }, [activeDocId, flushPendingSave, onNotFound]);
+  }, [isError, activeDocId, onNotFound]);
 
   // Debounced title autosave handler
   const handleTitleChange = useCallback(
@@ -123,8 +104,9 @@ export function useActiveDocument(
 
       const formattedTitle = newTitle.trim() || "Untitled";
 
-      setActiveDocData((prev) =>
-        prev && prev.id === activeDocId ? { ...prev, title: newTitle } : prev
+      // Synchronously update query cache so the title renders immediately
+      queryClient.setQueryData<ActiveDocData | null>(["document", activeDocId], (prev) =>
+        prev ? { ...prev, title: newTitle } : { id: activeDocId, title: newTitle, content: "" }
       );
       onUpdateTitleLocally?.(activeDocId, formattedTitle);
 
@@ -160,7 +142,7 @@ export function useActiveDocument(
         }
       }, AUTOSAVE_DELAY_MS);
     },
-    [activeDocId, onUpdateTitleLocally]
+    [activeDocId, onUpdateTitleLocally, queryClient]
   );
 
   // Debounced content autosave handler
@@ -168,8 +150,9 @@ export function useActiveDocument(
     (markdown: string) => {
       if (!activeDocId) return;
 
-      setActiveDocData((prev) =>
-        prev && prev.id === activeDocId ? { ...prev, content: markdown } : prev
+      // Synchronously update query cache so content edits are instant
+      queryClient.setQueryData<ActiveDocData | null>(["document", activeDocId], (prev) =>
+        prev ? { ...prev, content: markdown } : { id: activeDocId, title: "", content: markdown }
       );
 
       pendingSaveRef.current = {
@@ -204,8 +187,10 @@ export function useActiveDocument(
         }
       }, AUTOSAVE_DELAY_MS);
     },
-    [activeDocId]
+    [activeDocId, queryClient]
   );
+
+  const contentLoading = !!activeDocId && isDocLoading && !activeDocData;
 
   return {
     activeDocData,

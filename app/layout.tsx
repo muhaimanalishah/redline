@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Plus_Jakarta_Sans, Source_Serif_4 } from "next/font/google";
 import { Toaster } from "sonner";
-import { ThemeProvider } from "@/modules/shared";
+import { ThemeProvider, QueryProvider } from "@/modules/shared";
 import "./globals.css";
 
 const ibmPlexMono = IBM_Plex_Mono({
@@ -40,28 +40,30 @@ export default function RootLayout({
       className={`${sourceSerif4.variable} ${ibmPlexMono.variable} ${plusJakartaSans.variable}`}
     >
       <body>
-        <ThemeProvider
-          attribute="data-theme"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <Toaster
-            position="top-center"
-            offset={20}
-            expand={false}
-            toastOptions={{
-              duration: 2500,
-              style: {
-                background: "var(--float-bg)",
-                color: "var(--ink)",
-                border: "1px solid var(--float-border)",
-                boxShadow: "var(--shadow-md)",
-              },
-            }}
-          />
-        </ThemeProvider>
+        <QueryProvider>
+          <ThemeProvider
+            attribute="data-theme"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+            <Toaster
+              position="top-center"
+              offset={20}
+              expand={false}
+              toastOptions={{
+                duration: 2500,
+                style: {
+                  background: "var(--float-bg)",
+                  color: "var(--ink)",
+                  border: "1px solid var(--float-border)",
+                  boxShadow: "var(--shadow-md)",
+                },
+              }}
+            />
+          </ThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   );

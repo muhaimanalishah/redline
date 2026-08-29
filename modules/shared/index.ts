@@ -6,6 +6,7 @@ export { default as DemoBanner } from "./components/DemoBanner/DemoBanner";
 export * from "./components/DemoBanner/DemoBanner";
 export { default as MobileNotice } from "./components/MobileNotice/MobileNotice";
 export * from "./components/MobileNotice/MobileNotice";
+export * from "./components/QueryProvider";
 export * from "./components/ThemeProvider";
 export * from "./hooks/useAppShortcuts";
 export * from "./hooks/useMediaQuery";
