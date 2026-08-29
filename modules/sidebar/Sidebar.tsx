@@ -27,6 +27,7 @@ interface SidebarProps {
   onDeleteDoc: (id: string) => void;
   onTogglePinDoc: (id: string, currentPin: boolean) => void;
   onRenameDoc?: (id: string, newTitle: string) => void;
+  onOpenSearch?: () => void;
   isOpen: boolean;
   onToggleOpen: () => void;
 }
@@ -39,6 +40,7 @@ export default function Sidebar({
   onDeleteDoc,
   onTogglePinDoc,
   onRenameDoc,
+  onOpenSearch,
   isOpen,
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -238,9 +240,9 @@ export default function Sidebar({
 
             <button
               type="button"
-              className={`${styles.actionBtnFull} ${isSearchOpen ? styles.actionBtnActive : ""}`}
-              onClick={() => setIsSearchOpen((prev) => !prev)}
-              title="Search Documents"
+              className={styles.actionBtnFull}
+              onClick={onOpenSearch ?? (() => setIsSearchOpen((prev) => !prev))}
+              title="Search Documents (Cmd+K)"
             >
               <Search size={14} />
               <span>Search</span>

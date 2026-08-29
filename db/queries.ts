@@ -1,6 +1,28 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, like, or } from "drizzle-orm";
 import { db } from "./index";
 import { documents, Document, NewDocument } from "./schema";
+
+export async function searchDocuments(query: string): Promise<Document[]> {
+  const cleanQuery = query.trim();
+  if (!cleanQuery) return [];
+
+  const searchTerm = `%${cleanQuery}%`;
+
+  return db
+    .select()
+    .from(documents)
+    .where(
+      and(
+        eq(documents.isArchived, false),
+        or(
+          like(documents.title, searchTerm),
+          like(documents.content, searchTerm)
+        )
+      )
+    )
+    .orderBy(desc(documents.isPinned), desc(documents.updatedAt))
+    .limit(30);
+}
 
 export async function getDocumentsList(): Promise<Omit<Document, "content">[]> {
   return db
@@ -26,7 +48,7 @@ export async function createDocument(data?: Partial<NewDocument>): Promise<Docum
   const id = data?.id || crypto.randomUUID();
   const newDoc: NewDocument = {
     id,
-    title: data?.title || "Untitled",
+    title: data?.title ?? "",
     content: data?.content || "",
     isPinned: data?.isPinned ?? false,
     isArchived: data?.isArchived ?? false,

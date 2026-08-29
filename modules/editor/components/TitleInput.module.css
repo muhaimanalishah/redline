@@ -1,0 +1,36 @@
+.titleContainer {
+  width: 100%;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.titleTextarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  resize: none;
+  overflow: hidden;
+  display: block;
+  font-family: var(--serif);
+  font-size: calc(2.4em * var(--editor-zoom, 1));
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: var(--ink);
+  caret-color: var(--ink);
+  transition: color 0.2s ease;
+}
+
+.titleTextarea::placeholder {
+  color: var(--ink-faint);
+  opacity: 1;
+  font-weight: 750;
+}
+
+.titleTextarea:focus {
+  outline: none;
+  box-shadow: none;
+}

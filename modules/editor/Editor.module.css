@@ -40,12 +40,17 @@
   min-height: 520px;
 }
 
-.editorContent :global(.tiptap p.is-editor-empty:first-child::before) {
+.editorContent :global(.tiptap p.is-empty::before),
+.editorContent :global(.tiptap .is-empty::before),
+.editorContent :global(.tiptap p.is-editor-empty::before),
+.editorContent :global(.tiptap .is-editor-empty::before),
+.editorContent :global(.tiptap [data-placeholder].is-empty::before) {
   content: attr(data-placeholder);
   float: left;
   color: var(--ink-faint);
   pointer-events: none;
   height: 0;
+  white-space: nowrap;
 }
 
 /* Paragraphs */

@@ -9,6 +9,7 @@ import { Underline } from "@tiptap/extension-underline";
 import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table";
 import { Image } from "@tiptap/extension-image";
 import { Markdown } from "tiptap-markdown";
+import Placeholder from "@tiptap/extension-placeholder";
 import { DiffExtension, DiffPluginKey } from "@/modules/editor/extensions/DiffExtension";
 import { findIssueRange } from "@/modules/editor/extensions/diffDoc";
 import { DiffIssue } from "@/modules/editor/types";
@@ -20,6 +21,7 @@ export interface UseDiffEditorOptions {
   issues: DiffIssue[];
   onChange?: (markdown: string) => void;
   onIssuesChange?: (issues: DiffIssue[]) => void;
+  onFocusTitle?: () => void;
 }
 
 export function useDiffEditor({
@@ -28,6 +30,7 @@ export function useDiffEditor({
   issues,
   onChange,
   onIssuesChange,
+  onFocusTitle,
 }: UseDiffEditorOptions) {
   const [issueCount, setIssueCount] = useState<number>(() => issues.length);
   const [hasSelection, setHasSelection] = useState(false);
@@ -65,13 +68,41 @@ export function useDiffEditor({
         transformPastedText: true,
         transformCopiedText: true,
       }),
+      Placeholder.configure({
+        placeholder: ({ node }) => {
+          if (node.type.name === "heading") {
+            return `Heading ${node.attrs.level}`;
+          }
+          return placeholder || "Write something, or '/' for commands...";
+        },
+        showOnlyCurrent: true,
+        showOnlyWhenEditable: true,
+        emptyNodeClass: "is-empty",
+        emptyEditorClass: "is-editor-empty",
+      }),
       DiffExtension,
     ],
     content: initialContent,
     editorProps: {
       attributes: {
-        "data-placeholder": placeholder,
         class: "focus:outline-none",
+      },
+      handleKeyDown: (view, event) => {
+        if (event.key === "ArrowUp") {
+          const { from, empty } = view.state.selection;
+          if (empty && from <= 1) {
+            onFocusTitle?.();
+            return true;
+          }
+        }
+        if (event.key === "Backspace") {
+          const { from, empty } = view.state.selection;
+          if (empty && from <= 1 && view.state.doc.textContent.length === 0) {
+            onFocusTitle?.();
+            return true;
+          }
+        }
+        return false;
       },
     },
     onCreate: ({ editor: ed }) => {

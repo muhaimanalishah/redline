@@ -56,7 +56,7 @@ export function useDocuments(initialDocId?: string | null) {
   }, []);
 
   const createNewDocument = useCallback(
-    async (title = "Untitled", content = "") => {
+    async (title = "", content = "") => {
       try {
         const res = await fetch("/api/documents", {
           method: "POST",
@@ -67,7 +67,6 @@ export function useDocuments(initialDocId?: string | null) {
         const newDoc = await res.json();
         setDocuments((prev) => [newDoc, ...prev]);
         setActiveDocId(newDoc.id);
-        toast.success("Created new page");
         return newDoc;
       } catch (err) {
         console.error(err);
@@ -88,7 +87,6 @@ export function useDocuments(initialDocId?: string | null) {
           return next;
         });
         setActiveDocId((current) => (current === id ? null : current));
-        toast.success("Document deleted");
       } catch (err) {
         console.error(err);
         toast.error("Could not delete document");
@@ -117,18 +115,23 @@ export function useDocuments(initialDocId?: string | null) {
     []
   );
 
+  const updateDocTitleLocally = useCallback((id: string, newTitle: string) => {
+    setDocuments((prev) =>
+      prev.map((d) => (d.id === id ? { ...d, title: newTitle } : d))
+    );
+  }, []);
+
   const renameDoc = useCallback(async (id: string, newTitle: string) => {
     try {
+      setDocuments((prev) =>
+        prev.map((d) => (d.id === id ? { ...d, title: newTitle } : d))
+      );
       const res = await fetch(`/api/documents/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: newTitle }),
       });
       if (!res.ok) throw new Error("Failed to rename");
-      setDocuments((prev) =>
-        prev.map((d) => (d.id === id ? { ...d, title: newTitle } : d))
-      );
-      toast.success("Renamed document");
     } catch (err) {
       console.error(err);
       toast.error("Failed to rename document");
@@ -144,6 +147,7 @@ export function useDocuments(initialDocId?: string | null) {
     createNewDocument,
     deleteDoc,
     togglePinDoc,
+    updateDocTitleLocally,
     renameDoc,
   };
 }

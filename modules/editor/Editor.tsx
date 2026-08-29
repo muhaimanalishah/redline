@@ -8,6 +8,7 @@ import TableToolbar from "@/modules/editor/components/TableToolbar";
 import FloatingControls from "@/modules/editor/components/FloatingControls";
 import TopStrip from "@/modules/editor/components/TopStrip";
 import MarkdownSourceView from "@/modules/editor/components/MarkdownSourceView";
+import TitleInput, { TitleInputRef } from "@/modules/editor/components/TitleInput";
 import { DiffIssue, ExecuteAiOptions } from "@/modules/editor/types";
 import { PresetId } from "@/modules/editor/lib/ai/presets";
 import { getEditorMarkdown } from "@/modules/editor/lib/markdown";
@@ -21,9 +22,12 @@ import styles from "./Editor.module.css";
 
 export interface EditorProps {
   initialContent?: string;
+  title?: string;
+  titlePlaceholder?: string;
   issues?: DiffIssue[];
   placeholder?: string;
   onChange?: (markdown: string) => void;
+  onTitleChange?: (title: string) => void;
   onIssuesChange?: (issues: DiffIssue[]) => void;
   onAiExecute?: (options: ExecuteAiOptions) => Promise<string>;
   isSidebarOpen?: boolean;
@@ -32,20 +36,28 @@ export interface EditorProps {
 
 export default function Editor({
   initialContent = "",
+  title = "",
+  titlePlaceholder = "New page",
   issues = [],
   placeholder = "Start writing...",
   onChange,
+  onTitleChange,
   onIssuesChange,
   onAiExecute,
   isSidebarOpen = true,
   onToggleSidebar = () => {},
 }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const titleInputRef = useRef<TitleInputRef>(null);
   const voiceTriggerRef = useRef<(() => Promise<void>) | null>(null);
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [isAiDockOpen, setIsAiDockOpen] = useState(false);
   const [sourceMode, setSourceMode] = useState(false);
   const [sourceText, setSourceText] = useState("");
+
+  const handleFocusTitle = useCallback(() => {
+    titleInputRef.current?.focus();
+  }, []);
 
   const { editor, issueCount, hasSelection, canUndo, canRedo } = useDiffEditor({
     initialContent,
@@ -53,7 +65,14 @@ export default function Editor({
     issues,
     onChange,
     onIssuesChange,
+    onFocusTitle: handleFocusTitle,
   });
+
+  const handleFocusEditor = useCallback(() => {
+    if (editor) {
+      editor.commands.focus("start");
+    }
+  }, [editor]);
 
   const {
     activeDiff,
@@ -260,7 +279,20 @@ export default function Editor({
               placeholder={placeholder}
             />
           ) : (
-            <EditorContent editor={editor} className={styles.editorContent} />
+            <>
+              {onTitleChange && (
+                <TitleInput
+                  ref={titleInputRef}
+                  value={title}
+                  onChange={onTitleChange}
+                  placeholder={titlePlaceholder}
+                  onEnter={handleFocusEditor}
+                  onArrowDown={handleFocusEditor}
+                  disabled={!editor.isEditable}
+                />
+              )}
+              <EditorContent editor={editor} className={styles.editorContent} />
+            </>
           )}
         </div>
       </div>

@@ -200,3 +200,17 @@ body {
   font-size: 13px !important;
 }
 
+/* TipTap Editor Placeholders */
+.tiptap p.is-empty::before,
+.tiptap .is-empty::before,
+.tiptap p.is-editor-empty::before,
+.tiptap .is-editor-empty::before,
+.tiptap [data-placeholder].is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--ink-faint);
+  pointer-events: none;
+  height: 0;
+  white-space: nowrap;
+}
+
