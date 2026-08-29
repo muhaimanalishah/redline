@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Editor, DiffIssue, useAiExecution } from "@/modules/editor";
 import { Sidebar, useDocuments, useActiveDocument } from "@/modules/sidebar";
-import { CommandPalette, DemoBanner, useAppShortcuts } from "@/modules/shared";
+import { CommandPalette, DemoBanner, MobileNotice, useAppShortcuts } from "@/modules/shared";
 import styles from "./page.module.css";
 
 export default function Home() {
@@ -49,6 +49,7 @@ export default function Home() {
   return (
     <div className={styles.appWrapper}>
       <DemoBanner />
+      <MobileNotice />
       <div className={styles.container}>
         <Sidebar
           documents={documents}

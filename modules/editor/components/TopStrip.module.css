@@ -23,6 +23,7 @@
   align-items: center;
   gap: 3px;
   min-width: 140px;
+  flex-shrink: 0;
 }
 
 .rightZone {
@@ -34,6 +35,7 @@
   align-items: center;
   gap: 3px;
   flex-wrap: nowrap;
+  flex-shrink: 0;
 }
 
 .toolBtn {
@@ -115,6 +117,7 @@
   border: none;
   cursor: pointer;
   transition: all 0.12s ease;
+  flex-shrink: 0;
 }
 
 .zoomBtn:hover {
@@ -139,12 +142,47 @@
   position: relative;
 }
 
-@media (max-width: 900px) {
+.desktopOnly {
+  display: inline-flex;
+}
+
+@media (max-width: 768px) {
   .topStrip {
+    padding: 0 8px;
+    gap: 4px;
     overflow-x: auto;
     scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
+
   .topStrip::-webkit-scrollbar {
     display: none;
+  }
+
+  .leftZone,
+  .rightZone {
+    min-width: auto;
+    gap: 2px;
+  }
+
+  .centerZone {
+    gap: 2px;
+  }
+
+  .toolBtn {
+    width: 29px;
+    height: 29px;
+  }
+
+  .zoomBtn {
+    display: none !important;
+  }
+
+  .desktopOnly {
+    display: none !important;
+  }
+
+  .divider {
+    margin: 0 1px;
   }
 }

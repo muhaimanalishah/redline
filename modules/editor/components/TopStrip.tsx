@@ -341,7 +341,7 @@ export default function TopStrip({
 
           <button
             type="button"
-            className={styles.toolBtn}
+            className={`${styles.toolBtn} ${styles.desktopOnly}`}
             data-active={editorState?.isUnderline ?? false}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => editor.chain().focus().toggleUnderline().run()}
@@ -353,7 +353,7 @@ export default function TopStrip({
 
           <button
             type="button"
-            className={styles.toolBtn}
+            className={`${styles.toolBtn} ${styles.desktopOnly}`}
             data-active={editorState?.isStrike ?? false}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => editor.chain().focus().toggleStrike().run()}
@@ -365,7 +365,7 @@ export default function TopStrip({
 
           <button
             type="button"
-            className={styles.toolBtn}
+            className={`${styles.toolBtn} ${styles.desktopOnly}`}
             data-active={editorState?.isCode ?? false}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => editor.chain().focus().toggleCode().run()}
@@ -409,7 +409,7 @@ export default function TopStrip({
 
           <button
             type="button"
-            className={styles.toolBtn}
+            className={`${styles.toolBtn} ${styles.desktopOnly}`}
             data-active={editorState?.isTaskList ?? false}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => editor.chain().focus().toggleTaskList().run()}
@@ -421,7 +421,7 @@ export default function TopStrip({
 
           <button
             type="button"
-            className={styles.toolBtn}
+            className={`${styles.toolBtn} ${styles.desktopOnly}`}
             data-active={editorState?.isBlockquote ?? false}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
@@ -431,12 +431,12 @@ export default function TopStrip({
             <Quote size={15} />
           </button>
 
-          <div className={styles.divider} />
+          <div className={`${styles.divider} ${styles.desktopOnly}`} />
 
           {/* Insert Elements */}
           <button
             type="button"
-            className={styles.toolBtn}
+            className={`${styles.toolBtn} ${styles.desktopOnly}`}
             data-active={editorState?.isTable ?? false}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() =>
@@ -450,7 +450,7 @@ export default function TopStrip({
 
           <button
             type="button"
-            className={styles.toolBtn}
+            className={`${styles.toolBtn} ${styles.desktopOnly}`}
             disabled={editorState?.hasSelection ?? false}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => editor.chain().focus().setHorizontalRule().run()}
@@ -463,7 +463,7 @@ export default function TopStrip({
           <button
             ref={imageBtnRef}
             type="button"
-            className={styles.toolBtn}
+            className={`${styles.toolBtn} ${styles.desktopOnly}`}
             data-active={pendingUrl?.field === "image"}
             onClick={() => openUrlPopover("image", imageBtnRef)}
             title="Insert Image"
@@ -475,7 +475,7 @@ export default function TopStrip({
           <button
             ref={linkBtnRef}
             type="button"
-            className={styles.toolBtn}
+            className={`${styles.toolBtn} ${styles.desktopOnly}`}
             data-active={(editorState?.isLink ?? false) || pendingUrl?.field === "link"}
             onClick={() => openUrlPopover("link", linkBtnRef)}
             title="Insert Link"
