@@ -1,6 +1,6 @@
 .titleContainer {
   width: 100%;
-  margin-bottom: 16px;
+  margin-bottom: 26px;
   position: relative;
 }
 
@@ -15,10 +15,10 @@
   overflow: hidden;
   display: block;
   font-family: var(--serif);
-  font-size: calc(2.4em * var(--editor-zoom, 1));
+  font-size: calc(2.85em * var(--editor-zoom, 1));
   font-weight: 750;
-  letter-spacing: -0.03em;
-  line-height: 1.2;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
   color: var(--ink);
   caret-color: var(--ink);
   transition: color 0.2s ease;

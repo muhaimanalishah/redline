@@ -1,5 +1,5 @@
 .container {
-  min-height: 100vh;
+  min-height: 100%;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -14,7 +14,7 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 48px 24px 140px;
+  padding: 44px 24px 60px;
 }
 
 .editorWrapper {
@@ -31,13 +31,13 @@
   font-size: calc(18.5px * var(--editor-zoom, 1));
   line-height: 1.78;
   color: var(--ink);
-  min-height: 520px;
+  min-height: 180px;
   outline: none;
 }
 
 .editorContent :global(.tiptap) {
   outline: none;
-  min-height: 520px;
+  min-height: 180px;
 }
 
 .editorContent :global(.tiptap p.is-empty::before),
@@ -65,11 +65,11 @@
 
 /* Headings */
 .editorContent :global(.tiptap h1) {
-  font-size: 1.95em;
+  font-size: 1.8em;
   font-weight: 700;
   letter-spacing: -0.025em;
-  line-height: 1.25;
-  margin: 1.9em 0 0.65em 0;
+  line-height: 1.28;
+  margin: 1.8em 0 0.6em 0;
   color: var(--ink);
 }
 
